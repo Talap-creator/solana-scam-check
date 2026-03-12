@@ -55,9 +55,9 @@ const teamMembers = [
     accent: "linear-gradient(90deg, rgba(37, 99, 235, 0.25), rgba(56, 189, 248, 0.1))",
     focus: ["Product execution", "Partnerships", "Market growth"],
     bullets: [
-      "Ex Product Manager",
-      "BNB Chain Ambassador",
-      "Google Students Club Ambassador",
+      "Product Manager",
+      "Ex BNB Chain Ambassador",
+      "Ex Google Students Club Lead",
     ],
   },
   {
