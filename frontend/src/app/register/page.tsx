@@ -51,11 +51,7 @@ export default function RegisterPage() {
           Network Status: Secure
         </div>
       }
-      navLinks={[
-        { href: "/docs", label: "Audit API" },
-        { href: "/#engine", label: "Risk Engine" },
-      ]}
-      primaryAction={{ href: "/login", label: "Connect Wallet" }}
+      navLinks={[]}
       subheading="Get advanced onchain risk alerts and deep token audits."
       variant="register"
     >

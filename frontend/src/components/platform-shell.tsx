@@ -18,6 +18,7 @@ type PlatformShellProps = {
   actions?: ShellAction[];
   children: ReactNode;
   eyebrow: string;
+  headerContent?: ReactNode;
   subtitle: string;
   title: string;
   stats?: ShellStat[];
@@ -44,6 +45,7 @@ export function PlatformShell({
   actions = [],
   children,
   eyebrow,
+  headerContent,
   subtitle,
   title,
   stats = [],
@@ -81,19 +83,20 @@ export function PlatformShell({
             </div>
 
             <div className="flex items-center gap-3">
-              {actions.map((action) => (
-                <Link
-                  key={`${action.href}-${action.label}`}
-                  className={
-                    action.tone === "secondary"
-                      ? "rounded-lg border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.06)] px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-[rgba(59,130,246,0.12)]"
-                      : "rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition-all hover:brightness-110"
-                  }
-                  href={action.href}
-                >
-                  {action.label}
-                </Link>
-              ))}
+              {headerContent ??
+                actions.map((action) => (
+                  <Link
+                    key={`${action.href}-${action.label}`}
+                    className={
+                      action.tone === "secondary"
+                        ? "rounded-lg border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.06)] px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-[rgba(59,130,246,0.12)]"
+                        : "rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition-all hover:brightness-110"
+                    }
+                    href={action.href}
+                  >
+                    {action.label}
+                  </Link>
+                ))}
             </div>
           </div>
         </header>

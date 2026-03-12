@@ -3,16 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, getUsage, type UserUsage } from "@/lib/api";
-
-function planLabel(plan: string): string {
-  if (plan === "pro") {
-    return "Pro";
-  }
-  if (plan === "enterprise") {
-    return "Enterprise";
-  }
-  return "Free";
-}
+import { formatPlanLabel } from "@/lib/plans";
 
 export function AccountUsageBanner() {
   const [usage, setUsage] = useState<UserUsage | null>(null);
@@ -74,7 +65,7 @@ export function AccountUsageBanner() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-extrabold tracking-[0.16em] text-[var(--accent-deep)]">ACCOUNT USAGE</p>
-          <h2 className="mt-1 text-xl font-bold">{planLabel(usage.plan)} plan limits</h2>
+          <h2 className="mt-1 text-xl font-bold">{formatPlanLabel(usage.plan)} plan limits</h2>
         </div>
         {(nearLimit || exhausted) && usage.plan === "free" ? (
           <Link

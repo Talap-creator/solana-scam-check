@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DashboardHeaderActions } from "@/components/dashboard-header-actions";
 import { PlatformShell } from "@/components/platform-shell";
 import { getChecks, getOverview, getWatchlist } from "@/lib/api";
 import { statusTone } from "@/lib/mock-data";
@@ -17,11 +18,8 @@ export default async function DashboardPage() {
 
   return (
     <PlatformShell
-      actions={[
-        { href: "/coins", label: "Open launch feed" },
-        { href: "/history", label: "History", tone: "secondary" },
-      ]}
       eyebrow="Dashboard"
+      headerContent={<DashboardHeaderActions />}
       stats={[
         { label: "Total checks", value: String(overview.totals.checks) },
         { label: "Watchlist", value: String(overview.totals.watchlist) },

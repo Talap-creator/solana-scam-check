@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ApiError,
   bulkUpdateAdminUserLimits,
@@ -24,6 +24,7 @@ import {
   type TokenOverrideVerdict,
 } from "@/lib/api";
 import { SearchCheckForm } from "@/components/search-check-form";
+import { formatPlanLabel } from "@/lib/plans";
 
 type AdminState = {
   dashboard: AdminDashboardData | null;
@@ -55,6 +56,17 @@ const primaryButtonClass =
   "rounded-full bg-[linear-gradient(135deg,#60a5fa,#93c5fd)] px-4 py-2 text-sm font-bold text-slate-950 shadow-[0_12px_32px_rgba(96,165,250,0.25)] transition hover:brightness-105 disabled:opacity-60";
 const tableClass = "w-full min-w-[980px] text-left text-sm";
 const rowClass = "border-t border-[color:rgba(148,163,184,0.12)]";
+const emptyTableCellClass = "px-3 py-4 text-[var(--muted)]";
+
+function planBadgeClass(plan: string): string {
+  if (plan === "pro") {
+    return "border-[rgba(59,130,246,0.28)] bg-[rgba(59,130,246,0.12)] text-[#93c5fd]";
+  }
+  if (plan === "enterprise") {
+    return "border-[rgba(45,212,191,0.28)] bg-[rgba(45,212,191,0.12)] text-[#99f6e4]";
+  }
+  return "border-[rgba(148,163,184,0.22)] bg-[rgba(148,163,184,0.08)] text-slate-300";
+}
 
 export default function AdminPage() {
   const [authMode, setAuthMode] = useState<AuthMode>("checking");
@@ -100,7 +112,7 @@ export default function AdminPage() {
         }
 
         setAuthMode("ok");
-        const [dashboard, users, scans, tokens, overrides, queue] = await Promise.all([
+        const [dashboard, users, scans, tokens, overrides, queue] = await Promise.allSettled([
           getAdminDashboard(),
           getAdminUsers(),
           getAdminScans(),
@@ -113,10 +125,26 @@ export default function AdminPage() {
           return;
         }
 
-        setState({ dashboard, users, scans, tokens, overrides, queue });
+        const failedSections: string[] = [];
+        const nextState: AdminState = {
+          dashboard:
+            dashboard.status === "fulfilled"
+              ? dashboard.value
+              : (failedSections.push("dashboard"), null),
+          users: users.status === "fulfilled" ? users.value : (failedSections.push("users"), []),
+          scans: scans.status === "fulfilled" ? scans.value : (failedSections.push("scans"), []),
+          tokens: tokens.status === "fulfilled" ? tokens.value : (failedSections.push("tokens"), []),
+          overrides:
+            overrides.status === "fulfilled"
+              ? overrides.value
+              : (failedSections.push("overrides"), []),
+          queue: queue.status === "fulfilled" ? queue.value : (failedSections.push("review queue"), []),
+        };
+
+        setState(nextState);
         setUserDrafts(
           Object.fromEntries(
-            users.map((user) => [
+            nextState.users.map((user) => [
               user.id,
               {
                 plan: user.plan as "free" | "pro" | "enterprise",
@@ -127,6 +155,11 @@ export default function AdminPage() {
           ),
         );
         setSelectedUsers({});
+        setError(
+          failedSections.length > 0
+            ? `Some admin sections failed to load: ${failedSections.join(", ")}.`
+            : null,
+        );
       } catch (loadError) {
         if (cancelled) {
           return;
@@ -233,6 +266,21 @@ export default function AdminPage() {
 
   const selectedFilteredIds = filteredUsers.filter((user) => selectedUsers[user.id]).map((user) => user.id);
   const allFilteredSelected = filteredUsers.length > 0 && selectedFilteredIds.length === filteredUsers.length;
+  const planDistribution = useMemo(() => {
+    return state.users.reduce(
+      (acc, user) => {
+        if (user.plan === "pro") {
+          acc.pro += 1;
+        } else if (user.plan === "enterprise") {
+          acc.enterprise += 1;
+        } else {
+          acc.free += 1;
+        }
+        return acc;
+      },
+      { enterprise: 0, free: 0, pro: 0 },
+    );
+  }, [state.users]);
 
   const toggleSelectAllFiltered = () => {
     setSelectedUsers((prev) => {
@@ -438,7 +486,26 @@ export default function AdminPage() {
               <strong className="mt-3 block text-3xl">{state.dashboard.popular_tokens.length}</strong>
             </article>
           </section>
-        ) : null}
+        ) : (
+          <section className={`${softPanelClass} p-4 text-sm text-[var(--muted)]`}>
+            Dashboard metrics are unavailable right now, but the admin tools below still work.
+          </section>
+        )}
+
+        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Freemium accounts", String(planDistribution.free), "Free-tier monitoring"],
+            ["Premium accounts", String(planDistribution.pro), "Paid daily workflows"],
+            ["Enterprise accounts", String(planDistribution.enterprise), "Manual onboarding"],
+            ["Control surface", `${state.scans.length}/${state.tokens.length}/${state.overrides.length}`, "Scans / Tokens / Overrides"],
+          ].map(([label, value, detail]) => (
+            <article key={label} className={`${softPanelClass} p-4`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
+              <strong className="mt-3 block text-3xl">{value}</strong>
+              <p className="mt-2 text-sm text-[var(--muted)]">{detail}</p>
+            </article>
+          ))}
+        </section>
 
         <section className="mt-6 grid gap-6">
           <article className={`${panelClass} p-5`}>
@@ -447,7 +514,9 @@ export default function AdminPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">Accounts</p>
                 <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">Users and limits</h2>
               </div>
-              <p className="text-sm text-[var(--muted)]">Filter users, update plans, and apply daily scan overrides.</p>
+              <p className="text-sm text-[var(--muted)]">
+                {filteredUsers.length} user{filteredUsers.length === 1 ? "" : "s"} in current view.
+              </p>
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-[1.2fr_0.8fr_auto]">
               <input
@@ -464,8 +533,8 @@ export default function AdminPage() {
                 value={userFilterPlan}
               >
                 <option value="all">all plans</option>
-                <option value="free">free</option>
-                <option value="pro">pro</option>
+                <option value="free">freemium</option>
+                <option value="pro">premium</option>
                 <option value="enterprise">enterprise</option>
               </select>
               <button
@@ -483,8 +552,8 @@ export default function AdminPage() {
                 onChange={(event) => setBulkPlan(event.target.value as "free" | "pro" | "enterprise")}
                 value={bulkPlan}
               >
-                <option value="free">bulk plan: free</option>
-                <option value="pro">bulk plan: pro</option>
+                <option value="free">bulk plan: freemium</option>
+                <option value="pro">bulk plan: premium</option>
                 <option value="enterprise">bulk plan: enterprise</option>
               </select>
               <input
@@ -506,6 +575,22 @@ export default function AdminPage() {
                 {bulkPending ? "Applying..." : "Apply bulk limits"}
               </button>
             </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {[
+                ["Freemium", String(planDistribution.free), "5 requests/day"],
+                ["Premium", String(planDistribution.pro), "200 requests/day"],
+                ["Enterprise", String(planDistribution.enterprise), "Custom request caps"],
+              ].map(([label, value, detail]) => (
+                <div
+                  key={label}
+                  className="rounded-[20px] border border-[color:rgba(148,163,184,0.14)] bg-[rgba(148,163,184,0.06)] px-4 py-4"
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{label}</p>
+                  <strong className="mt-2 block text-2xl text-[var(--foreground)]">{value}</strong>
+                  <p className="mt-1 text-sm text-[var(--muted)]">{detail}</p>
+                </div>
+              ))}
+            </div>
             <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
               <table className="w-full min-w-[1080px] text-left text-sm">
                 <thead>
@@ -521,75 +606,90 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((item) => {
-                    const draft = userDrafts[item.id];
-                    return (
-                      <tr key={item.id} className={rowClass}>
-                        <td className="px-3 py-3">
-                          <input
-                            checked={Boolean(selectedUsers[item.id])}
-                            onChange={(event) =>
-                              setSelectedUsers((prev) => ({
-                                ...prev,
-                                [item.id]: event.target.checked,
-                              }))
-                            }
-                            type="checkbox"
-                          />
+                  {filteredUsers.length === 0 ? (
+                    <tr className={rowClass}>
+                      <td className={emptyTableCellClass} colSpan={8}>
+                        No users match the current filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((item) => {
+                      const draft = userDrafts[item.id];
+                      return (
+                        <tr key={item.id} className={rowClass}>
+                          <td className="px-3 py-3">
+                            <input
+                              checked={Boolean(selectedUsers[item.id])}
+                              onChange={(event) =>
+                                setSelectedUsers((prev) => ({
+                                  ...prev,
+                                  [item.id]: event.target.checked,
+                                }))
+                              }
+                              type="checkbox"
+                            />
                         </td>
                         <td className="px-3 py-3">{item.email}</td>
                         <td className="px-3 py-3">
-                          <select
-                            className="rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[rgba(148,163,184,0.08)] px-2 py-1"
-                            onChange={(event) =>
-                              setUserDrafts((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                  ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
-                                  plan: event.target.value as "free" | "pro" | "enterprise",
-                                },
-                              }))
-                            }
-                            value={draft?.plan ?? item.plan}
-                          >
-                            <option value="free">free</option>
-                            <option value="pro">pro</option>
-                            <option value="enterprise">enterprise</option>
-                          </select>
+                          <div className="flex flex-col gap-2">
+                            <span
+                              className={`inline-flex w-fit rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${planBadgeClass(draft?.plan ?? item.plan)}`}
+                            >
+                              {formatPlanLabel(draft?.plan ?? item.plan)}
+                            </span>
+                            <select
+                              className="rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[rgba(148,163,184,0.08)] px-2 py-1"
+                              onChange={(event) =>
+                                setUserDrafts((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
+                                    plan: event.target.value as "free" | "pro" | "enterprise",
+                                  },
+                                }))
+                              }
+                              value={draft?.plan ?? item.plan}
+                            >
+                              <option value="free">{formatPlanLabel("free")}</option>
+                              <option value="pro">{formatPlanLabel("pro")}</option>
+                              <option value="enterprise">{formatPlanLabel("enterprise")}</option>
+                            </select>
+                          </div>
                         </td>
-                        <td className="px-3 py-3">
-                          <input
-                            className="w-28 rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[rgba(148,163,184,0.08)] px-2 py-1"
-                            onChange={(event) =>
-                              setUserDrafts((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                  ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
-                                  customDailyScanLimit: event.target.value,
-                                },
-                              }))
-                            }
-                            placeholder="default"
-                            type="number"
-                            value={draft?.customDailyScanLimit ?? ""}
-                          />
-                        </td>
-                        <td className="px-3 py-3">{item.effective_daily_limit}</td>
-                        <td className="px-3 py-3">{item.scans}</td>
-                        <td className="px-3 py-3">{new Date(item.created_at).toLocaleString()}</td>
-                        <td className="px-3 py-3">
-                          <button
-                            className={secondaryButtonClass}
-                            disabled={userLimitPendingId === item.id}
-                            onClick={() => void onSaveUserLimit(item)}
-                            type="button"
-                          >
-                            {userLimitPendingId === item.id ? "Saving..." : "Save"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          <td className="px-3 py-3">
+                            <input
+                              className="w-28 rounded-xl border border-[color:rgba(148,163,184,0.16)] bg-[rgba(148,163,184,0.08)] px-2 py-1"
+                              onChange={(event) =>
+                                setUserDrafts((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
+                                    customDailyScanLimit: event.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="default"
+                              type="number"
+                              value={draft?.customDailyScanLimit ?? ""}
+                            />
+                          </td>
+                          <td className="px-3 py-3">{item.effective_daily_limit}</td>
+                          <td className="px-3 py-3">{item.scans}</td>
+                          <td className="px-3 py-3">{new Date(item.created_at).toLocaleString()}</td>
+                          <td className="px-3 py-3">
+                            <button
+                              className={secondaryButtonClass}
+                              disabled={userLimitPendingId === item.id}
+                              onClick={() => void onSaveUserLimit(item)}
+                              type="button"
+                            >
+                              {userLimitPendingId === item.id ? "Saving..." : "Save"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -599,9 +699,11 @@ export default function AdminPage() {
             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">Telemetry</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">Scans</h2>
+                <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">What users tested</h2>
               </div>
-              <p className="text-sm text-[var(--muted)]">Recent scan events and confidence snapshots.</p>
+              <p className="text-sm text-[var(--muted)]">
+                {state.scans.length} recent scan event{state.scans.length === 1 ? "" : "s"}.
+              </p>
             </div>
             <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
               <table className={tableClass}>
@@ -615,15 +717,23 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {state.scans.map((item) => (
-                    <tr key={item.id} className={rowClass}>
-                      <td className="px-3 py-3">{item.user_email}</td>
-                      <td className="px-3 py-3">{item.token_address}</td>
-                      <td className="px-3 py-3">{item.risk_score}</td>
-                      <td className="px-3 py-3">{item.confidence.toFixed(2)}</td>
-                      <td className="px-3 py-3">{new Date(item.scan_time).toLocaleString()}</td>
+                  {state.scans.length === 0 ? (
+                    <tr className={rowClass}>
+                      <td className={emptyTableCellClass} colSpan={5}>
+                        No user scan activity is available yet.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    state.scans.map((item) => (
+                      <tr key={item.id} className={rowClass}>
+                        <td className="px-3 py-3">{item.user_email}</td>
+                        <td className="px-3 py-3">{item.token_address}</td>
+                        <td className="px-3 py-3">{item.risk_score}</td>
+                        <td className="px-3 py-3">{item.confidence.toFixed(2)}</td>
+                        <td className="px-3 py-3">{new Date(item.scan_time).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -648,14 +758,22 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {state.tokens.map((item) => (
-                    <tr key={item.token_address} className={rowClass}>
-                      <td className="px-3 py-3">{item.token_address}</td>
-                      <td className="px-3 py-3">{item.scan_count}</td>
-                      <td className="px-3 py-3">{item.average_risk_score}</td>
-                      <td className="px-3 py-3">{new Date(item.last_scanned).toLocaleString()}</td>
+                  {state.tokens.length === 0 ? (
+                    <tr className={rowClass}>
+                      <td className={emptyTableCellClass} colSpan={4}>
+                        No token activity has been recorded yet.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    state.tokens.map((item) => (
+                      <tr key={item.token_address} className={rowClass}>
+                        <td className="px-3 py-3">{item.token_address}</td>
+                        <td className="px-3 py-3">{item.scan_count}</td>
+                        <td className="px-3 py-3">{item.average_risk_score}</td>
+                        <td className="px-3 py-3">{new Date(item.last_scanned).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -711,24 +829,32 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {state.overrides.map((item) => (
-                    <tr key={item.token_address} className={rowClass}>
-                      <td className="px-3 py-3">{item.token_address}</td>
-                      <td className="px-3 py-3">{item.verdict}</td>
-                      <td className="px-3 py-3">{item.reason ?? "-"}</td>
-                      <td className="px-3 py-3">{new Date(item.updated_at).toLocaleString()}</td>
-                      <td className="px-3 py-3">
-                        <button
-                          className={secondaryButtonClass}
-                          disabled={overridePending}
-                          onClick={() => void onDeleteOverride(item.token_address)}
-                          type="button"
-                        >
-                          Delete
-                        </button>
+                  {state.overrides.length === 0 ? (
+                    <tr className={rowClass}>
+                      <td className={emptyTableCellClass} colSpan={5}>
+                        No moderator overrides have been created yet.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    state.overrides.map((item) => (
+                      <tr key={item.token_address} className={rowClass}>
+                        <td className="px-3 py-3">{item.token_address}</td>
+                        <td className="px-3 py-3">{item.verdict}</td>
+                        <td className="px-3 py-3">{item.reason ?? "-"}</td>
+                        <td className="px-3 py-3">{new Date(item.updated_at).toLocaleString()}</td>
+                        <td className="px-3 py-3">
+                          <button
+                            className={secondaryButtonClass}
+                            disabled={overridePending}
+                            onClick={() => void onDeleteOverride(item.token_address)}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

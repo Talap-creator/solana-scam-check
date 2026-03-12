@@ -6,6 +6,7 @@ Frontend:
 - `cd frontend`
 - `npm run build`
 - `npm run start`
+  This resolves to `node .next/standalone/server.js` because the frontend uses `output: standalone`.
 
 Backend:
 - `cd backend`

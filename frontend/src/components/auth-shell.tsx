@@ -120,6 +120,7 @@ export function AuthShell({
   variant,
 }: AuthShellProps) {
   const isRegister = variant === "register";
+  const hasNav = navLinks.length > 0 || Boolean(primaryAction);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020617] text-slate-100">
@@ -136,21 +137,23 @@ export function AuthShell({
               <span className="text-xl font-bold tracking-[-0.03em]">SolanaTrust</span>
             </Link>
 
-            <nav className="flex items-center gap-6 text-sm text-slate-400">
-              {navLinks.map((item) => (
-                <Link key={item.href} className="transition-colors hover:text-slate-200" href={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-              {primaryAction ? (
-                <Link
-                  className="rounded-lg border border-[#2563eb] px-4 py-2 font-semibold text-[#2563eb] transition-colors hover:bg-[rgba(37,99,235,0.08)]"
-                  href={primaryAction.href}
-                >
-                  {primaryAction.label}
-                </Link>
-              ) : null}
-            </nav>
+            {hasNav ? (
+              <nav className="flex items-center gap-6 text-sm text-slate-400">
+                {navLinks.map((item) => (
+                  <Link key={item.href} className="transition-colors hover:text-slate-200" href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+                {primaryAction ? (
+                  <Link
+                    className="rounded-lg border border-[#2563eb] px-4 py-2 font-semibold text-[#2563eb] transition-colors hover:bg-[rgba(37,99,235,0.08)]"
+                    href={primaryAction.href}
+                  >
+                    {primaryAction.label}
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
           </div>
         </header>
 

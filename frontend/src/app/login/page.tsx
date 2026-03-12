@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 import { AuthShell, FieldIcon, VisibilityIcon } from "@/components/auth-shell";
 import { setAccessToken } from "@/lib/auth";
 import { ApiError, getMe, loginUser } from "@/lib/api";
+import { APP_TELEGRAM_URL } from "@/lib/plans";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,8 +39,7 @@ export default function LoginPage() {
       footerMode="login"
       heading="Welcome Back"
       navLinks={[
-        { href: "/docs", label: "Documentation" },
-        { href: "mailto:support@rugsignal.io", label: "Support" },
+        { href: APP_TELEGRAM_URL, label: "Support" },
       ]}
       subheading="Log in to access your risk intelligence dashboard."
       variant="login"

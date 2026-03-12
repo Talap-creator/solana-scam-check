@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AnimatedScanPreview } from "@/components/animated-scan-preview";
 import { AppIcon } from "@/components/app-icon";
+import { LandingHeaderAction } from "@/components/landing-header-action";
 import { SearchCheckForm } from "@/components/search-check-form";
 import { getChecks } from "@/lib/api";
+import { APP_TELEGRAM_URL, getPlanMeta } from "@/lib/plans";
 
 const engineCards = [
   {
@@ -43,6 +45,75 @@ const developerBullets = [
   "WebSocket streams for new launches",
   "Historical security data archive",
   "Batch risk assessment endpoints",
+] as const;
+
+const teamMembers = [
+  {
+    name: "Kenzhebayev Talap",
+    role: "CEO",
+    icon: "groups" as const,
+    accent: "from-[#2563eb]/25 to-[#38bdf8]/10",
+    focus: ["Product execution", "Partnerships", "Market growth"],
+    bullets: [
+      "Ex Product Manager",
+      "BNB Chain Ambassador",
+      "Google Students Club Ambassador",
+    ],
+  },
+  {
+    name: "Berikuly Sabyr",
+    role: "CTO",
+    icon: "code" as const,
+    accent: "from-[#0f766e]/25 to-[#22d3ee]/10",
+    focus: ["Python systems", "Rust services", "Web3 infrastructure"],
+    bullets: [
+      "3+ years of engineering experience",
+      "Python, Rust, and Web3",
+      "Production-focused backend and protocol delivery",
+    ],
+  },
+] as const;
+
+const pricingPlans = [
+  {
+    key: "free",
+    features: [
+      "5 token requests per day",
+      "Early launch report preview",
+      "Watchlist and basic dashboard access",
+    ],
+    ctaLabel: "Start free",
+    ctaHref: "/register",
+    featured: false,
+  },
+  {
+    key: "pro",
+    features: [
+      "200 token requests per day",
+      "Full token report unlock",
+      "Priority Telegram support",
+    ],
+    ctaLabel: "Upgrade to Premium",
+    ctaHref: APP_TELEGRAM_URL,
+    featured: true,
+  },
+  {
+    key: "enterprise",
+    features: [
+      "Unlimited team workflows",
+      "Custom datasets and alerts",
+      "Dedicated integration support",
+    ],
+    ctaLabel: "Write us",
+    ctaHref: APP_TELEGRAM_URL,
+    featured: false,
+  },
+] as const;
+
+const pricingHighlights = [
+  ["Live launch context", "Early launch radar, warnings, and staged confidence on every report."],
+  ["Account-linked workflow", "Watchlist, usage limits, and dashboard state tied to your account."],
+  ["Operator support", "Upgrade and enterprise onboarding go directly through Telegram."],
 ] as const;
 
 function BrandMark() {
@@ -90,15 +161,16 @@ export default async function Home() {
                   <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#developers">
                     Developers
                   </a>
+                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#team">
+                    Team
+                  </a>
                   <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#pricing">
                     Pricing
                   </a>
                 </nav>
               </div>
               <div className="flex items-center gap-4">
-                <Link className="rounded-lg bg-[#3b82f6] px-4 py-2 text-sm font-bold text-white transition-all hover:brightness-110" href="/login">
-                  Log In
-                </Link>
+                <LandingHeaderAction />
               </div>
             </div>
           </div>
@@ -242,6 +314,144 @@ export default async function Home() {
             </div>
           </section>
 
+          <section className="py-20" id="team">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-14 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
+                  Core Team
+                </span>
+                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">Team</h2>
+                <p className="mx-auto max-w-2xl text-slate-400">
+                  Built by operators focused on product delivery, infrastructure, and Web3 execution.
+                </p>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-2">
+                {teamMembers.map((member) => (
+                  <article
+                    key={member.name}
+                    className={`overflow-hidden rounded-[28px] border border-[#3b82f6]/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.96))] p-8 shadow-[0_24px_60px_rgba(2,6,23,0.18)]`}
+                  >
+                    <div className={`-mx-8 -mt-8 mb-8 bg-gradient-to-r ${member.accent} px-8 py-6`}>
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#020617]/60 ring-1 ring-white/10">
+                          <AppIcon className="h-7 w-7 text-[#60a5fa]" name={member.icon} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#93c5fd]">{member.role}</p>
+                          <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-100">{member.name}</h3>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+                      <ul className="space-y-3">
+                        {member.bullets.map((bullet) => (
+                          <li key={bullet} className="flex items-start gap-3 text-sm leading-6 text-slate-300">
+                            <AppIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#3b82f6]" name="check" />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Focus</p>
+                        <div className="mt-4 space-y-3">
+                          {member.focus.map((item) => (
+                            <div
+                              key={item}
+                              className="rounded-xl border border-[#3b82f6]/12 bg-[rgba(59,130,246,0.06)] px-3 py-2 text-sm text-slate-200"
+                            >
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-[#3b82f6]/5 py-20" id="pricing">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-14 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
+                  Access Tiers
+                </span>
+                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">Pricing</h2>
+                <p className="mx-auto max-w-2xl text-slate-400">
+                  Simple access tiers for individual users, active traders, and enterprise teams.
+                </p>
+              </div>
+              <div className="mb-10 grid gap-4 lg:grid-cols-3">
+                {pricingHighlights.map(([title, copy]) => (
+                  <article
+                    key={title}
+                    className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] px-5 py-5 shadow-[0_20px_60px_rgba(2,6,23,0.12)]"
+                  >
+                    <p className="text-sm font-bold text-slate-100">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{copy}</p>
+                  </article>
+                ))}
+              </div>
+              <div className="grid gap-6 lg:grid-cols-3">
+                {pricingPlans.map((plan) => {
+                  const meta = getPlanMeta(plan.key);
+
+                  return (
+                  <article
+                    key={plan.key}
+                    className={`rounded-2xl border p-8 ${
+                      plan.featured
+                        ? "border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.22),rgba(15,23,42,0.98))] shadow-[0_24px_70px_rgba(59,130,246,0.16)]"
+                        : "border-[#3b82f6]/10 bg-[#020617]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#60a5fa]">{meta.label}</p>
+                        <div className="mt-4 flex items-end gap-1">
+                          <span className="text-4xl font-black tracking-tight text-slate-100">{meta.price}</span>
+                          {meta.cadence ? <span className="pb-1 text-sm text-slate-400">{meta.cadence}</span> : null}
+                        </div>
+                      </div>
+                      {plan.featured ? (
+                        <span className="rounded-full border border-[#60a5fa]/30 bg-[#3b82f6]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
+                          Most popular
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-5 text-sm leading-7 text-slate-400">{meta.summary}</p>
+                    <div className="mt-6 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Usage</p>
+                      <p className="mt-2 text-lg font-semibold text-slate-100">{meta.dailyLimitLabel}</p>
+                    </div>
+                    <ul className="mt-6 space-y-3">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3 text-sm text-slate-300">
+                          <AppIcon className="mt-0.5 h-5 w-5 shrink-0 text-[#3b82f6]" name="check" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      className={`mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition ${
+                        plan.featured
+                          ? "bg-[#3b82f6] text-white hover:brightness-110"
+                          : "border border-[#3b82f6]/20 bg-[#3b82f6]/10 text-[#93c5fd] hover:bg-[#3b82f6]/20"
+                      }`}
+                      href={plan.ctaHref}
+                      rel={plan.ctaHref.startsWith("http") ? "noreferrer" : undefined}
+                      target={plan.ctaHref.startsWith("http") ? "_blank" : undefined}
+                    >
+                      {plan.ctaLabel}
+                    </a>
+                  </article>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
           <section className="py-24" id="developers">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid items-center gap-16 lg:grid-cols-2">
@@ -317,7 +527,8 @@ async function checkRisk(mintAddress) {
                   <li>Risk Engine</li>
                   <li>API Reference</li>
                   <li>Live Feed</li>
-                  <li id="pricing">Pricing</li>
+                  <li>Pricing</li>
+                  <li>Team</li>
                 </ul>
               </div>
               <div>
