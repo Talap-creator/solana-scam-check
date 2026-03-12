@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+import json
 import sys
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -178,6 +180,7 @@ class ReportRepository:
             with SessionLocal() as db:
                 for report in token_reports:
                     item = _build_launch_feed_item(report, symbol_counts, name_counts, now)
+                    snapshot_signature = _build_launch_feed_snapshot_signature(item)
                     existing = db.get(models.LaunchFeedToken, item.mint)
                     if existing is None:
                         db.add(
@@ -205,6 +208,12 @@ class ReportRepository:
                                 last_seen_at=now,
                             )
                         )
+                        _append_launch_feed_snapshot(
+                            db,
+                            item=item,
+                            snapshot_signature=snapshot_signature,
+                            observed_at=now,
+                        )
                         continue
 
                     existing.last_seen_at = now
@@ -229,6 +238,12 @@ class ReportRepository:
                     existing.top_reducer = item.top_reducer
                     existing.deployer_short_address = item.deployer_short_address
                     existing.report_created_at = item.updated_at
+                    _append_launch_feed_snapshot(
+                        db,
+                        item=item,
+                        snapshot_signature=snapshot_signature,
+                        observed_at=now,
+                    )
                 db.commit()
         except SQLAlchemyError:
             return
@@ -571,6 +586,73 @@ def _build_launch_feed_item_from_record(record: models.LaunchFeedToken, now: dat
         trade_caution_drivers=list(record.trade_caution_drivers or []),
         top_reducer=record.top_reducer,
         deployer_short_address=record.deployer_short_address,
+    )
+
+
+def _build_launch_feed_snapshot_signature(item: LaunchFeedItem) -> str:
+    payload = {
+        "copycat_status": item.copycat_status,
+        "deployer_short_address": item.deployer_short_address,
+        "initial_live_estimate": item.initial_live_estimate,
+        "launch_quality": item.launch_quality,
+        "liquidity_usd": round(float(item.liquidity_usd), 4),
+        "market_cap_usd": round(float(item.market_cap_usd), 4),
+        "mint": item.mint,
+        "name": item.name,
+        "report_created_at": _coerce_utc_datetime(item.updated_at).isoformat(),
+        "report_id": item.report_id,
+        "rug_probability": round(float(item.rug_probability), 4),
+        "rug_risk_drivers": list(item.rug_risk_drivers),
+        "rug_risk_level": item.rug_risk_level,
+        "summary": item.summary,
+        "symbol": item.symbol,
+        "top_reducer": item.top_reducer,
+        "trade_caution_drivers": list(item.trade_caution_drivers),
+        "trade_caution_level": item.trade_caution_level,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _append_launch_feed_snapshot(
+    db,
+    *,
+    item: LaunchFeedItem,
+    snapshot_signature: str,
+    observed_at: datetime,
+) -> None:
+    latest_snapshot = (
+        db.query(models.LaunchFeedSnapshot)
+        .filter(models.LaunchFeedSnapshot.mint == item.mint)
+        .order_by(models.LaunchFeedSnapshot.observed_at.desc())
+        .first()
+    )
+    if latest_snapshot is not None and latest_snapshot.snapshot_signature == snapshot_signature:
+        return
+
+    db.add(
+        models.LaunchFeedSnapshot(
+            mint=item.mint,
+            report_id=item.report_id,
+            name=item.name,
+            symbol=item.symbol,
+            logo_url=item.logo_url,
+            liquidity_usd=item.liquidity_usd,
+            market_cap_usd=item.market_cap_usd,
+            rug_probability=item.rug_probability,
+            rug_risk_level=item.rug_risk_level,
+            trade_caution_level=item.trade_caution_level,
+            launch_quality=item.launch_quality,
+            copycat_status=item.copycat_status,
+            initial_live_estimate=item.initial_live_estimate,
+            summary=item.summary,
+            rug_risk_drivers=item.rug_risk_drivers,
+            trade_caution_drivers=item.trade_caution_drivers,
+            top_reducer=item.top_reducer,
+            deployer_short_address=item.deployer_short_address,
+            report_created_at=item.updated_at,
+            snapshot_signature=snapshot_signature,
+            observed_at=observed_at,
+        )
     )
 
 

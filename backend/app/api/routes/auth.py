@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from ...dependencies import settings
@@ -18,12 +18,14 @@ from ...schemas import (
     UserUsageResponse,
 )
 from ...services.auth import create_access_token, get_current_user, get_user_by_email, hash_password, verify_password
+from ...services.password_policy import validate_password_strength
 from ...services.plan_limits import (
     daily_scan_limit_for_user,
     next_utc_day_reset,
     remaining_token_scans_today,
     token_scans_today,
 )
+from ...services.rate_limits import enforce_rate_limit
 
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -37,11 +39,24 @@ def resolve_user_role(email: str) -> str:
 
 
 @router.post("/register", response_model=AuthTokenResponse, status_code=status.HTTP_201_CREATED)
-async def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> AuthTokenResponse:
+async def register(
+    payload: RegisterRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> AuthTokenResponse:
+    enforce_rate_limit(
+        request,
+        scope="register",
+        limit=settings.auth_register_rate_limit,
+        window_seconds=settings.auth_register_window_seconds,
+    )
     normalized_email = payload.email.lower()
     existing = get_user_by_email(db, normalized_email)
     if existing is not None:
         raise HTTPException(status_code=409, detail="Email already registered")
+    password_issue = validate_password_strength(payload.password, normalized_email)
+    if password_issue is not None:
+        raise HTTPException(status_code=400, detail=password_issue)
 
     user = User(
         email=normalized_email,
@@ -58,7 +73,17 @@ async def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> A
 
 
 @router.post("/login", response_model=AuthTokenResponse)
-async def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthTokenResponse:
+async def login(
+    payload: LoginRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> AuthTokenResponse:
+    enforce_rate_limit(
+        request,
+        scope="login",
+        limit=settings.auth_login_rate_limit,
+        window_seconds=settings.auth_login_window_seconds,
+    )
     user = get_user_by_email(db, payload.email.lower())
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")

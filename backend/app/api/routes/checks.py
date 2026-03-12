@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from ...dependencies import get_repository, settings
@@ -10,6 +10,7 @@ from ...schemas import AddressRequest, ChecksResponse, EntityType, ProjectReques
 from ...services.auth import get_optional_current_user
 from ...services.analyzer import is_valid_solana_address, normalize_entity_id
 from ...services.plan_limits import daily_scan_limit_for_user, token_scans_today
+from ...services.rate_limits import enforce_rate_limit
 from ...services.scan_tracking import track_token_scan
 from ...services.solana_rpc import SolanaRpcError
 from ...services.overrides import apply_override
@@ -83,9 +84,16 @@ async def get_check(check_id: str):
 @router.post("/check/token", response_model=SubmissionResponse)
 async def check_token(
     payload: AddressRequest,
+    request: Request,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_current_user),
 ) -> SubmissionResponse:
+    enforce_rate_limit(
+        request,
+        scope="token_check",
+        limit=settings.token_check_rate_limit,
+        window_seconds=settings.token_check_window_seconds,
+    )
     if not is_valid_solana_address(payload.address):
         raise HTTPException(
             status_code=400,
@@ -97,18 +105,32 @@ async def check_token(
 @router.post("/check/wallet", response_model=SubmissionResponse)
 async def check_wallet(
     payload: AddressRequest,
+    request: Request,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_current_user),
 ) -> SubmissionResponse:
+    enforce_rate_limit(
+        request,
+        scope="token_check",
+        limit=settings.token_check_rate_limit,
+        window_seconds=settings.token_check_window_seconds,
+    )
     return build_submission("wallet", payload.address, db, user)
 
 
 @router.post("/check/project", response_model=SubmissionResponse)
 async def check_project(
     payload: ProjectRequest,
+    request: Request,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_current_user),
 ) -> SubmissionResponse:
+    enforce_rate_limit(
+        request,
+        scope="token_check",
+        limit=settings.token_check_rate_limit,
+        window_seconds=settings.token_check_window_seconds,
+    )
     return build_submission("project", payload.query, db, user)
 
 
@@ -116,9 +138,16 @@ async def check_project(
 async def recheck(
     entity_type: EntityType,
     entity_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     user: User | None = Depends(get_optional_current_user),
 ) -> SubmissionResponse:
+    enforce_rate_limit(
+        request,
+        scope="token_check",
+        limit=settings.token_check_rate_limit,
+        window_seconds=settings.token_check_window_seconds,
+    )
     normalized_entity_id = normalize_entity_id(entity_type, entity_id)
     repository = get_repository()
     if not repository.has_entity(entity_type, normalized_entity_id):

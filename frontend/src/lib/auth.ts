@@ -37,19 +37,7 @@ export function getAccessToken(): string | null {
   if (typeof window === "undefined") {
     return null;
   }
-
-  const localStorageToken = window.localStorage.getItem(ACCESS_TOKEN_KEY);
-  if (localStorageToken) {
-    return localStorageToken;
-  }
-
-  const cookieToken = readAccessTokenCookie();
-  if (cookieToken) {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, cookieToken);
-    return cookieToken;
-  }
-
-  return null;
+  return readAccessTokenCookie();
 }
 
 export function setAccessToken(token: string): void {
@@ -57,7 +45,6 @@ export function setAccessToken(token: string): void {
     return;
   }
 
-  window.localStorage.setItem(ACCESS_TOKEN_KEY, token);
   writeAccessTokenCookie(token);
 }
 

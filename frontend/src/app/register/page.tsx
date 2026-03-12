@@ -90,7 +90,7 @@ export default function RegisterPage() {
             </span>
             <input
               className="h-14 w-full rounded-xl border border-[rgba(37,99,235,0.2)] bg-[rgba(15,23,42,0.5)] pl-[45px] pr-12 text-base text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-[rgba(37,99,235,0.45)]"
-              minLength={8}
+              minLength={12}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
               required
@@ -116,7 +116,7 @@ export default function RegisterPage() {
             </span>
             <input
               className="h-14 w-full rounded-xl border border-[rgba(37,99,235,0.2)] bg-[rgba(15,23,42,0.5)] pl-[45px] pr-12 text-base text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-[rgba(37,99,235,0.45)]"
-              minLength={8}
+              minLength={12}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Repeat your password"
               required

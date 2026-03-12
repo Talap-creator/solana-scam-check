@@ -135,3 +135,30 @@ class LaunchFeedToken(Base):
     report_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class LaunchFeedSnapshot(Base):
+    __tablename__ = "launch_feed_snapshots"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    mint: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    report_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    symbol: Mapped[str] = mapped_column(String(64), nullable=False)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    liquidity_usd: Mapped[float] = mapped_column(Numeric(18, 4), nullable=False, default=0)
+    market_cap_usd: Mapped[float] = mapped_column(Numeric(18, 4), nullable=False, default=0)
+    rug_probability: Mapped[float] = mapped_column(Numeric(7, 4), nullable=False, default=0)
+    rug_risk_level: Mapped[str] = mapped_column(String(16), nullable=False)
+    trade_caution_level: Mapped[str] = mapped_column(String(16), nullable=False)
+    launch_quality: Mapped[str] = mapped_column(String(32), nullable=False, default="unknown")
+    copycat_status: Mapped[str] = mapped_column(String(16), nullable=False, default="none")
+    initial_live_estimate: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    summary: Mapped[str] = mapped_column(String(600), nullable=False)
+    rug_risk_drivers: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    trade_caution_drivers: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    top_reducer: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    deployer_short_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    report_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    snapshot_signature: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

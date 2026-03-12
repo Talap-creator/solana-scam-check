@@ -50,12 +50,24 @@ Common variables:
 - `JWT_ALGORITHM`
 - `JWT_EXPIRE_MINUTES`
 - `ADMIN_BOOTSTRAP_EMAIL`
+- `AUTH_LOGIN_RATE_LIMIT`
+- `AUTH_LOGIN_WINDOW_SECONDS`
+- `AUTH_REGISTER_RATE_LIMIT`
+- `AUTH_REGISTER_WINDOW_SECONDS`
+- `TOKEN_CHECK_RATE_LIMIT`
+- `TOKEN_CHECK_WINDOW_SECONDS`
 - `FREE_DAILY_SCAN_LIMIT`
 - `PRO_DAILY_SCAN_LIMIT`
 - `ENTERPRISE_DAILY_SCAN_LIMIT`
 - `FEED_LIVE_SOURCE_ENABLED`
 - `FEED_LIVE_PROFILES_LIMIT`
 - `FEED_LIVE_SYNC_TTL_SECONDS`
+
+Security notes:
+
+- Set a strong `JWT_SECRET_KEY`. The backend warns if the default placeholder is still being used.
+- Registration now enforces stronger passwords: at least 12 characters with upper/lowercase, number, and symbol.
+- Auth and scan endpoints apply lightweight in-memory rate limits. Tune them with the env variables above.
 
 Local example:
 

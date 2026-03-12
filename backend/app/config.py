@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import warnings
 
 
 PUBLIC_SOLANA_RPC_URLS = (
@@ -36,6 +37,12 @@ class Settings:
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24 * 7
     admin_bootstrap_email: str | None = None
+    auth_login_rate_limit: int = 10
+    auth_login_window_seconds: int = 60 * 5
+    auth_register_rate_limit: int = 5
+    auth_register_window_seconds: int = 60 * 15
+    token_check_rate_limit: int = 30
+    token_check_window_seconds: int = 60
     free_daily_scan_limit: int = 5
     pro_daily_scan_limit: int = 200
     enterprise_daily_scan_limit: int = 1000
@@ -129,7 +136,7 @@ def get_settings() -> Settings:
         if origin.strip()
     )
     origins = tuple(dict.fromkeys((*DEFAULT_CORS_ORIGINS, *configured_origins)))
-    return Settings(
+    settings = Settings(
         cors_allow_origins=origins or Settings.cors_allow_origins,
         solana_rpc_urls=build_solana_rpc_urls(),
         token_holders_max_pages=int(os.getenv("TOKEN_HOLDERS_MAX_PAGES", str(Settings.token_holders_max_pages))),
@@ -139,6 +146,20 @@ def get_settings() -> Settings:
         jwt_algorithm=os.getenv("JWT_ALGORITHM", Settings.jwt_algorithm),
         jwt_expire_minutes=int(os.getenv("JWT_EXPIRE_MINUTES", str(Settings.jwt_expire_minutes))),
         admin_bootstrap_email=os.getenv("ADMIN_BOOTSTRAP_EMAIL"),
+        auth_login_rate_limit=int(os.getenv("AUTH_LOGIN_RATE_LIMIT", str(Settings.auth_login_rate_limit))),
+        auth_login_window_seconds=int(
+            os.getenv("AUTH_LOGIN_WINDOW_SECONDS", str(Settings.auth_login_window_seconds))
+        ),
+        auth_register_rate_limit=int(
+            os.getenv("AUTH_REGISTER_RATE_LIMIT", str(Settings.auth_register_rate_limit))
+        ),
+        auth_register_window_seconds=int(
+            os.getenv("AUTH_REGISTER_WINDOW_SECONDS", str(Settings.auth_register_window_seconds))
+        ),
+        token_check_rate_limit=int(os.getenv("TOKEN_CHECK_RATE_LIMIT", str(Settings.token_check_rate_limit))),
+        token_check_window_seconds=int(
+            os.getenv("TOKEN_CHECK_WINDOW_SECONDS", str(Settings.token_check_window_seconds))
+        ),
         free_daily_scan_limit=int(os.getenv("FREE_DAILY_SCAN_LIMIT", str(Settings.free_daily_scan_limit))),
         pro_daily_scan_limit=int(os.getenv("PRO_DAILY_SCAN_LIMIT", str(Settings.pro_daily_scan_limit))),
         enterprise_daily_scan_limit=int(
@@ -242,3 +263,9 @@ def get_settings() -> Settings:
             os.getenv("BEHAVIOUR_BOOST_MULTIPLIER", str(Settings.behaviour_boost_multiplier))
         ),
     )
+    if settings.jwt_secret_key == Settings.jwt_secret_key:
+        warnings.warn(
+            "JWT_SECRET_KEY is using the default insecure value. Set a strong secret before production use.",
+            stacklevel=2,
+        )
+    return settings

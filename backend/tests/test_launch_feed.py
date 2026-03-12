@@ -6,7 +6,7 @@ from sqlalchemy.exc import OperationalError
 from app.db import SessionLocal, init_db
 from app.dependencies import get_repository
 from app.main import app
-from app.models import LaunchFeedToken
+from app.models import LaunchFeedSnapshot, LaunchFeedToken
 
 
 class LaunchFeedTests(unittest.TestCase):
@@ -90,11 +90,19 @@ class LaunchFeedTests(unittest.TestCase):
         payload = response.json()
         self.assertGreater(len(payload["items"]), 0)
         first_item = payload["items"][0]
+        second_response = client.get("/api/v1/feed/launches?limit=5")
+        self.assertEqual(second_response.status_code, 200)
 
         with SessionLocal() as db:
             persisted = db.get(LaunchFeedToken, first_item["mint"])
             self.assertIsNotNone(persisted)
             self.assertEqual(persisted.report_id, first_item["report_id"])
+            snapshots = (
+                db.query(LaunchFeedSnapshot)
+                .filter(LaunchFeedSnapshot.mint == first_item["mint"])
+                .all()
+            )
+            self.assertEqual(len(snapshots), 1)
 
         repository = get_repository()
         original_reports = dict(repository.reports)
