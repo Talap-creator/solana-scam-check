@@ -61,6 +61,15 @@ def split_env_list(value: str | None) -> tuple[str, ...]:
     return tuple(item.strip() for item in value.split(",") if item.strip())
 
 
+def normalize_database_url(value: str) -> str:
+    url = value.strip()
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 def load_env_file() -> None:
     if not ENV_FILE_PATH.exists():
         return
@@ -118,7 +127,7 @@ def get_settings() -> Settings:
         solana_rpc_urls=build_solana_rpc_urls(),
         token_holders_max_pages=int(os.getenv("TOKEN_HOLDERS_MAX_PAGES", str(Settings.token_holders_max_pages))),
         dexscreener_base_url=os.getenv("DEXSCREENER_BASE_URL", Settings.dexscreener_base_url),
-        database_url=os.getenv("DATABASE_URL", Settings.database_url),
+        database_url=normalize_database_url(os.getenv("DATABASE_URL", Settings.database_url)),
         jwt_secret_key=os.getenv("JWT_SECRET_KEY", Settings.jwt_secret_key),
         jwt_algorithm=os.getenv("JWT_ALGORITHM", Settings.jwt_algorithm),
         jwt_expire_minutes=int(os.getenv("JWT_EXPIRE_MINUTES", str(Settings.jwt_expire_minutes))),
