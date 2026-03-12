@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { AuthShell, FieldIcon, VisibilityIcon } from "@/components/auth-shell";
 import { setAccessToken } from "@/lib/auth";
-import { ApiError, registerUser } from "@/lib/api";
+import { ApiError, getMe, registerUser } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,7 +30,16 @@ export default function RegisterPage() {
     try {
       const data = await registerUser(email, password, "free");
       setAccessToken(data.access_token);
-      router.push("/dashboard");
+      const profile = await getMe();
+      const nextPath =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      const target =
+        nextPath && nextPath.startsWith("/")
+          ? nextPath
+          : profile.role === "admin"
+            ? "/admin"
+            : "/dashboard";
+      router.push(target);
       router.refresh();
     } catch (submitError) {
       setError(

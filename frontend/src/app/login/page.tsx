@@ -25,7 +25,15 @@ export default function LoginPage() {
       const data = await loginUser(email, password);
       setAccessToken(data.access_token);
       const profile = await getMe();
-      router.push(profile.role === "admin" ? "/admin" : "/dashboard");
+      const nextPath =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : null;
+      const target =
+        nextPath && nextPath.startsWith("/")
+          ? nextPath
+          : profile.role === "admin"
+            ? "/admin"
+            : "/dashboard";
+      router.push(target);
       router.refresh();
     } catch (submitError) {
       setError(submitError instanceof ApiError ? submitError.message : "Unable to login right now.");

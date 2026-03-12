@@ -29,6 +29,13 @@ from ...services.plan_limits import (
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
+def resolve_user_role(email: str) -> str:
+    bootstrap_email = (settings.admin_bootstrap_email or "").lower().strip()
+    if bootstrap_email and email == bootstrap_email:
+        return "admin"
+    return "user"
+
+
 @router.post("/register", response_model=AuthTokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> AuthTokenResponse:
     normalized_email = payload.email.lower()
@@ -40,7 +47,7 @@ async def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> A
         email=normalized_email,
         password_hash=hash_password(payload.password),
         plan=payload.plan,
-        role="user",
+        role=resolve_user_role(normalized_email),
     )
     db.add(user)
     db.commit()
@@ -55,6 +62,9 @@ async def login(payload: LoginRequest, db: Session = Depends(get_db)) -> AuthTok
     user = get_user_by_email(db, payload.email.lower())
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if resolve_user_role(user.email) == "admin" and user.role != "admin":
+        user.role = "admin"
 
     user.last_login = datetime.now(timezone.utc)
     db.commit()

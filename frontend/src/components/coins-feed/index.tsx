@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AppIcon } from "@/components/app-icon";
+import { CoinsFeedAuthActions } from "@/components/coins-feed-auth-actions";
 import { ApiError, getLaunchFeed, type LaunchFeedItem, type LaunchFeedQuery } from "@/lib/api";
 import { CoinsFeedControls } from "./controls";
 import { CoinsFeedHeader } from "./header";
@@ -163,9 +164,7 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
               <button className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary transition-all hover:bg-primary/20">
                 <AppIcon className="h-5 w-5" name="bell" />
               </button>
-              <Link className="hidden rounded-lg px-4 py-2 text-sm font-bold text-slate-100 md:inline-flex" href="/login">
-                Log In
-              </Link>
+              <CoinsFeedAuthActions />
             </div>
           </div>
         </header>
