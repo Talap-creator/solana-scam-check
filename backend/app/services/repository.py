@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 
+from sqlalchemy.exc import SQLAlchemyError
+
+from .. import models
 from ..config import get_settings
+from ..db import SessionLocal
 from ..schemas import (
     CheckOverview,
     CopycatStatus,
@@ -38,10 +42,12 @@ class ReportRepository:
         self.live_feed_last_sync_at: datetime | None = None
         self.seed_data()
 
-    def register_report(self, report: CheckOverview) -> CheckOverview:
+    def register_report(self, report: CheckOverview, *, persist: bool = True) -> CheckOverview:
         self.reports[report.id] = report
         index_key = (report.entity_type, report.entity_id)
         self.entity_index.setdefault(index_key, []).append(report.id)
+        if persist and report.entity_type == "token":
+            self._persist_launch_feed_reports([report])
         return report
 
     def create_report(self, entity_type: EntityType, raw_value: str) -> CheckOverview:
@@ -64,7 +70,9 @@ class ReportRepository:
     def get_report(self, check_id: str) -> CheckOverview | None:
         report = self.reports.get(check_id)
         if report is None:
-            return None
+            report = self._rehydrate_persisted_launch_report(check_id=check_id)
+            if report is None:
+                return None
         report.refreshed_at = relative_time(report.created_at)
         return report
 
@@ -72,12 +80,22 @@ class ReportRepository:
         normalized_entity_id = normalize_entity_id(entity_type, entity_id)
         report_ids = self.entity_index.get((entity_type, normalized_entity_id), [])
         if not report_ids:
-            return None
+            if entity_type != "token":
+                return None
+            return self._rehydrate_persisted_launch_report(mint=normalized_entity_id)
         return self.get_report(report_ids[-1])
 
     def has_entity(self, entity_type: EntityType, entity_id: str) -> bool:
         normalized = normalize_entity_id(entity_type, entity_id)
-        return bool(self.entity_index.get((entity_type, normalized)))
+        if self.entity_index.get((entity_type, normalized)):
+            return True
+        if entity_type != "token":
+            return False
+        try:
+            with SessionLocal() as db:
+                return db.get(models.LaunchFeedToken, normalized) is not None
+        except SQLAlchemyError:
+            return False
 
     def build_watchlist_items(self) -> list[WatchlistItem]:
         items: list[WatchlistItem] = []
@@ -124,64 +142,15 @@ class ReportRepository:
     ) -> tuple[list[LaunchFeedItem], str | None]:
         self._maybe_sync_live_launch_source()
         token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
-        symbol_counts: dict[str, int] = {}
-        name_counts: dict[str, int] = {}
-
-        for report in token_reports:
-            symbol = (report.symbol or report.display_name.split("/")[0].strip()).upper()
-            name = (report.name or report.display_name).strip().lower()
-            if symbol:
-                symbol_counts[symbol] = symbol_counts.get(symbol, 0) + 1
-            if name:
-                name_counts[name] = name_counts.get(name, 0) + 1
-
-        items: list[LaunchFeedItem] = []
-        now = utc_now()
-        for report in token_reports:
-            age_minutes = max(0, int((now - report.created_at).total_seconds() // 60))
-            liquidity_value = 0.0
-            market_cap_value = 0.0
-            for metric in report.metrics:
-                if metric.label == "Liquidity":
-                    liquidity_value = _parse_money_value(metric.value)
-                elif metric.label in {"Supply", "Market Cap"}:
-                    market_cap_value = _parse_compact_number(metric.value)
-
-            symbol = (report.symbol or report.display_name.split("/")[0].strip()).upper()
-            name = (report.name or report.display_name).strip()
-            launch_quality = _derive_launch_quality(report)
-            copycat_status: CopycatStatus = "none"
-            if symbol and symbol_counts.get(symbol, 0) > 1:
-                copycat_status = "collision"
-            elif name and name_counts.get(name.lower(), 0) > 1:
-                copycat_status = "collision"
-            elif any(factor.code == "TOKEN_METADATA_MISMATCH" for factor in report.risk_increasers):
-                copycat_status = "possible"
-
-            items.append(
-                LaunchFeedItem(
-                    mint=report.entity_id,
-                    report_id=report.id,
-                    name=name,
-                    symbol=symbol,
-                    logo_url=report.logo_url,
-                    age_minutes=age_minutes,
-                    liquidity_usd=liquidity_value,
-                    market_cap_usd=market_cap_value,
-                    rug_probability=report.rug_probability,
-                    rug_risk_level=report.status,
-                    trade_caution_level=(report.trade_caution.level if report.trade_caution else "moderate"),
-                    launch_quality=launch_quality,
-                    copycat_status=copycat_status,
-                    updated_at=report.created_at,
-                    initial_live_estimate=_is_initial_live_estimate(report),
-                    summary=report.summary,
-                    rug_risk_drivers=[factor.label for factor in report.risk_increasers[:2]],
-                    trade_caution_drivers=(report.trade_caution.drivers[:3] if report.trade_caution else []),
-                    top_reducer=(report.risk_reducers[0].label if report.risk_reducers else None),
-                    deployer_short_address=_shorten_address(report.entity_id),
-                )
-            )
+        self._persist_launch_feed_reports(token_reports)
+        items = self._load_persisted_launch_feed_items()
+        if not items and token_reports:
+            symbol_counts, name_counts = _build_launch_feed_identity_counts(token_reports)
+            now = utc_now()
+            items = [
+                _build_launch_feed_item(report, symbol_counts, name_counts, now)
+                for report in token_reports
+            ]
         filtered = _filter_launch_feed_items(
             items,
             tab=tab,
@@ -195,6 +164,126 @@ class ReportRepository:
         page = filtered[offset : offset + limit]
         next_cursor = str(offset + limit) if offset + limit < len(filtered) else None
         return page, next_cursor
+
+    def _persist_launch_feed_reports(self, reports: list[CheckOverview]) -> None:
+        token_reports = [report for report in reports if report.entity_type == "token"]
+        if not token_reports:
+            return
+
+        all_token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
+        symbol_counts, name_counts = _build_launch_feed_identity_counts(all_token_reports)
+        now = utc_now()
+
+        try:
+            with SessionLocal() as db:
+                for report in token_reports:
+                    item = _build_launch_feed_item(report, symbol_counts, name_counts, now)
+                    existing = db.get(models.LaunchFeedToken, item.mint)
+                    if existing is None:
+                        db.add(
+                            models.LaunchFeedToken(
+                                mint=item.mint,
+                                report_id=item.report_id,
+                                name=item.name,
+                                symbol=item.symbol,
+                                logo_url=item.logo_url,
+                                liquidity_usd=item.liquidity_usd,
+                                market_cap_usd=item.market_cap_usd,
+                                rug_probability=item.rug_probability,
+                                rug_risk_level=item.rug_risk_level,
+                                trade_caution_level=item.trade_caution_level,
+                                launch_quality=item.launch_quality,
+                                copycat_status=item.copycat_status,
+                                initial_live_estimate=item.initial_live_estimate,
+                                summary=item.summary,
+                                rug_risk_drivers=item.rug_risk_drivers,
+                                trade_caution_drivers=item.trade_caution_drivers,
+                                top_reducer=item.top_reducer,
+                                deployer_short_address=item.deployer_short_address,
+                                report_created_at=item.updated_at,
+                                first_seen_at=now,
+                                last_seen_at=now,
+                            )
+                        )
+                        continue
+
+                    existing.last_seen_at = now
+                    if _coerce_utc_datetime(existing.report_created_at) > _coerce_utc_datetime(item.updated_at):
+                        continue
+
+                    existing.report_id = item.report_id
+                    existing.name = item.name
+                    existing.symbol = item.symbol
+                    existing.logo_url = item.logo_url
+                    existing.liquidity_usd = item.liquidity_usd
+                    existing.market_cap_usd = item.market_cap_usd
+                    existing.rug_probability = item.rug_probability
+                    existing.rug_risk_level = item.rug_risk_level
+                    existing.trade_caution_level = item.trade_caution_level
+                    existing.launch_quality = item.launch_quality
+                    existing.copycat_status = item.copycat_status
+                    existing.initial_live_estimate = item.initial_live_estimate
+                    existing.summary = item.summary
+                    existing.rug_risk_drivers = item.rug_risk_drivers
+                    existing.trade_caution_drivers = item.trade_caution_drivers
+                    existing.top_reducer = item.top_reducer
+                    existing.deployer_short_address = item.deployer_short_address
+                    existing.report_created_at = item.updated_at
+                db.commit()
+        except SQLAlchemyError:
+            return
+
+    def _load_persisted_launch_feed_items(self) -> list[LaunchFeedItem]:
+        try:
+            with SessionLocal() as db:
+                records = (
+                    db.query(models.LaunchFeedToken)
+                    .order_by(models.LaunchFeedToken.report_created_at.desc())
+                    .all()
+                )
+        except SQLAlchemyError:
+            return []
+
+        now = utc_now()
+        return [_build_launch_feed_item_from_record(record, now) for record in records]
+
+    def _rehydrate_persisted_launch_report(
+        self,
+        *,
+        check_id: str | None = None,
+        mint: str | None = None,
+    ) -> CheckOverview | None:
+        try:
+            with SessionLocal() as db:
+                query = db.query(models.LaunchFeedToken)
+                if check_id is not None:
+                    record = query.filter(models.LaunchFeedToken.report_id == check_id).first()
+                elif mint is not None:
+                    record = query.filter(models.LaunchFeedToken.mint == mint).first()
+                else:
+                    record = None
+        except SQLAlchemyError:
+            return None
+
+        if record is None:
+            return None
+
+        report = generate_report(
+            "token",
+            record.mint,
+            forced_id=record.report_id,
+            forced_name=f"{record.symbol} / {record.name}",
+            created_at=_coerce_utc_datetime(record.report_created_at),
+            rpc_client=self.rpc_client,
+            live_token_analysis=False,
+            token_holders_max_pages=self.token_holders_max_pages,
+            dexscreener_client=self.dexscreener_client,
+        )
+        report.name = record.name
+        report.symbol = record.symbol
+        report.logo_url = record.logo_url
+        self.register_report(report, persist=False)
+        return report
 
     def _maybe_sync_live_launch_source(self) -> None:
         if not settings.feed_live_source_enabled or self.dexscreener_client is None:
@@ -393,7 +482,102 @@ class ReportRepository:
                         market_structure_strength=8,
                     ),
                 )
-            self.register_report(report)
+            self.register_report(report, persist=False)
+
+
+def _build_launch_feed_identity_counts(reports: list[CheckOverview]) -> tuple[dict[str, int], dict[str, int]]:
+    symbol_counts: dict[str, int] = {}
+    name_counts: dict[str, int] = {}
+    for report in reports:
+        symbol = (report.symbol or report.display_name.split("/")[0].strip()).upper()
+        name = (report.name or report.display_name).strip().lower()
+        if symbol:
+            symbol_counts[symbol] = symbol_counts.get(symbol, 0) + 1
+        if name:
+            name_counts[name] = name_counts.get(name, 0) + 1
+    return symbol_counts, name_counts
+
+
+def _build_launch_feed_item(
+    report: CheckOverview,
+    symbol_counts: dict[str, int],
+    name_counts: dict[str, int],
+    now: datetime,
+) -> LaunchFeedItem:
+    age_minutes = max(0, int((now - report.created_at).total_seconds() // 60))
+    liquidity_value = 0.0
+    market_cap_value = 0.0
+    for metric in report.metrics:
+        if metric.label == "Liquidity":
+            liquidity_value = _parse_money_value(metric.value)
+        elif metric.label in {"Supply", "Market Cap"}:
+            market_cap_value = _parse_compact_number(metric.value)
+
+    symbol = (report.symbol or report.display_name.split("/")[0].strip()).upper()
+    name = (report.name or report.display_name).strip()
+    copycat_status: CopycatStatus = "none"
+    if symbol and symbol_counts.get(symbol, 0) > 1:
+        copycat_status = "collision"
+    elif name and name_counts.get(name.lower(), 0) > 1:
+        copycat_status = "collision"
+    elif any(factor.code == "TOKEN_METADATA_MISMATCH" for factor in report.risk_increasers):
+        copycat_status = "possible"
+
+    return LaunchFeedItem(
+        mint=report.entity_id,
+        report_id=report.id,
+        name=name,
+        symbol=symbol,
+        logo_url=report.logo_url,
+        age_minutes=age_minutes,
+        liquidity_usd=liquidity_value,
+        market_cap_usd=market_cap_value,
+        rug_probability=report.rug_probability,
+        rug_risk_level=report.status,
+        trade_caution_level=(report.trade_caution.level if report.trade_caution else "moderate"),
+        launch_quality=_derive_launch_quality(report),
+        copycat_status=copycat_status,
+        updated_at=report.created_at,
+        initial_live_estimate=_is_initial_live_estimate(report),
+        summary=report.summary,
+        rug_risk_drivers=[factor.label for factor in report.risk_increasers[:2]],
+        trade_caution_drivers=(report.trade_caution.drivers[:3] if report.trade_caution else []),
+        top_reducer=(report.risk_reducers[0].label if report.risk_reducers else None),
+        deployer_short_address=_shorten_address(report.entity_id),
+    )
+
+
+def _build_launch_feed_item_from_record(record: models.LaunchFeedToken, now: datetime) -> LaunchFeedItem:
+    report_created_at = _coerce_utc_datetime(record.report_created_at)
+    age_minutes = max(0, int((now - report_created_at).total_seconds() // 60))
+    return LaunchFeedItem(
+        mint=record.mint,
+        report_id=record.report_id,
+        name=record.name,
+        symbol=record.symbol,
+        logo_url=record.logo_url,
+        age_minutes=age_minutes,
+        liquidity_usd=float(record.liquidity_usd),
+        market_cap_usd=float(record.market_cap_usd),
+        rug_probability=float(record.rug_probability),
+        rug_risk_level=record.rug_risk_level,
+        trade_caution_level=record.trade_caution_level,
+        launch_quality=record.launch_quality,
+        copycat_status=record.copycat_status,
+        updated_at=report_created_at,
+        initial_live_estimate=record.initial_live_estimate,
+        summary=record.summary,
+        rug_risk_drivers=list(record.rug_risk_drivers or []),
+        trade_caution_drivers=list(record.trade_caution_drivers or []),
+        top_reducer=record.top_reducer,
+        deployer_short_address=record.deployer_short_address,
+    )
+
+
+def _coerce_utc_datetime(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 def _parse_money_value(value: str) -> float:

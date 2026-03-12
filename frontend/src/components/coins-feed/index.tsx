@@ -63,8 +63,8 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
         });
 
         const currentItems = itemsRef.current;
-        const currentIds = new Set(currentItems.map((item) => item.report_id));
-        const insertedCount = payload.items.filter((item) => !currentIds.has(item.report_id)).length;
+        const currentMints = new Set(currentItems.map((item) => item.mint));
+        const insertedCount = payload.items.filter((item) => !currentMints.has(item.mint)).length;
 
         setItems((current) => {
           const mergedItems =
@@ -145,25 +145,10 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
                 <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/dashboard">
                   Dashboard
                 </Link>
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/">
-                  Token Analyzer
-                </Link>
                 <span className="border-b-2 border-primary pb-1 text-sm font-medium text-slate-100">Launch Feed</span>
               </nav>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden h-10 items-center rounded-lg border border-primary/20 bg-primary/10 px-3 lg:flex">
-                <AppIcon className="h-5 w-5 text-primary" name="search" />
-                <input
-                  className="w-72 bg-transparent px-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
-                  onChange={(event) => updateQueryState({ query: event.target.value })}
-                  placeholder="Search Token Address..."
-                  value={queryState.query}
-                />
-              </div>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary transition-all hover:bg-primary/20">
-                <AppIcon className="h-5 w-5" name="bell" />
-              </button>
               <CoinsFeedAuthActions />
             </div>
           </div>

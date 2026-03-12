@@ -86,11 +86,11 @@ export function mergeLaunchFeedItems(
   const merged = new Map<string, LaunchFeedItem>();
 
   for (const item of current) {
-    merged.set(item.report_id, item);
+    merged.set(item.mint, item);
   }
 
   for (const item of incoming) {
-    merged.set(item.report_id, item);
+    merged.set(item.mint, item);
   }
 
   return sortLaunchFeedItems(Array.from(merged.values()));
