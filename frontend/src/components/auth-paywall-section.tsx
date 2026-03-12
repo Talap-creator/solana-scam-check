@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/auth";
+import { getMe } from "@/lib/api";
 
 type AuthPaywallSectionProps = {
   children: ReactNode;
@@ -15,7 +16,29 @@ export function AuthPaywallSection({
   title = "Unlock full access",
   description = "Create a free account to view full analytics details.",
 }: AuthPaywallSectionProps) {
-  const [isAuthed] = useState(() => Boolean(getAccessToken()));
+  const [isAuthed, setIsAuthed] = useState(() => Boolean(getAccessToken()));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        await getMe();
+        if (!cancelled) {
+          setIsAuthed(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsAuthed(false);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (isAuthed) {
     return <>{children}</>;

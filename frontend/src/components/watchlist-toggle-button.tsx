@@ -9,7 +9,6 @@ import {
   getAccountWatchlistStatus,
   removeAccountWatchlistItem,
 } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
 
 type WatchlistToggleButtonProps = {
   displayName: string;
@@ -28,11 +27,6 @@ export function WatchlistToggleButton({
 
   useEffect(() => {
     let cancelled = false;
-
-    if (!getAccessToken()) {
-      setIsTracked(false);
-      return;
-    }
 
     const load = async () => {
       try {
@@ -55,11 +49,6 @@ export function WatchlistToggleButton({
   }, [entityId, entityType]);
 
   const onToggle = () => {
-    if (!getAccessToken()) {
-      router.push("/login");
-      return;
-    }
-
     setIsPending(true);
 
     startTransition(async () => {

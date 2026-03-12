@@ -67,6 +67,7 @@ Published services:
 Notes:
 
 - frontend uses a standalone Next.js build
+- browser auth/API calls go through Next same-origin `/api/v1/*` proxy routes, so the backend URL is only needed on the server side
 - backend runs `uvicorn app.main:app --host 0.0.0.0 --port 8000`
 - postgres uses the named volume `rugsignal_postgres_data`
 

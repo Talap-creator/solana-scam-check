@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-
-const ACCESS_TOKEN_COOKIE = "rugsignal_access_token";
+import { SESSION_COOKIE_NAME } from "@/lib/session-cookies";
 
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
@@ -11,7 +10,7 @@ function redirectToLogin(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   if (!accessToken) {
     return redirectToLogin(request);
   }

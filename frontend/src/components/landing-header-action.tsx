@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth";
 import { getMe } from "@/lib/api";
 
 type AuthState = "loading" | "guest" | "user";
@@ -14,14 +13,6 @@ export function LandingHeaderAction() {
     let cancelled = false;
 
     const load = async () => {
-      const token = getAccessToken();
-      if (!token) {
-        if (!cancelled) {
-          setAuthState("guest");
-        }
-        return;
-      }
-
       try {
         await getMe();
         if (!cancelled) {

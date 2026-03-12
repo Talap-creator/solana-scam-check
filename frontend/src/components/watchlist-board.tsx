@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PlatformShell } from "@/components/platform-shell";
 import { ApiError, getAccountWatchlist, type AccountWatchlistItem } from "@/lib/api";
-import { getAccessToken } from "@/lib/auth";
 
 function severityClass(value: string) {
   if (/critical|high/i.test(value)) return "text-rose-400";
@@ -20,13 +19,6 @@ export function WatchlistBoard() {
     let cancelled = false;
 
     const load = async () => {
-      if (!getAccessToken()) {
-        if (!cancelled) {
-          setMode("guest");
-        }
-        return;
-      }
-
       try {
         const nextItems = await getAccountWatchlist();
         if (!cancelled) {

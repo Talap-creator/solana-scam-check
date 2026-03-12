@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { clearAccessToken, getAccessToken } from "@/lib/auth";
-import { getMe } from "@/lib/api";
+import { clearAccessToken } from "@/lib/auth";
+import { getMe, logoutUser } from "@/lib/api";
 
 type AuthMode = "loading" | "guest" | "user" | "admin";
 
@@ -16,14 +16,6 @@ export function CoinsFeedAuthActions() {
     let cancelled = false;
 
     const load = async () => {
-      const token = getAccessToken();
-      if (!token) {
-        if (!cancelled) {
-          setAuthMode("guest");
-        }
-        return;
-      }
-
       try {
         const profile = await getMe();
         if (!cancelled) {
@@ -42,11 +34,15 @@ export function CoinsFeedAuthActions() {
     };
   }, []);
 
-  const onLogout = () => {
-    clearAccessToken();
-    setAuthMode("guest");
-    router.push("/");
-    router.refresh();
+  const onLogout = async () => {
+    try {
+      await logoutUser();
+    } finally {
+      clearAccessToken();
+      setAuthMode("guest");
+      router.push("/");
+      router.refresh();
+    }
   };
 
   if (authMode === "loading") {
@@ -71,7 +67,7 @@ export function CoinsFeedAuthActions() {
       </Link>
       <button
         className="hidden rounded-lg px-4 py-2 text-sm font-bold text-slate-100 md:inline-flex"
-        onClick={onLogout}
+        onClick={() => void onLogout()}
         type="button"
       >
         Log out

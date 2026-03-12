@@ -1,13 +1,13 @@
-const ACCESS_TOKEN_KEY = "rugsignal_access_token";
+import { AUTH_HINT_COOKIE_NAME } from "@/lib/session-cookies";
 
-function readAccessTokenCookie(): string | null {
+function readCookie(name: string): string | null {
   if (typeof window === "undefined") {
     return null;
   }
 
   const cookieValue = document.cookie
     .split("; ")
-    .find((entry) => entry.startsWith(`${ACCESS_TOKEN_KEY}=`))
+    .find((entry) => entry.startsWith(`${name}=`))
     ?.split("=")
     .slice(1)
     .join("=");
@@ -15,46 +15,35 @@ function readAccessTokenCookie(): string | null {
   return cookieValue ? decodeURIComponent(cookieValue) : null;
 }
 
-function writeAccessTokenCookie(token: string): void {
+function writeHintCookie(value: string): void {
   if (typeof window === "undefined") {
     return;
   }
 
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${ACCESS_TOKEN_KEY}=${encodeURIComponent(token)}; Path=/; Max-Age=2592000; SameSite=Lax${secure}`;
+  document.cookie = `${AUTH_HINT_COOKIE_NAME}=${encodeURIComponent(value)}; Path=/; Max-Age=604800; SameSite=Lax${secure}`;
 }
 
-function clearAccessTokenCookie(): void {
+function clearHintCookie(): void {
   if (typeof window === "undefined") {
     return;
   }
 
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
-  document.cookie = `${ACCESS_TOKEN_KEY}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+  document.cookie = `${AUTH_HINT_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
 }
 
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return readAccessTokenCookie();
+  return readCookie(AUTH_HINT_COOKIE_NAME);
 }
 
 export function setAccessToken(token: string): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  writeAccessTokenCookie(token);
+  void token;
+  writeHintCookie("1");
 }
 
 export function clearAccessToken(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-  clearAccessTokenCookie();
+  clearHintCookie();
 }
 
 export function isAuthenticated(): boolean {

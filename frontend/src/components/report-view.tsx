@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { AppIcon } from "@/components/app-icon";
 import { RecheckButton } from "@/components/recheck-button";
 import { WatchlistToggleButton } from "@/components/watchlist-toggle-button";
 import { getAccessToken } from "@/lib/auth";
+import { getMe } from "@/lib/api";
 import { type CheckReport } from "@/lib/mock-data";
 
 type ReportViewProps = { report: CheckReport };
@@ -160,7 +161,7 @@ function LockablePanel({ children, locked, compact = false }: { children: ReactN
 }
 
 export function ReportView({ report }: ReportViewProps) {
-  const [isAuthed] = useState(() => Boolean(getAccessToken()));
+  const [isAuthed, setIsAuthed] = useState(() => Boolean(getAccessToken()));
   const [shareLabel, setShareLabel] = useState("Share Report");
   const [copyLabel, setCopyLabel] = useState("Copy");
   const modules = useMemo(() => moduleRows(report), [report]);
@@ -180,6 +181,28 @@ export function ReportView({ report }: ReportViewProps) {
   const rugTone = statusTone(report.status);
   const confidenceTone = report.confidence >= 0.75 ? statusTone("low") : report.confidence >= 0.45 ? statusTone("moderate") : statusTone("unknown");
   const isEarly = report.pageMode !== "mature";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        await getMe();
+        if (!cancelled) {
+          setIsAuthed(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsAuthed(false);
+        }
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const copyShareLink = async () => {
     if (typeof window === "undefined") return;

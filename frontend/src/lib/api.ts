@@ -1,5 +1,5 @@
 import { type CheckReport } from "@/lib/mock-data";
-import { getAccessToken } from "@/lib/auth";
+import { getClientApiBaseUrl, getServerApiBaseUrl } from "@/lib/api-base";
 
 export type WatchlistItem = {
   name: string;
@@ -324,19 +324,6 @@ function normalizeApiDetail(detail: unknown, fallback: string): string {
   return fallback;
 }
 
-const DEFAULT_API_BASE_URL = "https://solana-scam-check.onrender.com";
-const SERVER_API_BASE_URL = process.env.API_BASE_URL ?? DEFAULT_API_BASE_URL;
-const CLIENT_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? DEFAULT_API_BASE_URL;
-
-export function getClientApiBaseUrl(): string {
-  return CLIENT_API_BASE_URL;
-}
-
-function getServerApiBaseUrl(): string {
-  return SERVER_API_BASE_URL;
-}
-
 function mapReport(report: ApiReport): CheckReport {
   return {
     id: report.id,
@@ -617,12 +604,11 @@ export async function submitCheck(
       ? JSON.stringify({ query: value.trim() })
       : JSON.stringify({ address: value.trim() });
 
-  const accessToken = getAccessToken();
   const response = await fetch(`${getClientApiBaseUrl()}${path}`, {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body,
   });
@@ -639,14 +625,13 @@ export async function recheckReport(
   entityType: "token" | "wallet" | "project",
   entityId: string,
 ): Promise<SubmissionResponse> {
-  const accessToken = getAccessToken();
   const response = await fetch(
     `${getClientApiBaseUrl()}/api/v1/recheck/${entityType}/${encodeURIComponent(entityId)}`,
     {
       method: "POST",
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
     },
   );
@@ -666,6 +651,7 @@ export async function registerUser(
 ): Promise<AuthTokenResponse> {
   const response = await fetch(`${getClientApiBaseUrl()}/api/v1/auth/register`, {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
     },
@@ -683,6 +669,7 @@ export async function registerUser(
 export async function loginUser(email: string, password: string): Promise<AuthTokenResponse> {
   const response = await fetch(`${getClientApiBaseUrl()}/api/v1/auth/login`, {
     method: "POST",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
     },
@@ -698,16 +685,11 @@ export async function loginUser(email: string, password: string): Promise<AuthTo
 }
 
 export async function getMe(): Promise<UserProfile> {
-  const accessToken = getAccessToken();
-  if (!accessToken) {
-    throw new ApiError("Not authenticated", 401);
-  }
-
   const response = await fetch(`${getClientApiBaseUrl()}/api/v1/auth/me`, {
     method: "GET",
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
     },
   });
 
@@ -737,16 +719,11 @@ async function fetchClientAuthedWithInit<T>(
   init: RequestInit,
   fallbackError = "Request failed",
 ): Promise<T> {
-  const accessToken = getAccessToken();
-  if (!accessToken) {
-    throw new ApiError("Not authenticated", 401);
-  }
-
   const response = await fetch(`${getClientApiBaseUrl()}${path}`, {
     ...init,
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
       ...(init.headers ?? {}),
     },
   });
@@ -832,4 +809,19 @@ export async function deleteAdminOverride(tokenAddress: string): Promise<void> {
     `/api/v1/admin/overrides/${encodeURIComponent(tokenAddress)}`,
     { method: "DELETE" },
   );
+}
+
+export async function logoutUser(): Promise<void> {
+  const response = await fetch(`${getClientApiBaseUrl()}/api/v1/auth/logout`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+    throw new ApiError(normalizeApiDetail(payload?.detail, "Unable to logout"), response.status);
+  }
 }

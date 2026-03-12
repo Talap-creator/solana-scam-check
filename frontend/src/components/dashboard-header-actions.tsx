@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { clearAccessToken, getAccessToken } from "@/lib/auth";
-import { ApiError, getUsage, type UserUsage } from "@/lib/api";
+import { clearAccessToken } from "@/lib/auth";
+import { ApiError, getUsage, logoutUser, type UserUsage } from "@/lib/api";
 import { APP_TELEGRAM_URL, formatPlanLabel } from "@/lib/plans";
 
 export function DashboardHeaderActions() {
@@ -14,21 +14,15 @@ export function DashboardHeaderActions() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const token = getAccessToken();
-      if (!cancelled) {
-        setHasToken(Boolean(token));
-      }
-      if (!token) {
-        return;
-      }
-
       try {
         const data = await getUsage();
         if (!cancelled) {
+          setHasToken(true);
           setUsage(data);
         }
       } catch (error) {
         if (!cancelled && error instanceof ApiError && error.status === 401) {
+          setHasToken(false);
           setUsage(null);
         }
       }
@@ -39,10 +33,14 @@ export function DashboardHeaderActions() {
     };
   }, []);
 
-  const onLogout = () => {
-    clearAccessToken();
-    router.push("/");
-    router.refresh();
+  const onLogout = async () => {
+    try {
+      await logoutUser();
+    } finally {
+      clearAccessToken();
+      router.push("/");
+      router.refresh();
+    }
   };
 
   return (
@@ -76,7 +74,7 @@ export function DashboardHeaderActions() {
       {hasToken ? (
         <button
           className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-sm font-bold"
-          onClick={onLogout}
+          onClick={() => void onLogout()}
           type="button"
         >
           Log out
