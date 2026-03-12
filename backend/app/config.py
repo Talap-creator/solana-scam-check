@@ -10,6 +10,12 @@ PUBLIC_SOLANA_RPC_URLS = (
     "https://solana-rpc.publicnode.com",
 )
 
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://solanatrust.vercel.app",
+)
+
 ENV_FILE_PATH = Path(__file__).resolve().parents[1] / ".env"
 
 
@@ -20,7 +26,7 @@ class Settings:
         "Backend API for RugSignal.io, focused on Solana rug-risk detection and explainable scoring."
     )
     app_version: str = "0.2.0"
-    cors_allow_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000")
+    cors_allow_origins: tuple[str, ...] = DEFAULT_CORS_ORIGINS
     active_rules: int = 128
     solana_rpc_urls: tuple[str, ...] = PUBLIC_SOLANA_RPC_URLS
     token_holders_max_pages: int = 25
@@ -114,14 +120,15 @@ def build_solana_rpc_urls() -> tuple[str, ...]:
 
 def get_settings() -> Settings:
     load_env_file()
-    origins = tuple(
+    configured_origins = tuple(
         origin.strip()
         for origin in os.getenv(
             "CORS_ALLOW_ORIGINS",
-            "http://localhost:3000,http://127.0.0.1:3000",
+            ",".join(DEFAULT_CORS_ORIGINS),
         ).split(",")
         if origin.strip()
     )
+    origins = tuple(dict.fromkeys((*DEFAULT_CORS_ORIGINS, *configured_origins)))
     return Settings(
         cors_allow_origins=origins or Settings.cors_allow_origins,
         solana_rpc_urls=build_solana_rpc_urls(),
