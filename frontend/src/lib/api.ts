@@ -324,9 +324,10 @@ function normalizeApiDetail(detail: unknown, fallback: string): string {
   return fallback;
 }
 
-const SERVER_API_BASE_URL = process.env.API_BASE_URL ?? "http://127.0.0.1:8000";
+const DEFAULT_API_BASE_URL = "https://solana-scam-check.onrender.com";
+const SERVER_API_BASE_URL = process.env.API_BASE_URL ?? DEFAULT_API_BASE_URL;
 const CLIENT_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 export function getClientApiBaseUrl(): string {
   return CLIENT_API_BASE_URL;

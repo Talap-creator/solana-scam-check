@@ -6,7 +6,7 @@ Frontend:
 - `cd frontend`
 - `npm run build`
 - `npm run start`
-  This resolves to `node .next/standalone/server.js` because the frontend uses `output: standalone`.
+  This resolves to `node scripts/start-standalone.js`, which syncs `.next/static` and `public` into `.next/standalone` before starting the standalone server.
 
 Backend:
 - `cd backend`

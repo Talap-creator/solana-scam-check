@@ -52,7 +52,7 @@ const teamMembers = [
     name: "Kenzhebayev Talap",
     role: "CEO",
     icon: "groups" as const,
-    accent: "from-[#2563eb]/25 to-[#38bdf8]/10",
+    accent: "linear-gradient(90deg, rgba(37, 99, 235, 0.25), rgba(56, 189, 248, 0.1))",
     focus: ["Product execution", "Partnerships", "Market growth"],
     bullets: [
       "Ex Product Manager",
@@ -64,7 +64,7 @@ const teamMembers = [
     name: "Berikuly Sabyr",
     role: "CTO",
     icon: "code" as const,
-    accent: "from-[#0f766e]/25 to-[#22d3ee]/10",
+    accent: "linear-gradient(90deg, rgba(15, 118, 110, 0.25), rgba(34, 211, 238, 0.1))",
     focus: ["Python systems", "Rust services", "Web3 infrastructure"],
     bullets: [
       "3+ years of engineering experience",
@@ -331,7 +331,7 @@ export default async function Home() {
                     key={member.name}
                     className={`overflow-hidden rounded-[28px] border border-[#3b82f6]/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.96))] p-8 shadow-[0_24px_60px_rgba(2,6,23,0.18)]`}
                   >
-                    <div className={`-mx-8 -mt-8 mb-8 bg-gradient-to-r ${member.accent} px-8 py-6`}>
+                    <div className="-mx-8 -mt-8 mb-8 px-8 py-6" style={{ backgroundImage: member.accent }}>
                       <div className="flex items-start gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#020617]/60 ring-1 ring-white/10">
                           <AppIcon className="h-7 w-7 text-[#60a5fa]" name={member.icon} />

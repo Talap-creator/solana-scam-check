@@ -48,9 +48,10 @@ function statusLabel(item: LaunchFeedItem) {
 function launchBars(item: LaunchFeedItem) {
   const tone = launchTone(item.launch_quality);
   const full = tone === "red" ? 5 : tone === "orange" ? 4 : tone === "yellow" ? 3 : tone === "green" ? 3 : 2;
-  const color = tone === "red" ? "bg-rose-500" : tone === "orange" ? "bg-orange-500" : tone === "yellow" ? "bg-amber-500" : "bg-primary";
+  const filledClass = tone === "red" ? "bg-rose-500" : tone === "orange" ? "bg-orange-500" : tone === "yellow" ? "bg-amber-500" : "bg-primary";
+  const fadedClass = tone === "red" ? "bg-rose-500/30" : tone === "orange" ? "bg-orange-500/30" : tone === "yellow" ? "bg-amber-500/30" : "bg-primary/30";
   return Array.from({ length: 5 }, (_, index) => (
-    <div key={`${item.report_id}-bar-${index}`} className={`h-1 w-4 ${index < full ? color : `${color}/30`}`} />
+    <div key={`${item.report_id}-bar-${index}`} className={`h-1 w-4 ${index < full ? filledClass : fadedClass}`} />
   ));
 }
 
