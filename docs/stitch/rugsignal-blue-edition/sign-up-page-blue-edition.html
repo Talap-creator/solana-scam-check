@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2563EB",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#020617",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-grid-pattern {
+            background-image: radial-gradient(circle at 2px 2px, rgba(37, 99, 235, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-grid-pattern">
+<header class="flex items-center justify-between border-b border-slate-200 dark:border-primary/20 px-6 py-4 md:px-20 lg:px-40">
+<div class="flex items-center gap-2 text-primary">
+<div class="size-8 flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">shield_with_heart</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight tracking-tight">SolanaTrust</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Audit API</a>
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Risk Engine</a>
+<button class="px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary/10 transition-all">
+                Connect Wallet
+            </button>
+</div>
+</header>
+<main class="flex-1 flex items-center justify-center p-6">
+<div class="w-full max-w-[480px] space-y-8">
+<div class="space-y-3">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                    Network Status: Secure
+                </div>
+<h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black leading-tight tracking-tight">Join SolanaTrust</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg font-normal leading-relaxed">
+                    Get advanced onchain risk alerts and deep token audits.
+                </p>
+</div>
+<form class="space-y-5">
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Email Address
+                    </label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+<input class="w-full pl-11 pr-4 h-14 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-primary/20 rounded-xl text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="name@example.com" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Password
+                    </label>
+<div class="relative group flex items-center">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<input class="w-full pl-11 pr-12 h-14 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-primary/20 rounded-xl text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="Enter your password" type="password"/>
+<button class="absolute right-4 text-slate-400 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Confirm Password
+                    </label>
+<div class="relative group flex items-center">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">lock_reset</span>
+</div>
+<input class="w-full pl-11 pr-12 h-14 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-primary/20 rounded-xl text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" placeholder="Repeat your password" type="password"/>
+<button class="absolute right-4 text-slate-400 hover:text-primary transition-colors" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full h-14 bg-primary text-white font-bold text-lg rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                        Create Account
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="text-center pt-4">
+<p class="text-slate-600 dark:text-slate-400 font-medium">
+                        Already have an account? 
+                        <a class="text-primary hover:underline underline-offset-4 ml-1" href="#">Log In</a>
+</p>
+</div>
+</form>
+<div class="relative py-4">
+<div aria-hidden="true" class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-slate-200 dark:border-primary/10"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase">
+<span class="bg-background-light dark:bg-background-dark px-4 text-slate-500 dark:text-slate-500 font-bold tracking-widest">Enterprise Trust</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-primary/10">
+<img class="h-6 object-contain" data-alt="Abstract secure network logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLm22yJCraf5aKEMSk9d8GVIejf3AzcmyhYx1IjvtuV7iHJJnolvUU3XgxX_xM0cRVhCRaSmW9DfnoL18uAqVyNHxJjx0ObTBTPwcyel52wz9bqMs6j4ABCzi2WlwnWnQl1xhx5_12OxyQqkViGdPR7lD7U0J5rUHMt0GL8wCOMDBZi8nFgGXQJvpFHGxpfOcwQvtH5JIw1aoa9G-W_LiXeOYLCxzlWTlAys_Oj74WM6zvulkFyYg_Pc9f16z05Qctx6sc8628MLc"/>
+</div>
+<div class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-primary/10">
+<img class="h-6 object-contain" data-alt="Cybersecurity compliance badge logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQJyFnoQj02Ul8ZD1AJlnk8h2CrAWB_LmMW86nNM38prPAp0WKM0D5w3FqMeu8jc6qQ_Ro4ZVGXvZtceujhW_m8xdPBE3mEFDSLa77Es6_CrsDA3BeruLBg3qwCmBrpQzWKdB-wYxrJyfs5gVoNcM5aAFbJ2o62KGIcIIHSQXIym5K7QI3EYwe5ptEfaiLnkAdGIF2nZTfYuCi9pXRUmZnnuNOdGqE9LmXssEdEOYONpnOj8Qb9FjJHK-KbI8h_vBMe81vXVmo8fs"/>
+</div>
+<div class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-primary/10">
+<img class="h-6 object-contain" data-alt="Solana blockchain network logo symbol" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBApWWciewk0Ke4gI53eWFs6uHQaYc7DHwKdppeBqZ9aXTWAEzGLV__1nVSas7g6qd_dNf8q28MGJZXX2fkhsxJRC0huA2ysU865v3MU668Jlz1lg0gkdBLNE3Mqqd5v0T4hIFaXhKNPkMs0wR3z4bWsz5T-xnudiaOJy18UQW0JPNntzwdIc7vqPEDiPIu1sAvpv2OeRqSChWEekikqkUaYRokyibk6CDAKv0foYUOqrOh6PLtuR669smLRSIQxdOGEIFDGSOuOUs"/>
+</div>
+</div>
+</div>
+</main>
+<footer class="px-6 py-8 md:px-20 lg:px-40 border-t border-slate-200 dark:border-primary/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-500 dark:text-slate-500">
+<div class="flex items-center gap-6">
+<span>© 2024 SolanaTrust Protocol</span>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+</div>
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-primary">circle</span> Mainnet Beta</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">terminal</span> API v2.0.4</span>
+</div>
+</footer>
+</div>
+</body></html>

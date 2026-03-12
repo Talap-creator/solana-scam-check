@@ -1,2 +1,12 @@
 fastapi==0.115.12
 uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.39
+psycopg[binary]==3.2.6
+passlib==1.7.4
+python-jose[cryptography]==3.3.0
+email-validator==2.2.0
+pandas==2.2.3
+scikit-learn==1.6.1
+joblib==1.4.2
+lightgbm==4.6.0
+httpx==0.28.1

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PlatformShell } from "@/components/platform-shell";
 import { getChecks } from "@/lib/api";
 import { statusTone } from "@/lib/mock-data";
 
@@ -6,52 +7,64 @@ export default async function HistoryPage() {
   const checks = await getChecks();
 
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <div className="mx-auto w-full max-w-[1240px] px-5 py-6 md:px-8 md:py-8">
-        <header className="mb-7 flex flex-col gap-5 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-5 py-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-              HISTORY
-            </p>
-            <h1 className="mt-2 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-5xl">
-              Последние проверки
-            </h1>
-          </div>
-          <Link className="rounded-full bg-[linear-gradient(135deg,#0f5a48,#0d7a5f)] px-5 py-3 text-center text-sm font-bold text-white" href="/dashboard">
-            Назад в dashboard
-          </Link>
-        </header>
-
-        <section className="rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] p-6">
-          <div className="grid gap-4">
-            {checks.map((report) => (
-              <Link
-                key={report.id}
-                href={`/report/${report.entityType}/${report.id}`}
-                className="grid gap-3 rounded-[28px] border border-[color:var(--border)] bg-white/80 p-5 md:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr]"
-              >
-                <div>
-                  <strong className="text-lg">{report.displayName}</strong>
-                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">{report.summary}</p>
+    <PlatformShell
+      actions={[
+        { href: "/dashboard", label: "Dashboard", tone: "secondary" },
+        { href: "/coins", label: "Open launch feed" },
+      ]}
+      eyebrow="History"
+      stats={[
+        { label: "Stored checks", value: String(checks.length) },
+        { label: "High risk", value: String(checks.filter((item) => item.status === "high" || item.status === "critical").length) },
+        { label: "Low risk", value: String(checks.filter((item) => item.status === "low").length) },
+        { label: "Latest item", value: checks[0]?.refreshedAt ?? "n/a" },
+      ]}
+      subtitle="Historical scan ledger for reports that have already moved through the engine."
+      title="Historical scan ledger"
+    >
+      <section className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
+        <div className="grid gap-4">
+          {checks.map((report) => (
+            <Link
+              key={report.id}
+              className="grid gap-3 rounded-[20px] border border-[rgba(59,130,246,0.14)] bg-[rgba(59,130,246,0.05)] p-5 transition-colors hover:bg-[rgba(59,130,246,0.08)] md:grid-cols-[1.4fr_0.7fr_0.7fr_0.8fr]"
+              href={`/report/${report.entityType}/${report.id}`}
+            >
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(59,130,246,0.16)] bg-[rgba(59,130,246,0.12)] font-[family:var(--font-display)] text-sm text-[#60a5fa]">
+                    {report.displayName.slice(0, 1)}
+                  </div>
+                  <div>
+                    <strong className="text-lg text-slate-100">{report.displayName}</strong>
+                    {(report.name || report.symbol) ? (
+                      <p className="text-sm text-slate-400">
+                        {[report.symbol, report.name].filter(Boolean).join(" | ")}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm text-[var(--muted)]">Score</span>
-                  <strong className="mt-1 block text-2xl">{report.score}</strong>
-                </div>
-                <div>
-                  <span className="text-sm text-[var(--muted)]">Updated</span>
-                  <strong className="mt-1 block">{report.refreshedAt}</strong>
-                </div>
-                <div className="flex items-start md:justify-end">
-                  <span className={`rounded-full px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${statusTone[report.status]}`}>
-                    {report.status}
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </div>
-    </main>
+                <p className="mt-2 text-sm leading-7 text-slate-400">{report.summary}</p>
+              </div>
+              <div>
+                <span className="text-sm text-slate-500">Score</span>
+                <strong className="mt-1 block text-2xl text-slate-100">{report.score}</strong>
+              </div>
+              <div>
+                <span className="text-sm text-slate-500">Updated</span>
+                <strong className="mt-1 block text-slate-100">{report.refreshedAt}</strong>
+              </div>
+              <div className="flex items-start md:justify-end">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${statusTone[report.status]}`}
+                >
+                  {report.status}
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </PlatformShell>
   );
 }

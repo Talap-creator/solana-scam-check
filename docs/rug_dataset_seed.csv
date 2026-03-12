@@ -1,0 +1,11 @@
+token_address,label,cohort,score,rug_probability,known_rug,known_honeypot,known_legit,mature_project,developer_cluster_label,early_buyer_cluster_label,insider_selling_label,liquidity_management_label,notes
+<replace_with_token_address>,1,known_rug,,,,1,0,0,0,0,0,0,"Confirmed rug. Add public incident reference in notes."
+<replace_with_token_address>,1,known_rug,,,,1,0,0,0,0,0,0,"Confirmed rug with liquidity removal or insider exit evidence."
+<replace_with_token_address>,1,honeypot,,,,0,1,0,0,0,0,0,"Known honeypot. Add evidence of sell failure or trap behaviour."
+<replace_with_token_address>,1,honeypot,,,,0,1,0,0,0,0,0,"Honeypot-like token with reproducible trading restriction."
+<replace_with_token_address>,0,known_legit,,,,0,0,1,0,0,0,0,"Legit token with no known rug history."
+<replace_with_token_address>,0,known_legit,,,,0,0,1,0,0,0,0,"Legit token. Add why it is considered safe in notes."
+<replace_with_token_address>,0,mature_project,,,,0,0,1,1,0,0,0,0,"Mature project with established market history."
+<replace_with_token_address>,0,mature_project,,,,0,0,1,1,0,0,0,0,"Blue-chip or mature wrapped asset."
+<replace_with_token_address>,0,low_liquidity_legit,,,,0,0,1,0,0,0,0,1,"Legit token with thin liquidity and elevated execution risk."
+<replace_with_token_address>,0,low_liquidity_legit,,,,0,0,1,0,0,0,0,1,"Low-liquidity legit token to reduce false positives."

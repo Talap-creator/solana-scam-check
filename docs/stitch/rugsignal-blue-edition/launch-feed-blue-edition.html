@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SolanaTrust | Launch Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3B82F6",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: #3B82F6 #0f172a;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3B82F6;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="flex items-center justify-between border-b border-primary/20 px-6 py-3 bg-background-light dark:bg-background-dark sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">terminal</span>
+<h2 class="text-xl font-extrabold leading-tight tracking-tight uppercase">SolanaTrust</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-primary text-sm font-bold uppercase border-b-2 border-primary pb-1" href="/coins">Launch Feed</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Portfolio</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Scanner</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Alerts</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<label class="hidden lg:flex items-center bg-primary/10 border border-primary/20 rounded-lg px-3 h-9">
+<span class="material-symbols-outlined text-primary text-xl">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-primary placeholder:text-primary/50 w-64" placeholder="Search Token Address..." type="text"/>
+</label>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-9 w-9 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-xl">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-9 w-9 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+</button>
+<div class="w-9 h-9 rounded-full bg-primary/30 overflow-hidden border border-primary/50">
+<img class="w-full h-full object-cover" data-alt="User profile avatar gradient pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCihYPGsaGb46XuWdCE2wfzJSFz-i_LVVFY-mzjj1pq8-70tGKvbIwIfbCj0JFZFklfV--68TTzZo0VcDAO2L_yHz6dvfPnPauTLdF1bXTx9dvDjg3ZtyVA7b_z-Yy2-OlX-zBJC8kwh8BQoN7-A029YONixrsK2lugUuw0AJ0HbdiWgqMaaXA_Ojm2sjDpEVvWoAETTepeogR2SpwvneOFKnM_kB9IWP1L172qAWlaNPBGGNdp1v083EN0V564fm-dDCS6YGIA-M"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 p-6 max-w-[1600px] mx-auto w-full">
+<div class="flex flex-col gap-6">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-primary text-xs font-mono font-bold tracking-widest uppercase px-2 py-0.5 bg-primary/10 rounded">Live Terminal</span>
+<span class="text-slate-500 text-xs font-mono">v3.0.1-terminal-stable</span>
+</div>
+<h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 uppercase italic">Launch Feed</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Real-time risk assessment engine for newly deployed Solana SPL tokens.</p>
+</div>
+<div class="flex flex-wrap gap-4">
+<div class="flex flex-col items-end border-r border-primary/20 pr-4">
+<span class="text-xs uppercase text-slate-500 font-bold">SOL Price</span>
+<span class="text-primary font-mono font-bold">$142.34 <span class="text-xs text-primary/70 font-normal">+2.4%</span></span>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-xs uppercase text-slate-500 font-bold">Network TPS</span>
+<span class="text-primary font-mono font-bold">2,482</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-slate-500 text-xs font-bold uppercase">Active Launches (1h)</span>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-black text-primary font-mono tracking-tighter">1,284</span>
+<span class="text-xs text-primary font-bold">+12%</span>
+</div>
+<div class="w-full h-1 bg-primary/10 mt-2 overflow-hidden rounded-full">
+<div class="h-full bg-primary w-[70%]"></div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-slate-500 text-xs font-bold uppercase">24h Volumne</span>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-black text-primary font-mono tracking-tighter">$42.8M</span>
+<span class="text-xs text-rose-500 font-bold">-5%</span>
+</div>
+<div class="w-full h-1 bg-primary/10 mt-2 overflow-hidden rounded-full">
+<div class="h-full bg-rose-500 w-[45%]"></div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-slate-500 text-xs font-bold uppercase">High Risk Detected</span>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-black text-rose-500 font-mono tracking-tighter">156</span>
+<span class="text-xs text-primary font-bold">+18%</span>
+</div>
+<div class="w-full h-1 bg-primary/10 mt-2 overflow-hidden rounded-full">
+<div class="h-full bg-rose-500 w-[85%]"></div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-slate-500 text-xs font-bold uppercase">Total Market Cap</span>
+<div class="flex items-baseline gap-2">
+<span class="text-2xl font-black text-primary font-mono tracking-tighter">$1.2B</span>
+<span class="text-xs text-primary font-bold">+0.8%</span>
+</div>
+<div class="w-full h-1 bg-primary/10 mt-2 overflow-hidden rounded-full">
+<div class="h-full bg-primary w-[30%]"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-3 py-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-slate-50 rounded-lg text-sm font-bold uppercase tracking-tight shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+<span class="material-symbols-outlined text-lg">star</span>
+                        New Tokens
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-sm font-bold uppercase tracking-tight hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">warning</span>
+                        High Rug Risk
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-sm font-bold uppercase tracking-tight hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">groups</span>
+                        Coordinated
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-sm font-bold uppercase tracking-tight hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">water_drop</span>
+                        High Liquidity
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-sm font-bold uppercase tracking-tight hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined text-lg">trending_down</span>
+                        Low Market Cap
+                    </button>
+<div class="ml-auto flex items-center gap-2 text-slate-500 text-sm font-mono">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        LIVE UPDATE
+                    </div>
+</div>
+<div class="bg-background-light dark:bg-background-dark border border-primary/20 rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-primary/10 border-b border-primary/20 text-xs font-bold uppercase tracking-widest text-primary">
+<th class="px-6 py-4">Token</th>
+<th class="px-6 py-4">Age</th>
+<th class="px-6 py-4">Liquidity</th>
+<th class="px-6 py-4">Market Cap</th>
+<th class="px-6 py-4">Rug Risk</th>
+<th class="px-6 py-4">Trade Caution</th>
+<th class="px-6 py-4">Launch Quality</th>
+<th class="px-6 py-4">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-primary/10 font-mono text-sm">
+<tr class="hover:bg-primary/5 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold italic">S</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary">$SOLANA_CAT</div>
+<div class="text-[10px] text-slate-500 truncate w-32 uppercase tracking-tighter">7vSj...9pQw</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-bold">2m 14s</td>
+<td class="px-6 py-4 text-primary font-bold">$42.5K</td>
+<td class="px-6 py-4">$1.2M</td>
+<td class="px-6 py-4">
+<span class="bg-emerald-500/10 text-emerald-500 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30 uppercase">Low Risk</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-emerald-500">
+<span class="material-symbols-outlined text-sm">verified</span>
+<span class="text-xs uppercase font-bold tracking-tighter">Healthy</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex gap-0.5">
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary/30"></div>
+<div class="w-4 h-1 bg-primary/30"></div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-primary font-bold uppercase tracking-tighter text-xs italic">Original</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold italic">P</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary">$PUMP_MINER</div>
+<div class="text-[10px] text-slate-500 truncate w-32 uppercase tracking-tighter">Ax92...Lp09</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-bold">4m 02s</td>
+<td class="px-6 py-4 text-primary font-bold">$12.1K</td>
+<td class="px-6 py-4">$250K</td>
+<td class="px-6 py-4">
+<span class="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-1 rounded-full border border-amber-500/30 uppercase">Med Risk</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-amber-500">
+<span class="material-symbols-outlined text-sm">info</span>
+<span class="text-xs uppercase font-bold tracking-tighter">Volatile</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex gap-0.5">
+<div class="w-4 h-1 bg-amber-500"></div>
+<div class="w-4 h-1 bg-amber-500"></div>
+<div class="w-4 h-1 bg-amber-500/30"></div>
+<div class="w-4 h-1 bg-amber-500/30"></div>
+<div class="w-4 h-1 bg-amber-500/30"></div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-amber-500 font-bold uppercase tracking-tighter text-xs italic">Copycat</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors cursor-pointer group bg-rose-500/5">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-500 font-bold italic">R</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-rose-500">$RUG_GPT</div>
+<div class="text-[10px] text-slate-500 truncate w-32 uppercase tracking-tighter">XyZ4...Pq23</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-bold text-rose-500">55s</td>
+<td class="px-6 py-4 text-rose-500 font-bold">$2.5K</td>
+<td class="px-6 py-4">$45K</td>
+<td class="px-6 py-4">
+<span class="bg-rose-500/10 text-rose-500 text-[10px] font-bold px-2 py-1 rounded-full border border-rose-500/30 uppercase shadow-[0_0_10px_rgba(244,63,94,0.2)]">High Rug</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-rose-500">
+<span class="material-symbols-outlined text-sm">dangerous</span>
+<span class="text-xs uppercase font-bold tracking-tighter">Blacklisted</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex gap-0.5">
+<div class="w-4 h-1 bg-rose-500"></div>
+<div class="w-4 h-1 bg-rose-500/30"></div>
+<div class="w-4 h-1 bg-rose-500/30"></div>
+<div class="w-4 h-1 bg-rose-500/30"></div>
+<div class="w-4 h-1 bg-rose-500/30"></div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-rose-500 font-bold uppercase tracking-tighter text-xs italic">Scam Bot</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold italic">M</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary">$MEME_MASTER</div>
+<div class="text-[10px] text-slate-500 truncate w-32 uppercase tracking-tighter">Bv12...Rt66</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-bold">12m 45s</td>
+<td class="px-6 py-4 text-primary font-bold">$115K</td>
+<td class="px-6 py-4">$4.5M</td>
+<td class="px-6 py-4">
+<span class="bg-emerald-500/10 text-emerald-500 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30 uppercase">Low Risk</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-emerald-500">
+<span class="material-symbols-outlined text-sm">verified</span>
+<span class="text-xs uppercase font-bold tracking-tighter">Bullish</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex gap-0.5">
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary"></div>
+<div class="w-4 h-1 bg-primary/30"></div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-primary font-bold uppercase tracking-tighter text-xs italic">Original</span>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors cursor-pointer group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold italic">D</div>
+<div>
+<div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary">$DEGEN_SOL</div>
+<div class="text-[10px] text-slate-500 truncate w-32 uppercase tracking-tighter">Km33...Op11</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-bold">15m 11s</td>
+<td class="px-6 py-4 text-primary font-bold">$340K</td>
+<td class="px-6 py-4">$8.1M</td>
+<td class="px-6 py-4">
+<span class="bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-1 rounded-full border border-amber-500/30 uppercase">Med Risk</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-1 text-amber-500">
+<span class="material-symbols-outlined text-sm">info</span>
+<span class="text-xs uppercase font-bold tracking-tighter">Whale Activity</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex gap-0.5">
+<div class="w-4 h-1 bg-amber-500"></div>
+<div class="w-4 h-1 bg-amber-500"></div>
+<div class="w-4 h-1 bg-amber-500"></div>
+<div class="w-4 h-1 bg-amber-500/30"></div>
+<div class="w-4 h-1 bg-amber-500/30"></div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-primary font-bold uppercase tracking-tighter text-xs italic">Original</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold uppercase italic text-primary">Volume Distribution</h3>
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium">Whale (&gt;$50k)</span>
+<span class="font-mono text-primary font-bold">14%</span>
+</div>
+<div class="w-full bg-primary/10 h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 14%"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium">Retail (&lt;$1k)</span>
+<span class="font-mono text-primary font-bold">62%</span>
+</div>
+<div class="w-full bg-primary/10 h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 62%"></div>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium">Bot Volume</span>
+<span class="font-mono text-rose-500 font-bold">24%</span>
+</div>
+<div class="w-full bg-primary/10 h-2 rounded-full overflow-hidden">
+<div class="bg-rose-500 h-full" style="width: 24%"></div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold uppercase italic text-primary">Recent Alerts</h3>
+<span class="material-symbols-outlined text-primary">history</span>
+</div>
+<div class="space-y-3">
+<div class="flex gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+<span class="material-symbols-outlined text-rose-500 shrink-0">warning</span>
+<div>
+<p class="text-xs font-bold text-rose-500 uppercase tracking-tighter">Rug Risk Detected</p>
+<p class="text-[10px] text-slate-400">Token Ax92... Liquidity removed instantly. Trade caution.</p>
+</div>
+</div>
+<div class="flex gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary shrink-0">rocket_launch</span>
+<div>
+<p class="text-xs font-bold text-primary uppercase tracking-tighter">Volume Surge</p>
+<p class="text-[10px] text-slate-400">$SOLANA_CAT volume spiked 400% in 5m.</p>
+</div>
+</div>
+<div class="flex gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary shrink-0">verified_user</span>
+<div>
+<p class="text-xs font-bold text-primary uppercase tracking-tighter">Contract Verified</p>
+<p class="text-[10px] text-slate-400">$MEME_MASTER audit completed 100/100 score.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 border border-primary/20 rounded-xl p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold uppercase italic text-primary">Trading Activity</h3>
+<span class="material-symbols-outlined text-primary">insights</span>
+</div>
+<div class="h-48 flex items-end justify-between gap-1">
+<div class="w-full bg-primary/40 h-[30%] rounded-t"></div>
+<div class="w-full bg-primary/20 h-[50%] rounded-t"></div>
+<div class="w-full bg-rose-500/40 h-[80%] rounded-t"></div>
+<div class="w-full bg-primary/60 h-[40%] rounded-t"></div>
+<div class="w-full bg-primary/30 h-[60%] rounded-t"></div>
+<div class="w-full bg-rose-500/30 h-[20%] rounded-t"></div>
+<div class="w-full bg-primary/80 h-[90%] rounded-t"></div>
+<div class="w-full bg-primary/40 h-[45%] rounded-t"></div>
+<div class="w-full bg-primary/20 h-[35%] rounded-t"></div>
+<div class="w-full bg-primary/90 h-[100%] rounded-t"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] text-slate-500 font-mono uppercase">
+<span>08:00</span>
+<span>12:00</span>
+<span>16:00</span>
+<span>20:00</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="border-t border-primary/20 p-6 bg-background-light dark:bg-background-dark mt-auto">
+<div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="text-primary font-black uppercase text-sm tracking-widest italic">SolanaTrust</span>
+<span class="text-slate-500 text-xs font-mono">© 2024 DECENTRALIZED DATA PROTOCOL</span>
+</div>
+<div class="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
+<a class="hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="hover:text-primary transition-colors" href="#">API Keys</a>
+<a class="hover:text-primary transition-colors" href="#">Legal</a>
+<a class="hover:text-primary transition-colors" href="#">Discord</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-500 uppercase">System Status</span>
+<span class="text-[10px] text-primary font-bold uppercase">All Systems Operational</span>
+</div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

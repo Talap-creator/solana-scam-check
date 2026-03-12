@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SolanaTrust | Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3b82f6",
+                        "background-light": "#f8fafc",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .grid-pattern {
+            background-image: radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .node-overlay {
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden grid-pattern">
+<div class="node-overlay absolute inset-0 pointer-events-none"></div>
+<div class="layout-container flex h-full grow flex-col z-10">
+<header class="flex items-center justify-between border-b border-primary/10 px-6 py-4 lg:px-40 bg-background-dark/50 backdrop-blur-md">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-primary/20 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">security</span>
+</div>
+<h2 class="text-slate-100 text-xl font-bold tracking-tight">SolanaTrust</h2>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="text-sm font-medium text-slate-400 hover:text-primary transition-colors" href="#">Support</a>
+</div>
+</header>
+<main class="flex-1 flex items-center justify-center p-6">
+<div class="w-full max-w-[480px] bg-background-dark/40 border border-primary/10 p-8 rounded-xl backdrop-blur-xl shadow-2xl">
+<div class="mb-8">
+<h1 class="text-slate-100 text-4xl font-black leading-tight tracking-tight mb-2">Welcome Back</h1>
+<p class="text-slate-400 text-base font-normal">Log in to access your risk intelligence dashboard.</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="block">
+<span class="text-slate-300 text-sm font-medium mb-2 block">Email Address</span>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">mail</span>
+<input class="w-full rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/20 bg-primary/5 h-14 pl-12 pr-4 placeholder:text-slate-600 text-base font-normal transition-all" placeholder="name@company.com" type="email"/>
+</div>
+</label>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center mb-2">
+<span class="text-slate-300 text-sm font-medium">Password</span>
+<a class="text-xs text-primary hover:underline" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl">lock</span>
+<input class="w-full rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 border border-primary/20 bg-primary/5 h-14 pl-12 pr-12 placeholder:text-slate-600 text-base font-normal transition-all" placeholder="••••••••" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full cursor-pointer items-center justify-center rounded-lg h-14 bg-primary text-white text-base font-bold leading-normal tracking-wide hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]" type="submit">
+                                Sign In to Dashboard
+                            </button>
+</div>
+</form>
+<div class="mt-8 pt-6 border-t border-primary/10 text-center">
+<p class="text-slate-400 text-sm">
+                            Don't have an account? 
+                            <a class="text-primary font-semibold hover:underline ml-1" href="#">Create an account</a>
+</p>
+</div>
+</div>
+</main>
+<footer class="p-6 text-center lg:px-40">
+<p class="text-slate-600 text-xs">
+                    © 2024 SolanaTrust Intelligence Systems. All rights reserved. <br class="md:hidden"/>
+<span class="mx-2 hidden md:inline">|</span>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<span class="mx-2">|</span>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+</p>
+</footer>
+</div>
+</div>
+</body></html>

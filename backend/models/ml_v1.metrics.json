@@ -1,0 +1,7 @@
+{
+  "roc_auc": 0.0,
+  "pr_auc": 0.0,
+  "brier": 0.25,
+  "precision_at_top10pct": 0.0,
+  "recall_at_critical_0.70": 0.0
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3B82F6",
+                        "background-light": "#f5f8fb",
+                        "background-dark": "#0f172a",
+                        "surface-dark": "#1e293b",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .terminal-grid { background-size: 20px 20px; background-image: radial-gradient(circle, #1e293b 1px, transparent 1px); }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display selection:bg-primary/30">
+<div class="relative flex min-h-screen flex-col overflow-x-hidden terminal-grid">
+<!-- Header / Navigation -->
+<header class="sticky top-0 z-50 border-b border-border-dark bg-background-dark/80 backdrop-blur-md px-4 lg:px-10 py-3">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">shield_with_heart</span>
+<h2 class="text-slate-100 text-xl font-bold tracking-tight">SolanaTrust</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-400 hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
+<a class="text-slate-100 border-b-2 border-primary text-sm font-medium pb-1" href="#">Token Analyzer</a>
+<a class="text-slate-400 hover:text-primary text-sm font-medium transition-colors" href="#">Portfolio</a>
+<a class="text-slate-400 hover:text-primary text-sm font-medium transition-colors" href="#">Alerts</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 flex-1 justify-end">
+<div class="flex items-center gap-2"><button class="bg-primary hover:bg-primary/90 text-white text-sm font-bold py-2 px-6 rounded-lg transition-colors shadow-lg shadow-primary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">login</span> Log In
+</button></div>
+</div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 py-6 md:px-10">
+<!-- Token Hero Info -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 p-6 bg-surface-dark border border-border-dark rounded-xl">
+<div class="flex items-center gap-6">
+<div class="relative">
+<div class="size-20 rounded-xl overflow-hidden bg-primary/10 border border-primary/20">
+<img alt="Bonk Token Logo" class="w-full h-full object-cover" data-alt="Official logo of Bonk cryptocurrency token" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAnmLMkwr1t6Tm1wf-UuXzvUDUNq7y6IWwrsSjsKYqCiwHFSM_d_3kKFp6V6vVrMgwEIrAjvtS3ospGD-IKBu-EfB12jxZdG_2s-7nFj7pLiP4U9b55GbtlhOyTrtLX3tuY3s4U_1N8bigSdGhPazPT74lJ3-5DYSNTZWxZnLrLqcTgba7L-A-GNv7y63GxzOaTfnyMl6zUQwwAiJOGO1neK5z-CVR2RcvHToCVQQxMLHvSPF6qqCAnnAdqwbSRheeLfqVFvyfKPI"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">SOL</div>
+</div>
+<div>
+<div class="flex items-center gap-3">
+<h1 class="text-3xl font-bold text-slate-100">Bonk</h1>
+<span class="text-slate-400 font-mono text-lg">(BONK)</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-slate-400 text-sm font-mono">DeZ7...6rkG</span>
+<button class="text-primary hover:text-primary/80"><span class="material-symbols-outlined text-sm">content_copy</span></button>
+<button class="text-primary hover:text-primary/80"><span class="material-symbols-outlined text-sm">open_in_new</span></button>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-4">
+<div class="bg-primary/10 border border-primary/30 p-4 rounded-xl flex items-center gap-4 min-w-[240px]">
+<div>
+<p class="text-xs uppercase tracking-widest text-primary/70 font-bold mb-1">Rug Probability</p>
+<p class="text-3xl font-black text-primary">LOW</p>
+</div>
+<div class="ml-auto">
+<span class="material-symbols-outlined text-4xl text-primary">verified_user</span>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<button class="bg-primary text-white font-bold py-2 px-6 rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">star</span> Watchlist
+                    </button>
+<button class="bg-surface-dark border border-border-dark text-slate-300 font-bold py-2 px-6 rounded-lg hover:bg-border-dark transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">share</span> Share Report
+                    </button>
+</div>
+</div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Summary & Dimensions -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Security Summary -->
+<div class="bg-surface-dark border border-border-dark rounded-xl overflow-hidden">
+<div class="p-4 border-b border-border-dark flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<h3 class="font-bold text-slate-100">Security Summary</h3>
+</div>
+<div class="p-6 flex flex-col md:flex-row gap-6">
+<div class="flex-1">
+<p class="text-slate-300 leading-relaxed">
+                                BONK exhibits a healthy ecosystem profile with high liquidity locking (92%) and distributed ownership. No proxy contracts or minting capabilities were detected in current audit cycles. 
+                                <span class="text-primary font-medium">Early buyer behavior matches known institutional patterns rather than coordinated sybil clusters.</span>
+</p>
+<div class="mt-4 flex flex-wrap gap-2">
+<span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded border border-primary/20">Ownership Renounced</span>
+<span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded border border-primary/20">Liquidity Burned</span>
+<span class="bg-primary/10 text-primary text-xs px-2 py-1 rounded border border-primary/20">No Blacklist</span>
+</div>
+</div>
+<div class="w-full md:w-48 aspect-video rounded-lg bg-background-dark flex items-center justify-center border border-border-dark overflow-hidden">
+<img alt="Security Scan Chart" class="w-full h-full object-cover opacity-50" data-alt="Abstract security scan waveform visualization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbAdmxSy_Yzx0WpmXfw73iV-oLTygkFsLHyCx3POLCutT65JXX3JEOHGp6dWF5KQjfR4YOFyjMja02JcYVRoeMcwGa1Pn_u_m3Szvv28VCbeMEzvumVMUJkkwqxABjR8AguOyYDvOTrGs83t1pK2-w5kPZP9RfdOQRTqDUx2ydipz_sI0OcRdgAEzky7HpIMbLgZSfHGFfttQ6TT1wmNF7coTb5aTlGb3dPvtEuO06M5P9tGGv5v0eUsM3cbtcQ6TySG8hczeSC0M"/>
+</div>
+</div>
+</div>
+<!-- Risk Dimensions Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Technical -->
+<div class="bg-surface-dark border border-border-dark p-4 rounded-xl">
+<div class="flex justify-between items-start mb-3">
+<span class="material-symbols-outlined text-blue-400">code</span>
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">9.2/10</span>
+</div>
+<h4 class="font-bold text-slate-100 mb-1">Technical</h4>
+<p class="text-xs text-slate-400">Clean contract, no malicious functions, audited bytecode.</p>
+</div>
+<!-- Distribution -->
+<div class="bg-surface-dark border border-border-dark p-4 rounded-xl">
+<div class="flex justify-between items-start mb-3">
+<span class="material-symbols-outlined text-purple-400">groups</span>
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">8.8/10</span>
+</div>
+<h4 class="font-bold text-slate-100 mb-1">Distribution</h4>
+<p class="text-xs text-slate-400">Low Gini coefficient, top 10 holders own &lt; 15%.</p>
+</div>
+<!-- Market Maturity -->
+<div class="bg-surface-dark border border-border-dark p-4 rounded-xl">
+<div class="flex justify-between items-start mb-3">
+<span class="material-symbols-outlined text-yellow-400">trending_up</span>
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">9.5/10</span>
+</div>
+<h4 class="font-bold text-slate-100 mb-1">Maturity</h4>
+<p class="text-xs text-slate-400">Listed on major CEXs, high age-to-volume ratio.</p>
+</div>
+</div>
+<!-- Behavior Analysis Modules -->
+<div class="space-y-4">
+<h3 class="text-lg font-bold text-slate-100 px-1">Behavioral Analysis</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Dev Cluster -->
+<div class="bg-surface-dark border border-border-dark rounded-xl p-5">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-orange-500/10 rounded-lg">
+<span class="material-symbols-outlined text-orange-500">hub</span>
+</div>
+<div>
+<h5 class="font-bold text-slate-100 text-sm">Developer Clusters</h5>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">Connected Wallets Scan</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-xs">
+<span class="text-slate-400">Identified Wallets</span>
+<span class="text-slate-100 font-mono">14 Wallets</span>
+</div>
+<div class="w-full bg-background-dark h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[25%]"></div>
+</div>
+<p class="text-[11px] text-slate-400 italic">Low correlation found between deployer and early snipers.</p>
+</div>
+</div>
+<!-- Early Buyers -->
+<div class="bg-surface-dark border border-border-dark rounded-xl p-5">
+<div class="flex items-center gap-3 mb-4">
+<div class="p-2 bg-cyan-500/10 rounded-lg">
+<span class="material-symbols-outlined text-cyan-500">history_toggle_off</span>
+</div>
+<div>
+<h5 class="font-bold text-slate-100 text-sm">Early Buyer Retention</h5>
+<p class="text-[10px] text-slate-500 uppercase tracking-tighter">T+30 Day Hold Analysis</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-xs">
+<span class="text-slate-400">Holding Post-Pump</span>
+<span class="text-slate-100 font-mono">68%</span>
+</div>
+<div class="w-full bg-background-dark h-1.5 rounded-full overflow-hidden">
+<div class="bg-cyan-500 h-full w-[68%]"></div>
+</div>
+<p class="text-[11px] text-slate-400 italic">Significant organic growth detected in the first 48 hours.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Event Timeline -->
+<div class="bg-surface-dark border border-border-dark rounded-xl overflow-hidden">
+<div class="p-4 border-b border-border-dark">
+<h3 class="font-bold text-slate-100">Event Timeline</h3>
+</div>
+<div class="p-6 relative">
+<div class="absolute left-8 top-8 bottom-8 w-px bg-border-dark"></div>
+<div class="space-y-8 relative">
+<!-- Timeline Item -->
+<div class="flex gap-6 items-start">
+<div class="size-4 rounded-full bg-primary border-4 border-background-dark ring-1 ring-primary z-10 mt-1"></div>
+<div class="flex-1">
+<p class="text-xs text-slate-500 font-mono mb-1">2023-12-24 14:22 UTC</p>
+<h5 class="font-bold text-slate-200 text-sm">Major Liquidity Lock Extension</h5>
+<p class="text-xs text-slate-400 mt-1">LP extended for another 365 days via Streamflow.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="size-4 rounded-full bg-primary border-4 border-background-dark ring-1 ring-primary z-10 mt-1"></div>
+<div class="flex-1">
+<p class="text-xs text-slate-500 font-mono mb-1">2023-11-10 09:15 UTC</p>
+<h5 class="font-bold text-slate-200 text-sm">Binance Spot Listing</h5>
+<p class="text-xs text-slate-400 mt-1">Token maturity rank increased from Silver to Gold.</p>
+</div>
+</div>
+<div class="flex gap-6 items-start">
+<div class="size-4 rounded-full bg-slate-600 border-4 border-background-dark ring-1 ring-slate-600 z-10 mt-1"></div>
+<div class="flex-1">
+<p class="text-xs text-slate-500 font-mono mb-1">2023-01-05 18:30 UTC</p>
+<h5 class="font-bold text-slate-200 text-sm">Deployment &amp; Mint</h5>
+<p class="text-xs text-slate-400 mt-1">Contract deployed on Solana mainnet-beta.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Signals & Markets -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Risk Signals -->
+<div class="bg-surface-dark border border-border-dark rounded-xl overflow-hidden">
+<div class="p-4 border-b border-border-dark bg-primary/5">
+<h3 class="font-bold text-slate-100 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">sensors</span>
+                            Key Signals
+                        </h3>
+</div>
+<div class="p-4 space-y-4">
+<!-- Reducing Risk -->
+<div>
+<h4 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">arrow_downward</span> Reducing Risk
+                            </h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 p-2 bg-background-dark rounded-lg border border-border-dark">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5">check_circle</span>
+<span class="text-xs text-slate-300">Renounced ownership 12 months ago.</span>
+</li>
+<li class="flex items-start gap-3 p-2 bg-background-dark rounded-lg border border-border-dark">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5">check_circle</span>
+<span class="text-xs text-slate-300">LP value &gt; $20M across multiple DEXs.</span>
+</li>
+</ul>
+</div>
+<hr class="border-border-dark"/>
+<!-- Increasing Risk -->
+<div>
+<h4 class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-3 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">arrow_upward</span> Increasing Risk
+                            </h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 p-2 bg-background-dark rounded-lg border border-border-dark">
+<span class="material-symbols-outlined text-red-400 text-sm mt-0.5">warning</span>
+<span class="text-xs text-slate-300">Recent increase in exchange inflow (3%).</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Market Data Widget -->
+<div class="bg-surface-dark border border-border-dark rounded-xl p-6">
+<h3 class="font-bold text-slate-100 mb-4">Market Execution</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-end">
+<div>
+<p class="text-xs text-slate-500 mb-1">Price USD</p>
+<p class="text-xl font-mono font-bold text-slate-100">$0.00001243</p>
+</div>
+<div class="text-right">
+<p class="text-xs text-primary font-bold">+4.2%</p>
+<p class="text-[10px] text-slate-500 uppercase">24H Change</p>
+</div>
+</div>
+<div class="pt-4 border-t border-border-dark space-y-2">
+<div class="flex justify-between text-xs">
+<span class="text-slate-500">Market Cap</span>
+<span class="text-slate-200">$748.4M</span>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-slate-500">24H Volume</span>
+<span class="text-slate-200">$124.2M</span>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-slate-500">Liquidity (Raydium)</span>
+<span class="text-slate-200">$18.9M</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 bg-primary hover:bg-primary/90 text-white text-sm font-bold py-3 rounded-lg transition-colors shadow-lg shadow-primary/20">
+                        Trade on Jupiter
+                    </button>
+</div>
+<!-- Community Sentiment -->
+<div class="bg-surface-dark border border-border-dark rounded-xl p-6">
+<h3 class="font-bold text-slate-100 mb-4">Social Sentiment</h3>
+<div class="flex items-center justify-between gap-2">
+<div class="flex-1 flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-1">sentiment_very_satisfied</span>
+<span class="text-[10px] text-slate-500 uppercase">Bullish</span>
+<span class="text-sm font-bold text-slate-100">72%</span>
+</div>
+<div class="w-px h-8 bg-border-dark"></div>
+<div class="flex-1 flex flex-col items-center">
+<span class="material-symbols-outlined text-slate-500 mb-1">sentiment_neutral</span>
+<span class="text-[10px] text-slate-500 uppercase">Neutral</span>
+<span class="text-sm font-bold text-slate-100">18%</span>
+</div>
+<div class="w-px h-8 bg-border-dark"></div>
+<div class="flex-1 flex flex-col items-center">
+<span class="material-symbols-outlined text-red-500 mb-1">sentiment_very_dissatisfied</span>
+<span class="text-[10px] text-slate-500 uppercase">Bearish</span>
+<span class="text-sm font-bold text-slate-100">10%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="border-t border-border-dark mt-12 py-8 bg-background-dark/50 px-4 md:px-10">
+<div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 opacity-50">
+<span class="material-symbols-outlined text-xl">shield_with_heart</span>
+<span class="text-sm font-bold text-slate-300">SolanaTrust v2.4.1</span>
+</div>
+<div class="flex gap-8">
+<a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs text-slate-500 hover:text-primary transition-colors" href="#">API Documentation</a>
+</div>
+<p class="text-xs text-slate-500">© 2024 SolanaTrust Analysis Labs.</p>
+</div>
+</footer>
+</div>
+</body></html>

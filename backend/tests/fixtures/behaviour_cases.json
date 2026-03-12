@@ -1,0 +1,685 @@
+[
+  {
+    "case_id": "mature_legit_clear",
+    "description": "Mature token with no strong behaviour anomalies should stay clear/low.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 12.0,
+        "wallet_b": 10.0,
+        "wallet_c": 8.0
+      },
+      "market_age_days": 365,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": false,
+        "severity": "green",
+        "summary": "No unusual liquidity management detected.",
+        "details": "",
+        "rapid_liquidity_drop_score": 0.0,
+        "liquidity_volatility_score": 0.0,
+        "lp_owner_deployer_link_score": 0.0,
+        "liquidity_change_vs_holder_exits_score": 0.0
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "confidence": "medium",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "clear"
+      }
+    }
+  },
+  {
+    "case_id": "low_liquidity_legit_watch",
+    "description": "Low-liquidity legit token can show liquidity watch without broad flagged behaviour.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 14.0,
+        "wallet_b": 9.0,
+        "wallet_c": 7.0
+      },
+      "market_age_days": 210,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "orange",
+        "summary": "Liquidity structure shows stress signals that warrant closer review.",
+        "details": "Liquidity/FDV ratio: 0.80% | 24h buys/sells: 8/10 | 24h volume: $12000.00",
+        "rapid_liquidity_drop_score": 0.45,
+        "liquidity_volatility_score": 0.55,
+        "lp_owner_deployer_link_score": 0.20,
+        "liquidity_change_vs_holder_exits_score": 0.10
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "summary": "Some liquidity-management irregularities were observed, but no broader suspicious wallet behaviour was detected.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "sol_live_like_benign_liquidity",
+    "description": "Blue-chip token with only liquidity-management noise should stay low and non-alarmist.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 11.0,
+        "wallet_b": 8.0,
+        "wallet_c": 6.0
+      },
+      "market_age_days": 900,
+      "market_maturity_score": 61,
+      "known_project_flag": true,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "red",
+        "summary": "Short-window liquidity stress was observed, but without corroborating wallet-behaviour anomalies.",
+        "details": "Liquidity/FDV ratio: 0.60% | 24h buys/sells: 18/24 | 24h volume: $410000.00",
+        "rapid_liquidity_drop_score": 0.78,
+        "liquidity_volatility_score": 0.74,
+        "lp_owner_deployer_link_score": 0.0,
+        "liquidity_change_vs_holder_exits_score": 0.0,
+        "short_window_sell_pressure_score": 0.76,
+        "short_window_price_drop_score": 0.51,
+        "short_window_volume_acceleration_score": 0.44
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "summary": "Some liquidity-management irregularities were observed, but no broader suspicious wallet behaviour was detected.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "usdc_live_like_benign_liquidity",
+    "description": "Established stablecoin should keep liquidity-management noise contextual and low-risk.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 10.0,
+        "wallet_b": 8.0,
+        "wallet_c": 6.0
+      },
+      "market_age_days": 1100,
+      "market_maturity_score": 81,
+      "known_project_flag": true,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "orange",
+        "summary": "Liquidity structure shows localized stress, but broader suspicious wallet behaviour is absent.",
+        "details": "Liquidity/FDV ratio: 0.68% | 24h buys/sells: 22/23 | 24h volume: $950000.00",
+        "rapid_liquidity_drop_score": 0.58,
+        "liquidity_volatility_score": 0.60,
+        "lp_owner_deployer_link_score": 0.0,
+        "liquidity_change_vs_holder_exits_score": 0.0,
+        "short_window_sell_pressure_score": 0.44,
+        "short_window_price_drop_score": 0.09,
+        "short_window_volume_acceleration_score": 0.35
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "summary": "Some liquidity-management irregularities were observed, but no broader suspicious wallet behaviour was detected.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "bonk_live_like_benign_liquidity",
+    "description": "Known token with noisy pair behaviour should keep liquidity issues contextual.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 12.0,
+        "wallet_b": 9.0,
+        "wallet_c": 7.0
+      },
+      "market_age_days": 420,
+      "market_maturity_score": 63,
+      "known_project_flag": true,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "red",
+        "summary": "Liquidity turnover is elevated relative to depth, but stronger coordination signals are absent.",
+        "details": "Liquidity/FDV ratio: 0.55% | 24h buys/sells: 25/31 | 24h volume: $780000.00",
+        "rapid_liquidity_drop_score": 0.72,
+        "liquidity_volatility_score": 0.80,
+        "lp_owner_deployer_link_score": 0.0,
+        "liquidity_change_vs_holder_exits_score": 0.0,
+        "short_window_sell_pressure_score": 0.69,
+        "short_window_price_drop_score": 0.42,
+        "short_window_volume_acceleration_score": 0.51
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "summary": "Some liquidity-management irregularities were observed, but no broader suspicious wallet behaviour was detected.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "link_live_like_benign_liquidity",
+    "description": "Mature token with thin detected pool should keep liquidity behaviour contextual rather than alarmist.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 9.2,
+        "wallet_b": 7.1,
+        "wallet_c": 5.8
+      },
+      "market_age_days": 270,
+      "market_maturity_score": 49,
+      "known_project_flag": false,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "timing_similarity_score": 0.0,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.0
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.0,
+        "same_window_buy_density": 0.0,
+        "buy_size_similarity_score": 0.0,
+        "overlap_with_top_holders": 0.0,
+        "confidence": 0.0
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "red",
+        "summary": "Thin detected pool shows liquidity stress, but no corroborating coordination or insider-selling signal was found.",
+        "details": "Liquidity/FDV ratio: 0.31% | 24h buys/sells: 5/7 | 24h volume: $2500.00",
+        "rapid_liquidity_drop_score": 0.84,
+        "liquidity_volatility_score": 0.70,
+        "lp_owner_deployer_link_score": 0.0,
+        "liquidity_change_vs_holder_exits_score": 0.0,
+        "short_window_sell_pressure_score": 0.62,
+        "short_window_price_drop_score": 0.36,
+        "short_window_volume_acceleration_score": 0.29
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "low",
+      "summary": "Some liquidity-management irregularities were observed, but no broader suspicious wallet behaviour was detected.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "clear",
+        "insider_selling": "clear",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "developer_cluster_dominant_high",
+    "description": "A strong developer-control pattern should drive a coordinated-wallet warning even without broad liquidity collapse.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 21.0,
+        "wallet_b": 16.0,
+        "wallet_c": 11.0
+      },
+      "market_age_days": 22,
+      "market_maturity_score": 18,
+      "known_project_flag": false,
+      "developer_cluster_signal": {
+        "detected": true,
+        "cluster_wallet_count": 3,
+        "cluster_supply_control_pct": 38.0,
+        "shared_funder": "Fund3r111111111111111111111111111111111",
+        "shared_funding_ratio": 0.72,
+        "timing_similarity_score": 0.78,
+        "direct_wallet_overlap_count": 1,
+        "shared_outgoing_wallets_count": 1,
+        "multi_hop_shared_funder_count": 1,
+        "funding_trace_depth_avg": 1.8,
+        "confidence": 0.81
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.08,
+        "same_window_buy_density": 0.10,
+        "buy_size_similarity_score": 0.05,
+        "overlap_with_top_holders": 0.04,
+        "confidence": 0.10
+      },
+      "insider_selling_signal": {
+        "detected": true,
+        "seller_wallet_count": 2,
+        "seller_supply_control_pct": 15.0,
+        "large_holder_sell_ratio_recent": 0.60,
+        "coordinated_exit_window_score": 0.58,
+        "sell_window_span_seconds": 5100,
+        "confidence": 0.52
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "orange",
+        "summary": "Liquidity structure shows stress signals that warrant closer review.",
+        "details": "Liquidity/FDV ratio: 0.95% | 24h buys/sells: 14/18 | 24h volume: $84000.00",
+        "rapid_liquidity_drop_score": 0.42,
+        "liquidity_volatility_score": 0.46,
+        "lp_owner_deployer_link_score": 0.18,
+        "liquidity_change_vs_holder_exits_score": 0.12,
+        "short_window_sell_pressure_score": 0.35,
+        "short_window_price_drop_score": 0.16,
+        "short_window_volume_acceleration_score": 0.22
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "critical",
+      "summary": "Coordinated wallet behaviour was detected and should be reviewed closely.",
+      "module_statuses": {
+        "developer_cluster": "flagged",
+        "early_buyers": "clear",
+        "insider_selling": "flagged",
+        "liquidity_management": "watch"
+      }
+    }
+  },
+  {
+    "case_id": "early_buyers_plus_liquidity_high",
+    "description": "Coordinated early accumulation plus strong liquidity anomalies should produce a high behaviour verdict.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 17.0,
+        "wallet_b": 13.0,
+        "wallet_c": 9.0
+      },
+      "market_age_days": 9,
+      "market_maturity_score": 10,
+      "known_project_flag": false,
+      "developer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 0,
+        "cluster_supply_control_pct": 0.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.10,
+        "timing_similarity_score": 0.08,
+        "direct_wallet_overlap_count": 0,
+        "shared_outgoing_wallets_count": 0,
+        "confidence": 0.12
+      },
+      "early_buyer_cluster_signal": {
+        "detected": true,
+        "cluster_wallet_count": 3,
+        "cluster_supply_control_pct": 26.0,
+        "shared_funder": "Fund3r111111111111111111111111111111111",
+        "shared_funding_ratio": 0.78,
+        "same_window_buy_density": 0.91,
+        "buy_size_similarity_score": 0.80,
+        "overlap_with_top_holders": 0.63,
+        "multi_hop_shared_funder_count": 2,
+        "funding_trace_depth_avg": 1.7,
+        "confidence": 0.77
+      },
+      "insider_selling_signal": {
+        "detected": false,
+        "seller_wallet_count": 0,
+        "seller_supply_control_pct": 0.0,
+        "large_holder_sell_ratio_recent": 0.0,
+        "coordinated_exit_window_score": 0.0,
+        "sell_window_span_seconds": 0,
+        "confidence": 0.0
+      },
+      "insider_liquidity_correlation": false,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "red",
+        "summary": "Rapid liquidity deterioration overlaps with aggressive sell pressure and unstable depth.",
+        "details": "Liquidity/FDV ratio: 0.36% | 24h buys/sells: 6/21 | 24h volume: $46000.00",
+        "rapid_liquidity_drop_score": 0.96,
+        "liquidity_volatility_score": 0.88,
+        "lp_owner_deployer_link_score": 0.42,
+        "liquidity_change_vs_holder_exits_score": 0.55,
+        "short_window_sell_pressure_score": 0.92,
+        "short_window_price_drop_score": 0.74,
+        "short_window_volume_acceleration_score": 0.66
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "high",
+      "summary": "Coordinated early-wallet activity was observed alongside liquidity-related anomalies.",
+      "module_statuses": {
+        "developer_cluster": "clear",
+        "early_buyers": "flagged",
+        "insider_selling": "clear",
+        "liquidity_management": "flagged"
+      }
+    }
+  },
+  {
+    "case_id": "developer_and_insider_exit_critical",
+    "description": "Linked developer wallets plus coordinated exits should escalate to a critical behaviour verdict.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 19.0,
+        "wallet_b": 15.0,
+        "wallet_c": 12.0
+      },
+      "market_age_days": 6,
+      "market_maturity_score": 8,
+      "known_project_flag": false,
+      "developer_cluster_signal": {
+        "detected": true,
+        "cluster_wallet_count": 3,
+        "cluster_supply_control_pct": 41.0,
+        "shared_funder": "Fund3r111111111111111111111111111111111",
+        "shared_funding_ratio": 0.82,
+        "timing_similarity_score": 0.84,
+        "direct_wallet_overlap_count": 2,
+        "shared_outgoing_wallets_count": 2,
+        "multi_hop_shared_funder_count": 2,
+        "funding_trace_depth_avg": 2.0,
+        "confidence": 0.86
+      },
+      "early_buyer_cluster_signal": {
+        "detected": false,
+        "cluster_wallet_count": 1,
+        "cluster_supply_control_pct": 4.0,
+        "shared_funder": null,
+        "shared_funding_ratio": 0.12,
+        "same_window_buy_density": 0.14,
+        "buy_size_similarity_score": 0.10,
+        "overlap_with_top_holders": 0.08,
+        "confidence": 0.16
+      },
+      "insider_selling_signal": {
+        "detected": true,
+        "seller_wallet_count": 3,
+        "seller_supply_control_pct": 22.0,
+        "large_holder_sell_ratio_recent": 0.82,
+        "coordinated_exit_window_score": 0.90,
+        "sell_window_span_seconds": 3600,
+        "confidence": 0.79
+      },
+      "insider_liquidity_correlation": true,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "orange",
+        "summary": "Liquidity remains weak while linked seller wallets continue exiting in a compact window.",
+        "details": "Liquidity/FDV ratio: 0.52% | 24h buys/sells: 7/17 | 24h volume: $59000.00",
+        "rapid_liquidity_drop_score": 0.52,
+        "liquidity_volatility_score": 0.61,
+        "lp_owner_deployer_link_score": 0.24,
+        "liquidity_change_vs_holder_exits_score": 0.68,
+        "short_window_sell_pressure_score": 0.71,
+        "short_window_price_drop_score": 0.48,
+        "short_window_volume_acceleration_score": 0.38
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "critical",
+      "summary": "Multiple scam-linked behaviour signals were detected.",
+      "module_statuses": {
+        "developer_cluster": "flagged",
+        "early_buyers": "clear",
+        "insider_selling": "flagged",
+        "liquidity_management": "flagged"
+      }
+    }
+  },
+  {
+    "case_id": "suspicious_fresh_flagged",
+    "description": "Fresh suspicious token should show multi-module flagged behaviour and uplifted risk.",
+    "input": {
+      "owner_shares": {
+        "wallet_a": 18.0,
+        "wallet_b": 14.0,
+        "wallet_c": 11.0
+      },
+      "market_age_days": 7,
+      "market_maturity_score": 12,
+      "known_project_flag": false,
+      "developer_cluster_signal": {
+        "detected": true,
+        "cluster_wallet_count": 3,
+        "cluster_supply_control_pct": 43.0,
+        "shared_funder": "Fund3r111111111111111111111111111111111",
+        "shared_funding_ratio": 0.75,
+        "timing_similarity_score": 0.82,
+        "direct_wallet_overlap_count": 2,
+        "shared_outgoing_wallets_count": 1,
+        "confidence": 0.82
+      },
+      "early_buyer_cluster_signal": {
+        "detected": true,
+        "cluster_wallet_count": 3,
+        "cluster_supply_control_pct": 28.0,
+        "shared_funder": "Fund3r111111111111111111111111111111111",
+        "shared_funding_ratio": 0.75,
+        "same_window_buy_density": 0.85,
+        "buy_size_similarity_score": 0.72,
+        "overlap_with_top_holders": 0.66,
+        "confidence": 0.75
+      },
+      "insider_selling_signal": {
+        "detected": true,
+        "seller_wallet_count": 3,
+        "seller_supply_control_pct": 24.0,
+        "large_holder_sell_ratio_recent": 0.24,
+        "coordinated_exit_window_score": 0.92,
+        "sell_window_span_seconds": 4200,
+        "confidence": 0.74
+      },
+      "insider_liquidity_correlation": true,
+      "liquidity_management_signal": {
+        "detected": true,
+        "severity": "red",
+        "summary": "Recent sell pressure overlaps with thin liquidity structure and weak market depth.",
+        "details": "Liquidity/FDV ratio: 0.40% | 24h buys/sells: 4/19 | 24h volume: $28000.00",
+        "rapid_liquidity_drop_score": 1.0,
+        "liquidity_volatility_score": 0.90,
+        "lp_owner_deployer_link_score": 0.80,
+        "liquidity_change_vs_holder_exits_score": 1.0
+      }
+    },
+    "expected": {
+      "overall_behaviour_risk": "critical",
+      "confidence": "high",
+      "module_statuses": {
+        "developer_cluster": "flagged",
+        "early_buyers": "flagged",
+        "insider_selling": "flagged",
+        "liquidity_management": "flagged"
+      }
+    }
+  }
+]

@@ -1,0 +1,7 @@
+token_address,label,cohort,score,rug_probability,known_rug,known_honeypot,known_legit,mature_project,developer_cluster_label,early_buyer_cluster_label,insider_selling_label,liquidity_management_label,notes
+So11111111111111111111111111111111111111112,0,mature_project,2,0.02,0,0,1,1,0,0,0,1,"Wrapped SOL / mature market asset; benign liquidity-management watch with low overall behaviour risk"
+EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v,0,mature_project,2,0.02,0,0,1,1,0,0,0,1,"USDC on Solana / established stablecoin; benign liquidity-management watch with low overall behaviour risk"
+DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263,0,known_legit,2,0.02,0,0,1,0,0,0,0,1,"BONK / established meme token with broad market history; liquidity behaviour remains contextual, not scam-linked"
+LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L,0,low_liquidity_legit,8,0.08,0,0,1,0,0,0,0,1,"Chainlink token representation with thin detected pool but low rug probability and contextual liquidity-management watch"
+<replace_with_known_rug>,1,known_rug,,,,1,0,0,,,,"Fill with a confirmed rug token and public evidence"
+<replace_with_honeypot>,1,honeypot,,,,0,1,0,0,,,,"Fill with a confirmed honeypot and reproducible sell-failure evidence"

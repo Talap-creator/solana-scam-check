@@ -1,490 +1,340 @@
-const coverageItems = [
-  {
-    title: "Token",
-    description:
-      "Анализ authority, supply, holder concentration, liquidity и token metadata.",
-    bullets: [
-      "Mint authority / freeze authority",
-      "Age, volume, liquidity",
-      "Holder concentration",
-    ],
-  },
-  {
-    title: "Wallet",
-    description:
-      "Проверка связей с flagged адресами, rug-паттернов и deployer behavior.",
-    bullets: [
-      "Связи с suspicious entities",
-      "Transaction patterns",
-      "Launch-dump behavior",
-    ],
-  },
-  {
-    title: "Project",
-    description:
-      "Агрегация token, domain, socials и manual moderation в единый risk profile.",
-    bullets: [
-      "Domain age and trust",
-      "Social validation",
-      "Aggregated risk summary",
-    ],
-  },
-];
+import Link from "next/link";
+import { AnimatedScanPreview } from "@/components/animated-scan-preview";
+import { AppIcon } from "@/components/app-icon";
+import { SearchCheckForm } from "@/components/search-check-form";
+import { getChecks } from "@/lib/api";
 
-const workflowSteps = [
+const engineCards = [
   {
-    step: "01",
-    title: "Fast analysis",
-    description: "Быстрый первичный risk score на базе ончейн- и external signals.",
+    title: "Contract Control",
+    copy: "Ownership analysis and permission monitoring for potential backdoors.",
+    icon: "control",
   },
   {
-    step: "02",
-    title: "Explainability layer",
-    description: "Каждый verdict раскладывается на rule hits, severity и evidence.",
+    title: "Token Distribution",
+    copy: "Whale tracking and holder concentration alerts to prevent dumping.",
+    icon: "holders",
   },
   {
-    step: "03",
-    title: "Background refresh",
-    description: "Глубокий пересчет уточняет отчет без потери первичного ответа.",
+    title: "Liquidity Stability",
+    copy: "LP burn status, lock duration metrics, and depth analysis.",
+    icon: "drop",
   },
-];
+  {
+    title: "Behaviour Signals",
+    copy: "MEV activity monitoring and bot pattern recognition in real-time.",
+    icon: "radar",
+  },
+  {
+    title: "Market Maturity",
+    copy: "Volume consistency and historical trading pattern validation.",
+    icon: "chart",
+  },
+] as const;
 
-const topFindings = [
-  {
-    severity: "HIGH",
-    title: "Mint authority активна",
-    description: "Supply токена можно изменить после запуска.",
-  },
-  {
-    severity: "HIGH",
-    title: "87% у top 10 holders",
-    description: "Критичная концентрация предложения у ограниченного круга адресов.",
-  },
-  {
-    severity: "MEDIUM",
-    title: "Новый домен проекта",
-    description: "Связанный сайт зарегистрирован менее 14 дней назад.",
-  },
-];
+const audienceCards = [
+  ["Traders", "Automated rug-check tools to protect your daily swaps.", "trending"],
+  ["Wallets", "Integrate our risk scores directly into your user's signing experience.", "wallet"],
+  ["Launchpads", "Whitelist protocols based on verifiable onchain health metrics.", "rocket"],
+  ["Researchers", "High-fidelity data for deep forensic onchain investigations.", "analytics"],
+] as const;
 
-const trustItems = [
-  {
-    title: "Explainable scoring",
-    description: "Пользователь видит не только label, но и список причин, почему он получен.",
-  },
-  {
-    title: "Freshness awareness",
-    description: "Интерфейс явно показывает свежесть данных и активный background refresh.",
-  },
-  {
-    title: "Human moderation ready",
-    description: "UI уже готов к manual labels, review queue и работе аналитиков.",
-  },
-];
+const developerBullets = [
+  "WebSocket streams for new launches",
+  "Historical security data archive",
+  "Batch risk assessment endpoints",
+] as const;
 
-export default function Home() {
+function BrandMark() {
+  return <AppIcon className="h-8 w-8 text-[#3b82f6]" name="shield" />;
+}
+
+function riskTone(score: number) {
+  if (score >= 75) return "bg-red-500/10 text-red-500";
+  if (score >= 45) return "bg-yellow-500/10 text-yellow-500";
+  return "bg-green-500/10 text-green-500";
+}
+
+function riskDot(score: number) {
+  if (score >= 75) return "bg-red-500";
+  if (score >= 45) return "bg-yellow-500";
+  return "bg-green-500";
+}
+
+export default async function Home() {
+  const checks = await getChecks();
+  const feedPreview = checks.slice(0, 3);
+  const previewItems = checks.slice(0, 4).map((item) => ({
+    displayName: item.displayName,
+    status: item.status,
+  }));
+
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <div className="mx-auto w-full max-w-[1240px] px-5 py-6 md:px-8 md:py-8">
-        <header className="mb-7 flex flex-col gap-5 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-5 py-5 shadow-[0_18px_60px_rgba(20,34,27,0.08)] backdrop-blur md:flex-row md:items-center md:justify-between">
-          <a className="flex items-center gap-4" href="#top">
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#14392f,#0d7a5f)] font-[family:var(--font-display)] text-lg font-bold text-white">
-              S
-            </span>
-            <span className="flex flex-col">
-              <strong className="text-sm font-extrabold tracking-[-0.03em]">
-                Solace Scan
-              </strong>
-              <span className="text-xs text-[var(--muted)]">
-                Solana risk intelligence
-              </span>
-            </span>
-          </a>
-
-          <nav className="flex flex-wrap gap-4 text-sm text-[var(--muted)] md:justify-center">
-            <a href="#coverage">Что проверяем</a>
-            <a href="#workflow">Как работает</a>
-            <a href="#report">Отчет</a>
-            <a href="#trust">Почему нам верят</a>
-          </nav>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a
-                className="rounded-full border border-[color:var(--border)] bg-white/70 px-5 py-3 text-center text-sm font-bold"
-                href="/dashboard"
-              >
-                Открыть dashboard
-              </a>
-              <a
-                className="rounded-full bg-[linear-gradient(135deg,#0f5a48,#0d7a5f)] px-5 py-3 text-center text-sm font-bold text-white shadow-[0_18px_36px_rgba(13,122,95,0.22)]"
-                href="/report/token/pearl-token"
-              >
-                Demo result page
-              </a>
+    <main className="min-h-screen bg-[#020617] text-slate-100 antialiased">
+      <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        <header className="sticky top-0 z-50 w-full border-b border-[rgba(59,130,246,0.1)] bg-[rgba(2,6,23,0.82)] backdrop-blur-md">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-2 text-[#3b82f6]">
+                  <BrandMark />
+                  <h2 className="text-xl font-bold tracking-tight text-slate-100">SolanaTrust</h2>
+                </div>
+                <nav className="hidden items-center gap-6 md:flex">
+                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#engine">
+                    Intelligence
+                  </a>
+                  <Link className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="/coins">
+                    Live Feed
+                  </Link>
+                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#developers">
+                    Developers
+                  </a>
+                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#pricing">
+                    Pricing
+                  </a>
+                </nav>
+              </div>
+              <div className="flex items-center gap-4">
+                <Link className="rounded-lg bg-[#3b82f6] px-4 py-2 text-sm font-bold text-white transition-all hover:brightness-110" href="/login">
+                  Log In
+                </Link>
+              </div>
             </div>
+          </div>
         </header>
 
-        <section
-          id="top"
-          className="grid items-center gap-8 py-5 md:grid-cols-[1.04fr_0.96fr] md:py-10"
-        >
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.22em] text-[var(--accent-deep)]">
-              SCAM CHECK FOR SOLANA
-            </p>
-            <h1 className="mt-3 max-w-[11ch] font-[family:var(--font-display)] text-5xl leading-[0.95] font-bold tracking-[-0.06em] md:text-7xl">
-              Проверяй токены и кошельки до того, как они проверят тебя
-            </h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[var(--muted)] md:text-lg">
-              Solace Scan показывает risk score, ключевые факторы риска и свежесть
-              данных по токенам, проектам и кошелькам в сети Solana. Быстрый verdict
-              наверху, подробный разбор ниже.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {[
-                ["3", "типа сущностей"],
-                ["< 8 сек", "первичный анализ"],
-                ["Explainable", "каждый score"],
-              ].map(([value, label]) => (
-                <div
-                  key={label}
-                  className="min-w-36 rounded-3xl border border-[color:var(--border)] bg-white/75 px-5 py-4"
-                >
-                  <strong className="block text-lg font-extrabold">{value}</strong>
-                  <span className="text-sm text-[var(--muted)]">{label}</span>
-                </div>
-              ))}
-            </div>
-
-            <div
-              id="check"
-              className="mt-7 flex flex-col gap-3 rounded-[28px] border border-[color:var(--border)] bg-white/85 p-3 shadow-[0_24px_80px_rgba(29,39,33,0.14)] md:flex-row"
-            >
-              <input
-                defaultValue="9xQeWvG816bUx9EPfEZLQ7ZL8A6V7zVYhWf9e7s6PzF1"
-                className="min-w-0 flex-1 rounded-2xl border border-transparent bg-transparent px-4 py-4 text-sm outline-none placeholder:text-[var(--muted)]"
-                placeholder="Вставь token mint, wallet или URL проекта"
-                type="text"
-              />
-              <button className="rounded-3xl bg-[linear-gradient(135deg,#b43f28,#db6b4f)] px-6 py-4 text-sm font-extrabold text-white">
-                Запустить проверку
-              </button>
-            </div>
-
-            <p className="mt-3 text-sm text-[var(--muted)]">
-              Поддерживаются токены, кошельки и project-level проверки для Solana.
-            </p>
-          </div>
-
-          <div className="relative min-h-[560px]">
-            <div className="absolute right-4 top-8 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.96),rgba(255,255,255,0.08)_35%),linear-gradient(135deg,rgba(13,122,95,0.18),rgba(200,75,49,0.11))] blur-md" />
-            <article className="relative ml-auto flex max-w-[520px] flex-col rounded-[32px] border border-[color:var(--border)] bg-white/85 p-6 shadow-[0_24px_80px_rgba(29,39,33,0.14)] backdrop-blur">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <p className="text-xs font-extrabold tracking-[0.18em] text-[var(--accent-deep)]">
-                    Последний анализ
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold tracking-[-0.04em]">
-                    PEARL / Solana meme token
-                  </h2>
-                </div>
-                <span className="w-fit rounded-full bg-[linear-gradient(135deg,#a9341e,#c84b31)] px-4 py-2 text-sm font-extrabold text-white">
-                  Critical risk
-                </span>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-5 md:flex-row md:items-center">
-                <div className="grid h-30 w-30 place-items-center rounded-full bg-[radial-gradient(circle_closest-side,#fff_67%,transparent_68%_100%),conic-gradient(#c84b31_0_82%,rgba(200,75,49,0.14)_82%_100%)]">
-                  <span className="font-[family:var(--font-display)] text-4xl font-bold">
-                    82
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-[var(--muted)]">Итоговый risk score</p>
-                  <strong className="mt-2 block text-base leading-7">
-                    Причины: mint authority, concentration, suspicious deployer
-                  </strong>
-                  <span className="mt-2 block text-sm text-[var(--muted)]">
-                    Обновлено 4 минуты назад
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
-                {topFindings.map((item) => (
-                  <article
-                    key={item.title}
-                    className="rounded-3xl border border-[color:var(--border)] bg-[rgba(244,241,232,0.72)] p-4"
-                  >
-                    <span className="text-[11px] font-extrabold tracking-[0.16em] text-[var(--critical)]">
-                      {item.severity}
+        <main className="flex-grow">
+          <section className="relative overflow-hidden py-20 lg:py-32">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent)]" />
+            <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="grid items-center gap-12 lg:grid-cols-2">
+                <div className="flex flex-col gap-8">
+                  <div className="space-y-4">
+                    <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-xs font-medium text-[#3b82f6] ring-1 ring-inset ring-[#3b82f6]/20">
+                      Institutional Grade Analytics
                     </span>
-                    <strong className="mt-2 block leading-6">{item.title}</strong>
-                    <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                      {item.description}
+                    <h1 className="text-5xl font-black leading-tight tracking-tighter text-slate-100 lg:text-7xl">
+                      Solana Onchain <span className="text-[#3b82f6]">Risk Intelligence</span>
+                    </h1>
+                    <p className="max-w-xl text-lg text-slate-400">
+                      Real-time security analytics and risk scoring for the Solana ecosystem. Identify rugs, honey pots, and malicious contracts before they strike.
                     </p>
+                  </div>
+                  <div className="relative max-w-xl">
+                    <SearchCheckForm
+                      leadingIcon
+                      placeholder="Enter token mint address (e.g. EPjFW...)"
+                      submitLabel="Analyze"
+                      tokenOnly
+                      variant="landing"
+                    />
+                  </div>
+                </div>
+
+                <div className="hidden lg:block">
+                  <div className="relative h-[400px] w-full overflow-hidden rounded-2xl border border-[#3b82f6]/20 bg-[#3b82f6]/5 p-4 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,rgba(59,130,246,0.12),transparent_18%),radial-gradient(circle_at_55%_60%,rgba(16,185,129,0.08),transparent_16%)]" />
+                    <div className="relative flex h-full flex-col justify-between rounded-xl bg-[linear-gradient(135deg,#0f172a_0%,#020617_100%)] p-6">
+                      <div className="flex gap-2">
+                        <div className="h-3 w-3 rounded-full bg-red-500/50" />
+                        <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
+                        <div className="h-3 w-3 rounded-full bg-[#3b82f6]/50" />
+                      </div>
+                      <AnimatedScanPreview items={previewItems} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-[#3b82f6]/5 py-20" id="engine">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-16 text-center">
+                <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-100">Risk Intelligence Engine</h2>
+                <p className="text-slate-400">Five pillars of automated security auditing</p>
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
+                {engineCards.map((card) => (
+                  <article key={card.title} className="group relative rounded-xl border border-[#3b82f6]/10 bg-[#020617] p-6 transition-all hover:border-[#3b82f6]/40 hover:shadow-lg hover:shadow-[#3b82f6]/5">
+                    <AppIcon className="mb-4 h-10 w-10 text-[#3b82f6]" name={card.icon} />
+                    <h3 className="mb-2 text-lg font-bold">{card.title}</h3>
+                    <p className="text-sm leading-relaxed text-slate-400">{card.copy}</p>
                   </article>
                 ))}
               </div>
+            </div>
+          </section>
 
-              <div className="mt-5 grid gap-4 border-t border-[color:var(--border)] pt-5 md:grid-cols-3">
-                {[
-                  ["Confidence", "0.81"],
-                  ["Liquidity", "$12.4K"],
-                  ["Review queue", "Escalated"],
-                ].map(([label, value]) => (
-                  <div key={label}>
-                    <span className="text-sm text-[var(--muted)]">{label}</span>
-                    <strong className="mt-1 block">{value}</strong>
-                  </div>
+          <section className="py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <div>
+                  <h2 className="text-3xl font-bold tracking-tight text-slate-100">Live Solana Launch Feed</h2>
+                  <p className="mt-2 text-slate-400">Latest token launches monitored by SolanaTrust</p>
+                </div>
+                <Link className="flex items-center gap-2 rounded-lg border border-[#3b82f6]/20 px-4 py-2 text-sm font-semibold text-[#3b82f6] hover:bg-[#3b82f6]/10" href="/coins">
+                  <AppIcon className="h-4 w-4" name="filter" />
+                  Filters
+                </Link>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-[#3b82f6]/10 bg-[#020617]">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-[#3b82f6]/5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th className="px-6 py-4">Token Name</th>
+                      <th className="px-6 py-4">Launch Time</th>
+                      <th className="px-6 py-4">Liquidity</th>
+                      <th className="px-6 py-4">Risk Score</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#3b82f6]/5">
+                    {feedPreview.map((item) => (
+                      <tr key={item.id} className="transition-colors hover:bg-[#3b82f6]/5">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6]/20 font-bold text-[#3b82f6]">
+                              {item.displayName.slice(0, 1)}
+                            </div>
+                            <span className="font-medium text-slate-100">{item.displayName}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-slate-400">{item.refreshedAt}</td>
+                        <td className="px-6 py-4 text-slate-400">{item.liquidity}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold ${riskTone(item.score)}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${riskDot(item.score)}`} />
+                            {item.score}/100
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link className="text-[#3b82f6] hover:underline" href={`/report/${item.entityType}/${item.id}`}>
+                            View Audit
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section className="bg-[#3b82f6]/5 py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-16 text-center">
+                <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-100">Who is SolanaTrust for?</h2>
+                <p className="text-slate-400">Scalable security intelligence for every stakeholder</p>
+              </div>
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+                {audienceCards.map(([title, copy, icon]) => (
+                  <article key={title} className="flex flex-col items-center rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8 text-center">
+                    <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-[#3b82f6]/10">
+                      <AppIcon className="h-8 w-8 text-[#3b82f6]" name={icon} />
+                    </div>
+                    <h3 className="mb-3 text-xl font-bold">{title}</h3>
+                    <p className="text-sm text-slate-400">{copy}</p>
+                  </article>
                 ))}
               </div>
-            </article>
-          </div>
-        </section>
+            </div>
+          </section>
 
-        <section className="mt-2 flex flex-col gap-5 rounded-[28px] border border-[color:var(--border)] bg-[var(--surface)] px-6 py-6 md:flex-row md:items-center md:justify-between">
-          <p className="font-bold">
-            Для ресерча, модерации и быстрой проверки перед покупкой
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {["Token scan", "Wallet intelligence", "Project verification", "Rule-based scoring"].map(
-              (item) => (
-                <span
-                  key={item}
-                  className="rounded-full bg-[rgba(13,122,95,0.08)] px-4 py-2 text-sm font-bold text-[var(--accent-deep)]"
-                >
-                  {item}
-                </span>
-              ),
-            )}
-          </div>
-        </section>
+          <section className="py-24" id="developers">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="grid items-center gap-16 lg:grid-cols-2">
+                <div className="space-y-6">
+                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">Built for Developers</h2>
+                  <p className="text-lg text-slate-400">
+                    Integrate SolanaTrust into your project with just a few lines of code. Our low-latency API provides real-time risk assessments for any Solana mint address.
+                  </p>
+                  <ul className="space-y-4">
+                    {developerBullets.map((bullet) => (
+                      <li key={bullet} className="flex items-center gap-3">
+                        <AppIcon className="h-5 w-5 text-[#3b82f6]" name="check" />
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 inline-flex rounded-lg border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-6 py-3 font-bold text-[#3b82f6]">
+                    In development
+                  </div>
+                </div>
+                <div className="group relative">
+                  <div className="absolute -inset-1 rounded-xl bg-[#3b82f6]/20 opacity-30 blur transition duration-1000 group-hover:opacity-50" />
+                  <div className="relative overflow-hidden rounded-xl bg-[#0a1120] p-6 text-sm font-mono leading-relaxed text-slate-300">
+                    <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
+                      <span className="text-xs text-slate-500">risk_assessment.js</span>
+                      <AppIcon className="h-4 w-4 text-slate-500" name="copy" />
+                    </div>
+                    <pre><code>{`const trust = require('@solanatrust/sdk');
 
-        <section
-          id="coverage"
-          className="mt-7 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-6 py-8 md:px-8 md:py-9"
-        >
-          <div className="max-w-3xl">
-            <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-              ОХВАТ ПРОВЕРКИ
-            </p>
-            <h2 className="mt-3 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-6xl">
-              Один поиск, три типа риска
-            </h2>
-            <p className="mt-4 text-base leading-8 text-[var(--muted)]">
-              Главный сценарий строится вокруг одной строки поиска. Система сама
-              определяет сущность и собирает explainable отчет.
-            </p>
-          </div>
+const client = new trust.Client(process.env.ST_KEY);
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {coverageItems.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-[28px] border border-[color:var(--border)] bg-white/80 p-6 shadow-[0_12px_32px_rgba(22,31,26,0.06)]"
-              >
-                <div className="h-14 w-14 rounded-2xl bg-[linear-gradient(135deg,rgba(13,122,95,0.18),rgba(16,35,26,0.04))]" />
-                <h3 className="mt-4 text-xl font-bold">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-                  {item.description}
+async function checkRisk(mintAddress) {
+  const score = await client.getRiskScore(mintAddress);
+
+  if (score.riskLevel === 'CRITICAL') {
+    return blockTransaction();
+  }
+
+  console.log(\`Risk Score: \${score.total}\`);
+}`}</code></pre>
+                  </div>
+                  <div className="absolute inset-0 grid place-items-center rounded-xl bg-[rgba(2,6,23,0.52)] backdrop-blur-[6px]">
+                    <div className="rounded-full border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-5 py-2 text-sm font-bold text-[#93c5fd]">
+                      In development
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer className="border-t border-[#3b82f6]/10 py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 grid gap-12 md:grid-cols-4">
+              <div className="col-span-2">
+                <div className="mb-6 flex items-center gap-2 text-[#3b82f6]">
+                  <BrandMark />
+                  <h2 className="text-lg font-bold tracking-tight text-slate-100">SolanaTrust</h2>
+                </div>
+                <p className="mb-6 text-slate-400">
+                  The leading provider of onchain risk intelligence for the Solana ecosystem. Powered by decentralized data and institutional expertise.
                 </p>
-                <ul className="mt-5 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--muted)]">
-                  {item.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
+                <div className="flex gap-4">
+                  <AppIcon className="h-5 w-5 text-slate-400" name="share" />
+                  <AppIcon className="h-5 w-5 text-slate-400" name="mail" />
+                  <AppIcon className="h-5 w-5 text-slate-400" name="rss" />
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-6 font-bold">Product</h3>
+                <ul className="space-y-4 text-sm text-slate-400">
+                  <li>Risk Engine</li>
+                  <li>API Reference</li>
+                  <li>Live Feed</li>
+                  <li id="pricing">Pricing</li>
                 </ul>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section
-          id="workflow"
-          className="mt-7 grid gap-6 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-6 py-8 md:grid-cols-[0.86fr_1.14fr] md:px-8 md:py-9"
-        >
-          <div className="max-w-xl">
-            <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-              КАК ЭТО РАБОТАЕТ
-            </p>
-            <h2 className="mt-3 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-6xl">
-              Не просто label, а понятный разбор
-            </h2>
-            <p className="mt-4 text-base leading-8 text-[var(--muted)]">
-              Пользователь получает verdict сверху, но может быстро дойти до
-              доказательств: какие сигналы сработали, насколько свежи данные, и что
-              именно вызывает риск.
-            </p>
-          </div>
-
-          <div className="grid gap-4">
-            {workflowSteps.map((item) => (
-              <article
-                key={item.step}
-                className="grid gap-4 rounded-[28px] border border-[color:var(--border)] bg-white/75 p-5 md:grid-cols-[72px_1fr]"
-              >
-                <span className="grid h-13 w-13 place-items-center rounded-2xl bg-[linear-gradient(135deg,#0f5a48,#0d7a5f)] font-[family:var(--font-display)] text-lg font-bold text-white">
-                  {item.step}
-                </span>
-                <div>
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                    {item.description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section
-          id="report"
-          className="mt-7 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-6 py-8 md:px-8 md:py-9"
-        >
-          <div className="max-w-3xl">
-            <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-              RESULT EXPERIENCE
-            </p>
-            <h2 className="mt-3 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-6xl">
-              Report page, которую можно прочитать за 10 секунд
-            </h2>
-            <p className="mt-4 text-base leading-8 text-[var(--muted)]">
-              Above-the-fold зона дает итоговое решение, confidence и топ-факторы
-              риска. Ниже лежат holders, liquidity, links и history.
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-4 rounded-[32px] border border-[color:var(--border)] p-4 md:grid-cols-[280px_1fr]">
-            <aside className="rounded-[28px] bg-white/82 p-6">
-              <p className="text-xs font-extrabold tracking-[0.18em] text-[var(--accent-deep)]">
-                Summary
-              </p>
-              <h3 className="mt-3 text-2xl font-bold">Scam check result</h3>
-              <ul className="mt-5 list-disc space-y-2 pl-5 text-sm leading-7 text-[var(--muted)]">
-                <li>Score + status</li>
-                <li>Confidence</li>
-                <li>Top findings</li>
-                <li>Refresh state</li>
-              </ul>
-            </aside>
-
-            <div className="rounded-[28px] bg-white/82 p-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xs font-extrabold tracking-[0.18em] text-[var(--accent-deep)]">
-                    Token report
-                  </p>
-                  <h3 className="mt-2 text-2xl font-bold">PEARL / 9xQe...PzF1</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-[rgba(13,122,95,0.08)] px-4 py-2 text-sm font-bold text-[var(--accent-deep)]">
-                    Solana
-                  </span>
-                  <span className="rounded-full bg-[rgba(201,142,41,0.14)] px-4 py-2 text-sm font-bold text-[#8f671d]">
-                    High priority
-                  </span>
-                </div>
               </div>
-
-              <div className="mt-6 grid gap-3 md:grid-cols-4">
-                {[
-                  ["Score", "82"],
-                  ["Confidence", "0.81"],
-                  ["Top 10 share", "87.4%"],
-                  ["Liquidity", "$12.4K"],
-                ].map(([label, value]) => (
-                  <article
-                    key={label}
-                    className="rounded-3xl bg-[rgba(244,241,232,0.72)] px-4 py-4"
-                  >
-                    <span className="text-sm text-[var(--muted)]">{label}</span>
-                    <strong className="mt-2 block text-lg">{value}</strong>
-                  </article>
-                ))}
-              </div>
-
-              <div className="mt-4 grid gap-3">
-                {[
-                  ["Active mint authority", "Detected", "danger"],
-                  ["Linked deployer history", "3 suspicious launches", "danger"],
-                  ["Project domain age", "12 days", "warn"],
-                  ["Background refresh", "In progress", "neutral"],
-                ].map(([label, value, tone]) => (
-                  <div
-                    key={label}
-                    className="flex flex-col gap-2 rounded-3xl bg-[rgba(244,241,232,0.72)] px-4 py-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <span className="text-sm text-[var(--muted)]">{label}</span>
-                    <strong
-                      className={
-                        tone === "danger"
-                          ? "text-[var(--critical)]"
-                          : tone === "warn"
-                            ? "text-[#99660e]"
-                            : "text-[var(--foreground)]"
-                      }
-                    >
-                      {value}
-                    </strong>
-                  </div>
-                ))}
+              <div>
+                <h3 className="mb-6 font-bold">Resources</h3>
+                <ul className="space-y-4 text-sm text-slate-400">
+                  <li>Security Whitepaper</li>
+                  <li>Governance</li>
+                  <li>Privacy Policy</li>
+                  <li>Terms of Service</li>
+                </ul>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section
-          id="trust"
-          className="mt-7 rounded-[32px] border border-[color:var(--border)] bg-[linear-gradient(135deg,rgba(13,122,95,0.06),rgba(255,255,255,0.72))] p-6 md:p-8"
-        >
-          <div className="grid gap-6 md:grid-cols-[0.9fr_1.1fr]">
-            <div className="max-w-xl">
-              <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-                ПОЧЕМУ ЭТОТ UX РАБОТАЕТ
-              </p>
-              <h2 className="mt-3 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-6xl">
-                Минимум крика, максимум сигнала
-              </h2>
-              <p className="mt-4 text-base leading-8 text-[var(--muted)]">
-                Дизайн не маскирует risk data. Он помогает быстро принять решение и
-                отдельно помечает, где данных недостаточно или verdict еще
-                уточняется.
-              </p>
-            </div>
-
-            <div className="grid gap-4">
-              {trustItems.map((item) => (
-                <article
-                  key={item.title}
-                  className="rounded-3xl border border-[color:var(--border)] bg-white/80 p-5"
-                >
-                  <strong className="block text-lg">{item.title}</strong>
-                  <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                    {item.description}
-                  </p>
-                </article>
-              ))}
+            <div className="border-t border-[#3b82f6]/5 pt-8 text-center text-xs text-slate-500">
+              Copyright 2026 SolanaTrust Intelligence Systems. All data provided as-is for informational purposes.
             </div>
           </div>
-        </section>
-
-        <section className="mt-7 flex flex-col gap-6 rounded-[32px] border border-[color:var(--border)] bg-[var(--surface)] px-6 py-8 md:flex-row md:items-center md:justify-between md:px-8">
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--accent-deep)]">
-              START WITH A SINGLE CHECK
-            </p>
-            <h2 className="mt-3 max-w-[16ch] font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-6xl">
-              Готово как посадочная страница для продукта и как база для app dashboard
-            </h2>
-          </div>
-          <a
-            className="rounded-full bg-[linear-gradient(135deg,#0f5a48,#0d7a5f)] px-6 py-4 text-center text-sm font-bold text-white shadow-[0_18px_36px_rgba(13,122,95,0.22)]"
-            href="/dashboard"
-          >
-            Открыть dashboard
-          </a>
-        </section>
+        </footer>
       </div>
     </main>
   );

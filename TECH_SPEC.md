@@ -1,8 +1,8 @@
-# ТЗ: Solace Scan
+# ТЗ: RugSignal
 
 ## 1. Описание проекта
 
-`Solace Scan` — web-сервис для проверки `token`, `wallet` и `project` в сети `Solana` с выдачей `risk score`, explainable risk factors и итогового статуса риска.
+`RugSignal` — web-сервис для проверки `token`, `wallet` и `project` в сети `Solana` с выдачей `risk score`, explainable risk factors и итогового статуса риска.
 
 Основная задача MVP:
 

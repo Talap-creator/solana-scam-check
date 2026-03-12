@@ -1,0 +1,5 @@
+token_address,label,cohort,score,rug_probability,known_rug,known_honeypot,known_legit,mature_project,developer_cluster_label,early_buyer_cluster_label,insider_selling_label,liquidity_management_label,notes
+ExampleTokenA111111111111111111111111111111,1,known_rug,94,0.94,1,0,0,0,1,1,1,1,"Known rug with concentrated wallet control and liquidity collapse"
+ExampleTokenB222222222222222222222222222222,0,mature_project,18,0.18,0,0,1,1,0,0,0,0,"Established project with stable market history"
+ExampleTokenC333333333333333333333333333333,1,honeypot,81,0.81,0,1,0,0,1,1,1,1,"Honeypot-like trading behaviour and suspicious exits"
+ExampleTokenD444444444444444444444444444444,0,low_liquidity_legit,27,0.27,0,0,1,0,0,0,0,1,"Legit token with thin pool and execution risk"

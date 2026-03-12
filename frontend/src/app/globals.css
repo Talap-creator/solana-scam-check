@@ -1,14 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap");
+
 @import "tailwindcss";
 
 :root {
-  --background: #f4f1e8;
-  --foreground: #10231a;
-  --muted: #53625a;
-  --surface: rgba(255, 253, 248, 0.75);
-  --border: rgba(16, 35, 26, 0.08);
-  --accent: #0d7a5f;
-  --accent-deep: #0f5a48;
-  --critical: #c84b31;
+  --background: #020617;
+  --foreground: #e2e8f0;
+  --muted: #94a3b8;
+  --surface: rgba(15, 23, 42, 0.84);
+  --panel: rgba(15, 23, 42, 0.72);
+  --panel-strong: rgba(30, 41, 59, 0.92);
+  --border: rgba(59, 130, 246, 0.16);
+  --accent: #3b82f6;
+  --accent-deep: #93c5fd;
+  --accent-2: #2563eb;
+  --critical: #f87171;
 }
 
 @theme inline {
@@ -31,9 +36,9 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
   background-image:
-    radial-gradient(circle at top left, rgba(31, 180, 138, 0.15), transparent 28%),
-    radial-gradient(circle at top right, rgba(228, 176, 74, 0.14), transparent 24%),
-    linear-gradient(180deg, #f7f5ee 0%, var(--background) 100%);
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 24%),
+    radial-gradient(circle at 90% 0%, rgba(37, 99, 235, 0.1), transparent 22%),
+    linear-gradient(180deg, #020617 0%, #0f172a 52%, #020617 100%);
 }
 
 body::before {
@@ -41,11 +46,20 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(16, 35, 26, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(16, 35, 26, 0.03) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent 82%);
+  background-image: radial-gradient(circle at 2px 2px, rgba(59, 130, 246, 0.08) 1px, transparent 0);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 92%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.06), transparent 16%),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.03), transparent 14%);
+  opacity: 0.7;
 }
 
 a {
@@ -58,6 +72,112 @@ input {
   font: inherit;
 }
 
+button,
+input,
+select {
+  color: inherit;
+}
+
+input::placeholder {
+  color: color-mix(in srgb, var(--muted) 88%, white 12%);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.7);
+  outline-offset: 2px;
+}
+
 ::selection {
-  background: rgba(13, 122, 95, 0.18);
+  background: rgba(59, 130, 246, 0.28);
+}
+
+@keyframes scan-progress-slide {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes scan-terminal-flicker {
+  0%,
+  100% {
+    text-shadow: 0 0 0 rgba(59, 130, 246, 0);
+  }
+
+  35% {
+    text-shadow: 0 0 12px rgba(59, 130, 246, 0.18);
+  }
+
+  55% {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.28);
+  }
+}
+
+@keyframes scan-orb-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(59, 130, 246, 0.16),
+      0 0 32px rgba(59, 130, 246, 0.12);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(59, 130, 246, 0.04),
+      0 0 40px rgba(59, 130, 246, 0.22);
+    transform: scale(1.035);
+  }
+}
+
+.scan-progress-glow {
+  background-image: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.76) 0%,
+    rgba(96, 165, 250, 0.9) 30%,
+    rgba(191, 219, 254, 0.98) 50%,
+    rgba(96, 165, 250, 0.9) 70%,
+    rgba(59, 130, 246, 0.76) 100%
+  );
+  background-size: 220% 100%;
+  animation: scan-progress-slide 1.8s linear infinite;
+}
+
+.scan-terminal-line {
+  will-change: transform, opacity;
+  animation: scan-terminal-flicker 2.6s ease-in-out infinite;
+}
+
+.scan-terminal-line:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.scan-terminal-line:nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.scan-terminal-line:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+.scan-orb {
+  animation: scan-orb-pulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .scan-progress-glow,
+  .scan-terminal-line,
+  .scan-orb {
+    animation: none;
+  }
 }

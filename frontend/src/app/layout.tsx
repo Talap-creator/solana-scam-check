@@ -13,8 +13,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Solace Scan",
-  description: "Solana scam check platform with explainable risk scoring.",
+  title: "RugSignal | Solana Risk Intelligence",
+  description:
+    "RugSignal.io tracks Solana rug-risk with explainable scoring, reports, and refreshable checks.",
 };
 
 export default function RootLayout({
