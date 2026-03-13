@@ -44,19 +44,19 @@ export function DashboardHeaderActions() {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+    <div className="grid w-full gap-2 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap xl:items-center xl:justify-end">
       {usage ? (
         <>
-          <span className="rounded-full border border-[color:var(--border)] bg-white/6 px-4 py-2 text-sm font-semibold text-white/90">
+          <span className="rounded-full border border-[color:var(--border)] bg-white/6 px-4 py-2 text-center text-sm font-semibold text-white/90">
             {formatPlanLabel(usage.plan)}
           </span>
-          <span className="rounded-full border border-[color:var(--border)] bg-white/6 px-4 py-2 text-sm font-semibold text-white/90">
+          <span className="rounded-full border border-[color:var(--border)] bg-white/6 px-4 py-2 text-center text-sm font-semibold text-white/90">
             {usage.remaining_today} / {usage.daily_limit} requests left
           </span>
         </>
       ) : null}
       <a
-        className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-sm font-bold text-white/90 transition hover:border-[rgba(96,165,250,0.35)] hover:bg-white/10"
+        className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-center text-sm font-bold text-white/90 transition hover:border-[rgba(96,165,250,0.35)] hover:bg-white/10"
         href={APP_TELEGRAM_URL}
         rel="noreferrer"
         target="_blank"
@@ -64,7 +64,7 @@ export function DashboardHeaderActions() {
         Telegram
       </a>
       <a
-        className="rounded-full bg-[linear-gradient(135deg,#11b8ff,#7effc1)] px-5 py-2 text-sm font-bold text-slate-950"
+        className="rounded-full bg-[linear-gradient(135deg,#11b8ff,#7effc1)] px-5 py-2 text-center text-sm font-bold text-slate-950"
         href={APP_TELEGRAM_URL}
         rel="noreferrer"
         target="_blank"
@@ -73,7 +73,7 @@ export function DashboardHeaderActions() {
       </a>
       {hasToken ? (
         <button
-          className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-sm font-bold"
+          className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-center text-sm font-bold"
           onClick={() => void onLogout()}
           type="button"
         >

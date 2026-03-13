@@ -155,7 +155,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="mt-5 overflow-hidden rounded-[20px] border border-[rgba(59,130,246,0.14)]">
-            <div className="grid grid-cols-[minmax(0,1.1fr)_120px_150px] bg-[rgba(59,130,246,0.08)] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+            <div className="hidden grid-cols-[minmax(0,1.1fr)_120px_150px] bg-[rgba(59,130,246,0.08)] px-4 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 md:grid">
               <span>Asset</span>
               <span>Score</span>
               <span>Status</span>
@@ -163,17 +163,19 @@ export default async function DashboardPage() {
             {queueReports.map((report) => (
               <Link
                 key={`queue-${report.id}`}
-                className="grid grid-cols-[minmax(0,1.1fr)_120px_150px] items-center border-t border-[rgba(59,130,246,0.10)] px-4 py-4 transition-colors hover:bg-[rgba(59,130,246,0.06)]"
+                className="flex flex-col gap-3 border-t border-[rgba(59,130,246,0.10)] px-4 py-4 transition-colors hover:bg-[rgba(59,130,246,0.06)] md:grid md:grid-cols-[minmax(0,1.1fr)_120px_150px] md:items-center"
                 href={`/report/${report.entityType}/${report.id}`}
               >
                 <div className="min-w-0">
                   <strong className="block truncate text-slate-100">{report.displayName}</strong>
                   <span className="text-sm text-slate-400">{report.entityType}</span>
                 </div>
-                <strong className="text-slate-100">{report.score}</strong>
-                <span className={`w-fit rounded-full px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${statusTone[report.status]}`}>
-                  {report.status}
-                </span>
+                <div className="flex flex-wrap items-center gap-3 md:contents">
+                  <strong className="text-slate-100 md:block">{report.score}</strong>
+                  <span className={`w-fit rounded-full px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${statusTone[report.status]}`}>
+                    {report.status}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>

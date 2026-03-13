@@ -46,12 +46,12 @@ export function CoinsFeedAuthActions() {
   };
 
   if (authMode === "loading") {
-    return <div className="hidden h-10 w-[160px] rounded-lg border border-primary/20 bg-primary/10 md:block" />;
+    return <div className="h-10 w-[128px] rounded-lg border border-primary/20 bg-primary/10 md:w-[160px]" />;
   }
 
   if (authMode === "guest") {
     return (
-      <Link className="hidden rounded-lg px-4 py-2 text-sm font-bold text-slate-100 md:inline-flex" href="/login">
+      <Link className="inline-flex rounded-lg px-4 py-2 text-sm font-bold text-slate-100" href="/login">
         Log In
       </Link>
     );
@@ -60,13 +60,13 @@ export function CoinsFeedAuthActions() {
   return (
     <>
       <Link
-        className="hidden rounded-lg border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-bold text-primary md:inline-flex"
+        className="inline-flex rounded-lg border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-bold text-primary"
         href={authMode === "admin" ? "/admin" : "/dashboard"}
       >
         {authMode === "admin" ? "Admin" : "Dashboard"}
       </Link>
       <button
-        className="hidden rounded-lg px-4 py-2 text-sm font-bold text-slate-100 md:inline-flex"
+        className="inline-flex rounded-lg px-4 py-2 text-sm font-bold text-slate-100"
         onClick={() => void onLogout()}
         type="button"
       >

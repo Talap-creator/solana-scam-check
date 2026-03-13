@@ -235,12 +235,17 @@ export function ReportView({ report }: ReportViewProps) {
     { title: "Behavioral", score: report.behaviourRisk, icon: "hub" as const },
     { title: "Market Maturity", score: report.marketMaturity, icon: "hourglass" as const },
   ];
+  const reportNav = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: `/report/${report.entityType}/${report.id}`, label: "Token Analyzer" },
+    { href: "/coins", label: "Launch Feed" },
+  ] as const;
 
   return (
     <main className="min-h-screen bg-[#050b1a] text-slate-100">
       <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_24%),linear-gradient(180deg,#050b1a_0%,#071228_100%)]">
         <header className="sticky top-0 z-50 border-b border-white/10 bg-[rgba(3,9,21,0.82)] px-4 py-3 backdrop-blur-md lg:px-10">
-          <div className="mx-auto flex max-w-[1440px] items-center justify-between">
+          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3 text-primary">
                 <AppIcon className="h-8 w-8" name="shield" />
@@ -252,15 +257,30 @@ export function ReportView({ report }: ReportViewProps) {
                 <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/coins">Launch Feed</Link>
               </nav>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               <RecheckButton entityId={report.entityId} entityType={report.entityType} />
               <Link className="rounded-full border border-white/12 bg-white/6 px-5 py-2 text-sm font-bold text-white" href="/login">Log In</Link>
             </div>
+            <nav className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+              {reportNav.map((item) => (
+                <Link
+                  key={item.href}
+                  className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
+                    item.label === "Token Analyzer"
+                      ? "border border-primary/25 bg-primary/15 text-primary"
+                      : "border border-primary/20 bg-primary/8 text-[#93c5fd]"
+                  }`}
+                  href={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 md:px-10">
-          <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,53,0.96),rgba(8,16,30,0.96))] p-6 shadow-[0_24px_90px_rgba(2,6,23,0.4)] lg:p-8">
+        <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-4 sm:py-6 md:px-10">
+          <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(18,30,53,0.96),rgba(8,16,30,0.96))] p-5 shadow-[0_24px_90px_rgba(2,6,23,0.4)] sm:p-6 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
               <div className="flex items-start gap-5">
                 <div className="relative h-20 w-20 overflow-hidden rounded-[22px] border border-primary/25 bg-primary/10">

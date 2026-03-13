@@ -29,14 +29,14 @@ export function CoinsFeedControls({ queryState, filterChips, onUpdate }: CoinsFe
             </button>
           );
         })}
-        <div className="ml-auto flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
+        <div className="flex w-full items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400 sm:ml-auto sm:w-auto">
           <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           LIVE UPDATE
         </div>
       </div>
 
       <div className="rounded-xl border border-primary/20 bg-background-light/90 p-4 shadow-[0_16px_50px_rgba(15,23,42,0.06)] dark:bg-background-dark/90">
-        <div className="grid gap-3 lg:grid-cols-[220px_180px_180px_auto_auto] lg:items-center">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[220px_180px_180px_auto_auto] xl:items-center">
           <select
             className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-slate-900 outline-none dark:text-slate-100"
             onChange={(event) => onUpdate({ sort: event.target.value as LaunchFeedSort })}

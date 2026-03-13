@@ -128,12 +128,16 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
 
   const stats = useMemo(() => buildStats(items), [items]);
   const filterChips = useMemo(() => buildFilterChips(queryState), [queryState]);
+  const feedNav = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/coins", label: "Launch Feed" },
+  ] as const;
 
   return (
     <main className="min-h-screen bg-[#0f172a] text-slate-100">
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
         <header className="sticky top-0 z-50 border-b border-[rgba(59,130,246,0.16)] bg-[rgba(2,6,23,0.84)] backdrop-blur-md">
-          <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-6">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0">
             <div className="flex items-center gap-8">
               <Link className="flex items-center gap-3 text-primary" href="/">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.14)]">
@@ -148,13 +152,28 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
                 <span className="border-b-2 border-primary pb-1 text-sm font-medium text-slate-100">Launch Feed</span>
               </nav>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               <CoinsFeedAuthActions />
             </div>
+            <nav className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+              {feedNav.map((item) => (
+                <Link
+                  key={item.href}
+                  className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
+                    item.href === "/coins"
+                      ? "border border-primary/25 bg-primary/15 text-primary"
+                      : "border border-primary/20 bg-primary/8 text-[#93c5fd]"
+                  }`}
+                  href={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1600px] flex-1 p-6">
+        <div className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6">
           <div className="flex flex-col gap-6">
             <CoinsFeedHeader
               isRefreshing={isRefreshing}

@@ -50,6 +50,13 @@ export function PlatformShell({
   title,
   stats = [],
 }: PlatformShellProps) {
+  const shellNav = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/coins", label: "Launch Feed" },
+    { href: "/history", label: "History" },
+    { href: "/watchlist", label: "Watchlist" },
+  ] as const;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020617] text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.14),transparent_28%),linear-gradient(180deg,#020617_0%,#0b1328_52%,#020617_100%)]" />
@@ -57,7 +64,7 @@ export function PlatformShell({
 
       <div className="relative">
         <header className="sticky top-0 z-40 border-b border-[rgba(59,130,246,0.16)] bg-[rgba(2,6,23,0.8)] backdrop-blur-md">
-          <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10">
+          <div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0 lg:px-10">
             <div className="flex items-center gap-8">
               <Link className="flex items-center gap-3 text-[#3b82f6]" href="/">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.14)]">
@@ -67,22 +74,15 @@ export function PlatformShell({
               </Link>
 
               <nav className="hidden items-center gap-6 md:flex">
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href="/dashboard">
-                  Dashboard
-                </Link>
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href="/coins">
-                  Launch Feed
-                </Link>
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href="/history">
-                  History
-                </Link>
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href="/watchlist">
-                  Watchlist
-                </Link>
+                {shellNav.map((item) => (
+                  <Link key={item.href} className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               {headerContent ??
                 actions.map((action) => (
                   <Link
@@ -98,13 +98,24 @@ export function PlatformShell({
                   </Link>
                 ))}
             </div>
+            <nav className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+              {shellNav.map((item) => (
+                <Link
+                  key={item.href}
+                  className="shrink-0 rounded-full border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.08)] px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#93c5fd]"
+                  href={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10">
+        <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
           <section className="rounded-[28px] border border-[rgba(59,130,246,0.16)] bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(15,23,42,0.68))] p-6 shadow-[0_24px_80px_rgba(2,6,23,0.28)]">
             <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#60a5fa]">{eyebrow}</p>
-            <h1 className="mt-3 max-w-4xl font-[family:var(--font-display)] text-4xl font-black tracking-[-0.06em] text-slate-100 md:text-6xl">
+            <h1 className="mt-3 max-w-4xl font-[family:var(--font-display)] text-3xl font-black tracking-[-0.06em] text-slate-100 sm:text-4xl md:text-6xl">
               {title}
             </h1>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-400 md:text-base">{subtitle}</p>

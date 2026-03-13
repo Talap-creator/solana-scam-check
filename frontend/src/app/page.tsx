@@ -139,45 +139,69 @@ export default async function Home() {
     displayName: item.displayName,
     status: item.status,
   }));
+  const landingNav = [
+    { href: "#engine", label: "Intelligence" },
+    { href: "/coins", label: "Live Feed", external: false },
+    { href: "#developers", label: "Developers" },
+    { href: "#team", label: "Team" },
+    { href: "#pricing", label: "Pricing" },
+  ] as const;
 
   return (
     <main className="min-h-screen bg-[#020617] text-slate-100 antialiased">
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
         <header className="sticky top-0 z-50 w-full border-b border-[rgba(59,130,246,0.1)] bg-[rgba(2,6,23,0.82)] backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center justify-between">
+            <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-3 md:h-16 md:flex-nowrap md:py-0">
               <div className="flex items-center gap-8">
                 <div className="flex items-center gap-2 text-[#3b82f6]">
                   <BrandMark />
                   <h2 className="text-xl font-bold tracking-tight text-slate-100">SolanaTrust</h2>
                 </div>
                 <nav className="hidden items-center gap-6 md:flex">
-                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#engine">
-                    Intelligence
-                  </a>
-                  <Link className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="/coins">
-                    Live Feed
-                  </Link>
-                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#developers">
-                    Developers
-                  </a>
-                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#team">
-                    Team
-                  </a>
-                  <a className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href="#pricing">
-                    Pricing
-                  </a>
+                  {landingNav.map((item) =>
+                    item.href.startsWith("/") ? (
+                      <Link key={item.href} className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href={item.href}>
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <a key={item.href} className="text-sm font-medium transition-colors hover:text-[#3b82f6]" href={item.href}>
+                        {item.label}
+                      </a>
+                    ),
+                  )}
                 </nav>
               </div>
               <div className="flex items-center gap-4">
                 <LandingHeaderAction />
               </div>
+              <nav className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+                {landingNav.map((item) =>
+                  item.href.startsWith("/") ? (
+                    <Link
+                      key={item.href}
+                      className="shrink-0 rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#93c5fd]"
+                      href={item.href}
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a
+                      key={item.href}
+                      className="shrink-0 rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#93c5fd]"
+                      href={item.href}
+                    >
+                      {item.label}
+                    </a>
+                  ),
+                )}
+              </nav>
             </div>
           </div>
         </header>
 
         <main className="flex-grow">
-          <section className="relative overflow-hidden py-20 lg:py-32">
+          <section className="relative overflow-hidden py-14 sm:py-20 lg:py-32">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent)]" />
             <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -186,10 +210,10 @@ export default async function Home() {
                     <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-xs font-medium text-[#3b82f6] ring-1 ring-inset ring-[#3b82f6]/20">
                       Institutional Grade Analytics
                     </span>
-                    <h1 className="text-5xl font-black leading-tight tracking-tighter text-slate-100 lg:text-7xl">
+                    <h1 className="text-4xl font-black leading-tight tracking-tighter text-slate-100 sm:text-5xl lg:text-7xl">
                       Solana Onchain <span className="text-[#3b82f6]">Risk Intelligence</span>
                     </h1>
-                    <p className="max-w-xl text-lg text-slate-400">
+                    <p className="max-w-xl text-base text-slate-400 sm:text-lg">
                       Real-time security analytics and risk scoring for the Solana ecosystem. Identify rugs, honey pots, and malicious contracts before they strike.
                     </p>
                   </div>
@@ -201,6 +225,19 @@ export default async function Home() {
                       tokenOnly
                       variant="landing"
                     />
+                  </div>
+                  <div className="lg:hidden">
+                    <div className="relative overflow-hidden rounded-2xl border border-[#3b82f6]/20 bg-[#3b82f6]/5 p-4 shadow-[0_0_20px_rgba(59,130,246,0.08)]">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,rgba(59,130,246,0.12),transparent_18%),radial-gradient(circle_at_55%_60%,rgba(16,185,129,0.08),transparent_16%)]" />
+                      <div className="relative flex min-h-[240px] flex-col justify-between rounded-xl bg-[linear-gradient(135deg,#0f172a_0%,#020617_100%)] p-5">
+                        <div className="flex gap-2">
+                          <div className="h-3 w-3 rounded-full bg-red-500/50" />
+                          <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
+                          <div className="h-3 w-3 rounded-full bg-[#3b82f6]/50" />
+                        </div>
+                        <AnimatedScanPreview items={previewItems} />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
