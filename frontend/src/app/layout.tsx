@@ -13,9 +13,13 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "RugSignal | Solana Risk Intelligence",
+  applicationName: "Solana Trust",
+  title: {
+    default: "Solana Trust",
+    template: "%s | Solana Trust",
+  },
   description:
-    "RugSignal.io tracks Solana rug-risk with explainable scoring, reports, and refreshable checks.",
+    "Solana Trust tracks Solana rug-risk with explainable scoring, reports, and refreshable checks.",
 };
 
 export default function RootLayout({
