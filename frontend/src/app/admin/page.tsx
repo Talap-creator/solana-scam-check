@@ -57,6 +57,8 @@ const primaryButtonClass =
 const tableClass = "w-full min-w-[980px] text-left text-sm";
 const rowClass = "border-t border-[color:rgba(148,163,184,0.12)]";
 const emptyTableCellClass = "px-3 py-4 text-[var(--muted)]";
+const mobileCardClass =
+  "rounded-[22px] border border-[color:rgba(148,163,184,0.14)] bg-[rgba(148,163,184,0.06)] p-4";
 
 function planBadgeClass(plan: string): string {
   if (plan === "pro") {
@@ -66,6 +68,23 @@ function planBadgeClass(plan: string): string {
     return "border-[rgba(45,212,191,0.28)] bg-[rgba(45,212,191,0.12)] text-[#99f6e4]";
   }
   return "border-[rgba(148,163,184,0.22)] bg-[rgba(148,163,184,0.08)] text-slate-300";
+}
+
+function formatTimestamp(value: string): string {
+  return new Date(value).toLocaleString();
+}
+
+function severityBadgeClass(severity: string): string {
+  if (severity === "critical") {
+    return "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.12)] text-rose-300";
+  }
+  if (severity === "high") {
+    return "border-[rgba(251,146,60,0.3)] bg-[rgba(251,146,60,0.12)] text-orange-300";
+  }
+  if (severity === "medium") {
+    return "border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.12)] text-amber-200";
+  }
+  return "border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.12)] text-emerald-300";
 }
 
 export default function AdminPage() {
@@ -403,18 +422,18 @@ export default function AdminPage() {
 
   return (
     <main className={pageShellClass}>
-      <div className="mx-auto w-full max-w-[1280px] px-5 py-6 md:px-8 md:py-8">
-        <header className={`${panelClass} mb-7 flex flex-col gap-6 px-6 py-6 md:flex-row md:items-end md:justify-between`}>
+      <div className="mx-auto w-full max-w-[1280px] px-4 py-5 sm:px-5 md:px-8 md:py-8">
+        <header className={`${panelClass} mb-6 flex flex-col gap-5 px-5 py-5 sm:px-6 sm:py-6 md:mb-7 md:flex-row md:items-end md:justify-between`}>
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--accent)]">Admin console</p>
-            <h1 className="mt-2 font-[family:var(--font-display)] text-4xl font-bold tracking-[-0.05em] md:text-5xl">
+            <h1 className="mt-2 font-[family:var(--font-display)] text-3xl font-bold tracking-[-0.05em] sm:text-4xl md:text-5xl">
               Platform control panel
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-[var(--muted)]">
               Moderate tokens, manage user limits, inspect scan throughput, and apply token verdict overrides from one control surface.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 md:flex md:flex-wrap md:items-center">
             <div className={`${softPanelClass} px-4 py-3`}>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">Mode</p>
               <p className="mt-1 text-sm text-[var(--muted)]">Live admin moderation</p>
@@ -468,7 +487,7 @@ export default function AdminPage() {
         ) : null}
 
         {state.dashboard ? (
-          <section className="grid gap-4 md:grid-cols-4">
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <article className={`${softPanelClass} p-4`}>
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Users</span>
               <strong className="mt-3 block text-3xl">{state.dashboard.users_count}</strong>
@@ -492,7 +511,7 @@ export default function AdminPage() {
           </section>
         )}
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             ["Freemium accounts", String(planDistribution.free), "Free-tier monitoring"],
             ["Premium accounts", String(planDistribution.pro), "Paid daily workflows"],
@@ -538,7 +557,7 @@ export default function AdminPage() {
                 <option value="enterprise">enterprise</option>
               </select>
               <button
-                className={secondaryButtonClass}
+                className={`${secondaryButtonClass} w-full md:w-auto`}
                 onClick={toggleSelectAllFiltered}
                 type="button"
               >
@@ -567,7 +586,7 @@ export default function AdminPage() {
                 Selected: {selectedFilteredIds.length}
               </span>
               <button
-                className={primaryButtonClass}
+                className={`${primaryButtonClass} w-full md:w-auto`}
                 disabled={bulkPending}
                 onClick={() => void onApplyBulkLimits()}
                 type="button"
@@ -591,7 +610,102 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {filteredUsers.length === 0 ? (
+                <div className={`${mobileCardClass} text-sm text-[var(--muted)]`}>
+                  No users match the current filters.
+                </div>
+              ) : (
+                filteredUsers.map((item) => {
+                  const draft = userDrafts[item.id];
+                  return (
+                    <article key={item.id} className={mobileCardClass}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="break-all text-sm font-semibold text-[var(--foreground)]">{item.email}</p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">Created {formatTimestamp(item.created_at)}</p>
+                        </div>
+                        <input
+                          checked={Boolean(selectedUsers[item.id])}
+                          onChange={(event) =>
+                            setSelectedUsers((prev) => ({
+                              ...prev,
+                              [item.id]: event.target.checked,
+                            }))
+                          }
+                          type="checkbox"
+                        />
+                      </div>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <span
+                            className={`inline-flex w-fit rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${planBadgeClass(draft?.plan ?? item.plan)}`}
+                          >
+                            {formatPlanLabel(draft?.plan ?? item.plan)}
+                          </span>
+                          <select
+                            className={`${fieldClass} mt-2 w-full`}
+                            onChange={(event) =>
+                              setUserDrafts((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                  ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
+                                  plan: event.target.value as "free" | "pro" | "enterprise",
+                                },
+                              }))
+                            }
+                            value={draft?.plan ?? item.plan}
+                          >
+                            <option value="free">{formatPlanLabel("free")}</option>
+                            <option value="pro">{formatPlanLabel("pro")}</option>
+                            <option value="enterprise">{formatPlanLabel("enterprise")}</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                            Custom/day
+                          </label>
+                          <input
+                            className={`${fieldClass} mt-2 w-full`}
+                            onChange={(event) =>
+                              setUserDrafts((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                  ...(prev[item.id] ?? { plan: "free", customDailyScanLimit: "" }),
+                                  customDailyScanLimit: event.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="default"
+                            type="number"
+                            value={draft?.customDailyScanLimit ?? ""}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-2xl border border-[color:rgba(148,163,184,0.12)] bg-[rgba(148,163,184,0.04)] px-3 py-3">
+                          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Effective/day</p>
+                          <p className="mt-1 text-base font-semibold">{item.effective_daily_limit}</p>
+                        </div>
+                        <div className="rounded-2xl border border-[color:rgba(148,163,184,0.12)] bg-[rgba(148,163,184,0.04)] px-3 py-3">
+                          <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Scans</p>
+                          <p className="mt-1 text-base font-semibold">{item.scans}</p>
+                        </div>
+                      </div>
+                      <button
+                        className={`${secondaryButtonClass} mt-4 w-full`}
+                        disabled={userLimitPendingId === item.id}
+                        onClick={() => void onSaveUserLimit(item)}
+                        type="button"
+                      >
+                        {userLimitPendingId === item.id ? "Saving..." : "Save"}
+                      </button>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)] md:block">
               <table className="w-full min-w-[1080px] text-left text-sm">
                 <thead>
                   <tr className="bg-[rgba(15,23,42,0.92)] text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -675,7 +789,7 @@ export default function AdminPage() {
                           </td>
                           <td className="px-3 py-3">{item.effective_daily_limit}</td>
                           <td className="px-3 py-3">{item.scans}</td>
-                          <td className="px-3 py-3">{new Date(item.created_at).toLocaleString()}</td>
+                          <td className="px-3 py-3">{formatTimestamp(item.created_at)}</td>
                           <td className="px-3 py-3">
                             <button
                               className={secondaryButtonClass}
@@ -705,7 +819,32 @@ export default function AdminPage() {
                 {state.scans.length} recent scan event{state.scans.length === 1 ? "" : "s"}.
               </p>
             </div>
-            <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {state.scans.length === 0 ? (
+                <div className={`${mobileCardClass} text-sm text-[var(--muted)]`}>
+                  No user scan activity is available yet.
+                </div>
+              ) : (
+                state.scans.map((item) => (
+                  <article key={item.id} className={mobileCardClass}>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.user_email}</p>
+                    <p className="mt-2 break-all text-xs text-[var(--muted)]">{item.token_address}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Risk</p>
+                        <p className="mt-1 text-base font-semibold">{item.risk_score}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Confidence</p>
+                        <p className="mt-1 text-base font-semibold">{item.confidence.toFixed(2)}</p>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-xs text-[var(--muted)]">{formatTimestamp(item.scan_time)}</p>
+                  </article>
+                ))
+              )}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)] md:block">
               <table className={tableClass}>
                 <thead>
                   <tr className="bg-[rgba(15,23,42,0.92)] text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -730,7 +869,7 @@ export default function AdminPage() {
                         <td className="px-3 py-3">{item.token_address}</td>
                         <td className="px-3 py-3">{item.risk_score}</td>
                         <td className="px-3 py-3">{item.confidence.toFixed(2)}</td>
-                        <td className="px-3 py-3">{new Date(item.scan_time).toLocaleString()}</td>
+                        <td className="px-3 py-3">{formatTimestamp(item.scan_time)}</td>
                       </tr>
                     ))
                   )}
@@ -747,7 +886,31 @@ export default function AdminPage() {
               </div>
               <p className="text-sm text-[var(--muted)]">Frequently scanned assets and last activity.</p>
             </div>
-            <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {state.tokens.length === 0 ? (
+                <div className={`${mobileCardClass} text-sm text-[var(--muted)]`}>
+                  No token activity has been recorded yet.
+                </div>
+              ) : (
+                state.tokens.map((item) => (
+                  <article key={item.token_address} className={mobileCardClass}>
+                    <p className="break-all text-sm font-semibold text-[var(--foreground)]">{item.token_address}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Scan count</p>
+                        <p className="mt-1 text-base font-semibold">{item.scan_count}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]">Average risk</p>
+                        <p className="mt-1 text-base font-semibold">{item.average_risk_score}</p>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-xs text-[var(--muted)]">{formatTimestamp(item.last_scanned)}</p>
+                  </article>
+                ))
+              )}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)] md:block">
               <table className="w-full min-w-[900px] text-left text-sm">
                 <thead>
                   <tr className="bg-[rgba(15,23,42,0.92)] text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -770,7 +933,7 @@ export default function AdminPage() {
                         <td className="px-3 py-3">{item.token_address}</td>
                         <td className="px-3 py-3">{item.scan_count}</td>
                         <td className="px-3 py-3">{item.average_risk_score}</td>
-                        <td className="px-3 py-3">{new Date(item.last_scanned).toLocaleString()}</td>
+                        <td className="px-3 py-3">{formatTimestamp(item.last_scanned)}</td>
                       </tr>
                     ))
                   )}
@@ -810,14 +973,42 @@ export default function AdminPage() {
                 value={overrideReason}
               />
               <button
-                className={primaryButtonClass}
+                className={`${primaryButtonClass} w-full md:w-auto`}
                 disabled={overridePending}
                 type="submit"
               >
                 Save
               </button>
             </form>
-            <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {state.overrides.length === 0 ? (
+                <div className={`${mobileCardClass} text-sm text-[var(--muted)]`}>
+                  No moderator overrides have been created yet.
+                </div>
+              ) : (
+                state.overrides.map((item) => (
+                  <article key={item.token_address} className={mobileCardClass}>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="break-all text-sm font-semibold text-[var(--foreground)]">{item.token_address}</p>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${item.verdict === "blacklist" ? "border-[rgba(248,113,113,0.3)] bg-[rgba(248,113,113,0.12)] text-rose-300" : "border-[rgba(74,222,128,0.3)] bg-[rgba(74,222,128,0.12)] text-emerald-300"}`}>
+                        {item.verdict}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm text-[var(--muted)]">{item.reason ?? "No reason attached."}</p>
+                    <p className="mt-4 text-xs text-[var(--muted)]">{formatTimestamp(item.updated_at)}</p>
+                    <button
+                      className={`${secondaryButtonClass} mt-4 w-full`}
+                      disabled={overridePending}
+                      onClick={() => void onDeleteOverride(item.token_address)}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </article>
+                ))
+              )}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)] md:block">
               <table className={tableClass}>
                 <thead>
                   <tr className="bg-[rgba(15,23,42,0.92)] text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -841,7 +1032,7 @@ export default function AdminPage() {
                         <td className="px-3 py-3">{item.token_address}</td>
                         <td className="px-3 py-3">{item.verdict}</td>
                         <td className="px-3 py-3">{item.reason ?? "-"}</td>
-                        <td className="px-3 py-3">{new Date(item.updated_at).toLocaleString()}</td>
+                        <td className="px-3 py-3">{formatTimestamp(item.updated_at)}</td>
                         <td className="px-3 py-3">
                           <button
                             className={secondaryButtonClass}
@@ -868,7 +1059,27 @@ export default function AdminPage() {
               </div>
               <p className="text-sm text-[var(--muted)]">Latest assets pushed into the moderation queue.</p>
             </div>
-            <div className="mt-4 overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)]">
+            <div className="mt-4 grid gap-3 md:hidden">
+              {state.queue.length === 0 ? (
+                <div className={`${mobileCardClass} text-sm text-[var(--muted)]`}>
+                  Queue is empty.
+                </div>
+              ) : (
+                state.queue.map((item) => (
+                  <article key={item.id} className={mobileCardClass}>
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-semibold text-[var(--foreground)]">{item.display_name}</p>
+                      <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${severityBadgeClass(item.severity)}`}>
+                        {item.severity}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm text-[var(--muted)]">{`${item.entity_type} | ${item.owner}`}</p>
+                    <p className="mt-4 text-xs text-[var(--muted)]">{formatTimestamp(item.updated_at)}</p>
+                  </article>
+                ))
+              )}
+            </div>
+            <div className="mt-4 hidden overflow-x-auto rounded-[22px] border border-[color:rgba(148,163,184,0.14)] md:block">
               <table className={tableClass}>
                 <thead>
                   <tr className="bg-[rgba(15,23,42,0.92)] text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -889,7 +1100,7 @@ export default function AdminPage() {
                       <tr key={item.id} className={rowClass}>
                         <td className="px-3 py-3">{item.display_name}</td>
                         <td className="px-3 py-3">{`${item.entity_type} | ${item.owner} | ${item.severity}`}</td>
-                        <td className="px-3 py-3">{new Date(item.updated_at).toLocaleString()}</td>
+                        <td className="px-3 py-3">{formatTimestamp(item.updated_at)}</td>
                       </tr>
                     ))
                   )}
