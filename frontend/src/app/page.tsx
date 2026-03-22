@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AnimatedScanPreview } from "@/components/animated-scan-preview";
 import { AppIcon } from "@/components/app-icon";
 import { LandingHeaderAction } from "@/components/landing-header-action";
+import { PremiumCheckoutButton } from "@/components/premium-checkout-button";
 import { SearchCheckForm } from "@/components/search-check-form";
 import { getChecks } from "@/lib/api";
 import { APP_TELEGRAM_URL, getPlanMeta } from "@/lib/plans";
@@ -117,7 +118,7 @@ const pricingPlans = [
       "Priority Telegram support",
     ],
     ctaLabel: "Upgrade to Premium",
-    ctaHref: APP_TELEGRAM_URL,
+    ctaHref: "#pricing",
     featured: true,
   },
   {
@@ -493,18 +494,29 @@ export default async function Home() {
                         </li>
                       ))}
                     </ul>
-                    <a
-                      className={`mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition ${
-                        plan.featured
-                          ? "bg-[#3b82f6] text-white hover:brightness-110"
-                          : "border border-[#3b82f6]/20 bg-[#3b82f6]/10 text-[#93c5fd] hover:bg-[#3b82f6]/20"
-                      }`}
-                      href={plan.ctaHref}
-                      rel={plan.ctaHref.startsWith("http") ? "noreferrer" : undefined}
-                      target={plan.ctaHref.startsWith("http") ? "_blank" : undefined}
-                    >
-                      {plan.ctaLabel}
-                    </a>
+                    {plan.key === "pro" ? (
+                      <PremiumCheckoutButton
+                        className={`mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition ${
+                          plan.featured
+                            ? "bg-[#3b82f6] text-white hover:brightness-110"
+                            : "border border-[#3b82f6]/20 bg-[#3b82f6]/10 text-[#93c5fd] hover:bg-[#3b82f6]/20"
+                        }`}
+                        label={plan.ctaLabel}
+                      />
+                    ) : (
+                      <a
+                        className={`mt-8 inline-flex w-full items-center justify-center rounded-xl px-5 py-3 text-sm font-bold transition ${
+                          plan.featured
+                            ? "bg-[#3b82f6] text-white hover:brightness-110"
+                            : "border border-[#3b82f6]/20 bg-[#3b82f6]/10 text-[#93c5fd] hover:bg-[#3b82f6]/20"
+                        }`}
+                        href={plan.ctaHref}
+                        rel={plan.ctaHref.startsWith("http") ? "noreferrer" : undefined}
+                        target={plan.ctaHref.startsWith("http") ? "_blank" : undefined}
+                      >
+                        {plan.ctaLabel}
+                      </a>
+                    )}
                   </article>
                   );
                 })}

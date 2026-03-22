@@ -342,6 +342,28 @@ class UserUsageResponse(BaseModel):
     reset_at: datetime
 
 
+class PremiumCheckoutSessionResponse(BaseModel):
+    available: bool
+    already_active: bool = False
+    plan: Literal["pro"] = "pro"
+    label: str = "Premium"
+    amount_label: str = "$100/month"
+    paylink_id: str | None = None
+    payment_type: str = "paystream"
+    primary_color: str = "#3b82f6"
+    neutral_color: str = "#94a3b8"
+    background_color: str = "#020617"
+    button_label: str = "Unlock Premium"
+    email: EmailStr | None = None
+    additional_json: dict[str, str] = Field(default_factory=dict)
+
+
+class BillingWebhookResponse(BaseModel):
+    accepted: bool
+    upgraded: bool = False
+    message: str
+
+
 class UserScanItem(BaseModel):
     id: str
     token_address: str

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { PremiumCheckoutButton } from "@/components/premium-checkout-button";
 import { clearAccessToken } from "@/lib/auth";
 import { ApiError, getUsage, logoutUser, type UserUsage } from "@/lib/api";
 import { APP_TELEGRAM_URL, formatPlanLabel } from "@/lib/plans";
@@ -63,14 +64,12 @@ export function DashboardHeaderActions() {
       >
         Telegram
       </a>
-      <a
-        className="rounded-full bg-[linear-gradient(135deg,#11b8ff,#7effc1)] px-5 py-2 text-center text-sm font-bold text-slate-950"
-        href={APP_TELEGRAM_URL}
-        rel="noreferrer"
-        target="_blank"
-      >
-        Upgrade
-      </a>
+      {usage?.plan === "free" ? (
+        <PremiumCheckoutButton
+          className="rounded-full bg-[linear-gradient(135deg,#2563eb,#38bdf8)] px-5 py-2 text-center text-sm font-bold text-white"
+          label="Upgrade"
+        />
+      ) : null}
       {hasToken ? (
         <button
           className="rounded-full border border-[color:var(--border)] bg-white/6 px-5 py-2 text-center text-sm font-bold"

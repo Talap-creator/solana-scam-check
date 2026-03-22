@@ -66,6 +66,9 @@ class Settings:
     behaviour_rapid_liquidity_drop_warn_pct: float = 0.20
     behaviour_rapid_liquidity_drop_high_pct: float = 0.45
     behaviour_boost_multiplier: float = 1.15
+    helio_premium_paylink_id: str | None = None
+    helio_premium_payment_type: str = "paystream"
+    helio_webhook_secret: str | None = None
 
 
 def split_env_list(value: str | None) -> tuple[str, ...]:
@@ -262,6 +265,13 @@ def get_settings() -> Settings:
         behaviour_boost_multiplier=float(
             os.getenv("BEHAVIOUR_BOOST_MULTIPLIER", str(Settings.behaviour_boost_multiplier))
         ),
+        helio_premium_paylink_id=os.getenv("HELIO_PREMIUM_PAYLINK_ID") or None,
+        helio_premium_payment_type=os.getenv(
+            "HELIO_PREMIUM_PAYMENT_TYPE",
+            Settings.helio_premium_payment_type,
+        ).strip()
+        or Settings.helio_premium_payment_type,
+        helio_webhook_secret=os.getenv("HELIO_WEBHOOK_SECRET") or None,
     )
     if settings.jwt_secret_key == Settings.jwt_secret_key:
         warnings.warn(

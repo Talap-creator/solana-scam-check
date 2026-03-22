@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
+import json
 import uuid
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, Numeric, String, UniqueConstraint
@@ -30,6 +32,7 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    billing_events: Mapped[list["BillingEvent"]] = relationship(back_populates="user")
 
 
 class TokenScan(Base):
@@ -162,3 +165,53 @@ class LaunchFeedSnapshot(Base):
     report_created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     snapshot_signature: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class BillingEvent(Base):
+    __tablename__ = "billing_events"
+
+    event_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="helio")
+    event_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    plan: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    paylink_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    transaction_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    subscription_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    amount_usd: Mapped[float | None] = mapped_column(Numeric(18, 4), nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    user_email: Mapped[str | None] = mapped_column(String(320), nullable=True, index=True)
+    upgraded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    user: Mapped[User | None] = relationship(back_populates="billing_events")
+
+
+def build_billing_event_key(
+    *,
+    event_id: str | None,
+    transaction_id: str | None,
+    subscription_id: str | None,
+    event_type: str | None,
+    status: str | None,
+    payload_json: dict,
+) -> str:
+    if event_id:
+        return event_id
+    if transaction_id:
+        return f"txn:{transaction_id}"
+    if subscription_id and event_type:
+        return f"sub:{subscription_id}:{event_type}"
+    payload_hash = hashlib.sha256(
+        json.dumps(
+            {
+                "event_type": event_type or "",
+                "status": status or "",
+                "payload": payload_json,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()
+    return f"hash:{payload_hash}"

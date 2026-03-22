@@ -227,6 +227,22 @@ export type UserUsage = {
   reset_at: string;
 };
 
+export type PremiumCheckoutSession = {
+  available: boolean;
+  already_active: boolean;
+  plan: "pro";
+  label: string;
+  amount_label: string;
+  paylink_id: string | null;
+  payment_type: string;
+  primary_color: string;
+  neutral_color: string;
+  background_color: string;
+  button_label: string;
+  email: string | null;
+  additional_json: Record<string, string>;
+};
+
 export type UserScan = {
   id: string;
   token_address: string;
@@ -703,6 +719,13 @@ export async function getMe(): Promise<UserProfile> {
 
 export async function getUsage(): Promise<UserUsage> {
   return fetchClientAuthed<UserUsage>("/api/v1/auth/usage");
+}
+
+export async function getPremiumCheckoutSession(): Promise<PremiumCheckoutSession> {
+  return fetchClientAuthed<PremiumCheckoutSession>(
+    "/api/v1/billing/premium-session",
+    "Unable to prepare premium checkout",
+  );
 }
 
 export async function getMyScans(): Promise<UserScan[]> {

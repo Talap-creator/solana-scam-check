@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PremiumCheckoutButton } from "@/components/premium-checkout-button";
 import { ApiError, getUsage, type UserUsage } from "@/lib/api";
 import { formatPlanLabel } from "@/lib/plans";
 
@@ -68,12 +68,10 @@ export function AccountUsageBanner() {
           <h2 className="mt-1 text-xl font-bold">{formatPlanLabel(usage.plan)} plan limits</h2>
         </div>
         {(nearLimit || exhausted) && usage.plan === "free" ? (
-          <Link
-            className="rounded-full bg-[linear-gradient(135deg,#11b8ff,#7effc1)] px-4 py-2 text-sm font-bold text-slate-950"
-            href="/#pricing"
-          >
-            Upgrade plan
-          </Link>
+          <PremiumCheckoutButton
+            className="rounded-full bg-[linear-gradient(135deg,#2563eb,#38bdf8)] px-4 py-2 text-sm font-bold text-white"
+            label="Upgrade plan"
+          />
         ) : null}
       </div>
 
