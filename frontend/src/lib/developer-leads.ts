@@ -6,21 +6,36 @@ export type DeveloperLeadProfile = {
   avgRugProbability: number;
   avgTradeCaution: string;
   confidence: string;
+  coverage: string;
   flags: string[];
+  fundingSource: string | null;
+  highRiskLaunches: number;
   id: string;
   kind: "cluster" | "wallet";
   label: string;
   latestLaunches: Array<{
+    ageMinutes: number | null;
     id: string;
     launchPattern: string | null;
     name: string;
     pageMode: CheckReport["pageMode"];
+    refreshedAt: string;
     risk: CheckReport["status"];
     symbol: string;
   }>;
+  latestRefreshedAt: string;
   launches: number;
+  operatorScore: number;
   premiumPrompt: string;
+  profileSignals: Array<{
+    label: string;
+    tone: "neutral" | "watch" | "flagged";
+    value: string;
+  }>;
+  profileStatus: "clean" | "watch" | "flagged";
+  riskyLaunchRatio: number;
   summary: string;
+  topMetrics: Array<{ label: string; value: string }>;
   unresolved: boolean;
   walletPreview: string;
 };
@@ -48,6 +63,31 @@ function toneCount(reports: CheckReport[], status: CheckReport["status"]) {
 
 function makeClusterKey(report: CheckReport) {
   return `cluster:${report.id}`;
+}
+
+function cautionWeight(level: string) {
+  if (/avoid/i.test(level)) return 16;
+  if (/high/i.test(level)) return 11;
+  if (/moderate/i.test(level)) return 6;
+  return 2;
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function reportTimestamp(report: CheckReport, orderMap: Map<string, number>) {
+  const parsed = Date.parse(report.refreshedAt);
+  if (!Number.isNaN(parsed)) {
+    return parsed;
+  }
+  return Number.MAX_SAFE_INTEGER - (orderMap.get(report.id) ?? Number.MAX_SAFE_INTEGER);
+}
+
+function coverageLabel(value: string | undefined) {
+  if (/high/i.test(value ?? "")) return "Deep trace";
+  if (/moderate/i.test(value ?? "")) return "Partial trace";
+  return "Limited trace";
 }
 
 export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLeadProfile[] {
@@ -89,7 +129,7 @@ export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLe
   return Array.from(grouped.entries())
     .map(([key, items]) => {
       const ordered = [...items].sort(
-        (a, b) => (orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+        (a, b) => reportTimestamp(b, orderMap) - reportTimestamp(a, orderMap),
       );
       const latest = ordered[0];
       const profile = deriveDeveloperWalletProfile(latest);
@@ -105,7 +145,24 @@ export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLe
         .filter((item): item is "low" | "moderate" | "high" | "avoid" => Boolean(item));
       const criticalCount = toneCount(ordered, "critical");
       const highCount = toneCount(ordered, "high");
+      const highRiskLaunches = criticalCount + highCount;
+      const sharedFunder =
+        typeof latest.behaviourAnalysisV2?.modules?.developer_cluster?.evidence?.shared_funder === "string"
+          ? latest.behaviourAnalysisV2.modules.developer_cluster.evidence.shared_funder
+          : null;
       const meta = walletLabels.get(key)!;
+      const riskyLaunchRatio = Math.round((highRiskLaunches / Math.max(launchCount, 1)) * 100);
+      const operatorScore = Math.round(
+        clamp(
+          avgRugProbability * 0.52 +
+            riskyLaunchRatio * 0.28 +
+            criticalCount * 7 +
+            (profile?.status === "flagged" ? 12 : profile?.status === "watch" ? 6 : 0) +
+            cautionWeight(avgTradeCautionLabel(cautionLevels)),
+          0,
+          100,
+        ),
+      );
       return {
         id: key,
         kind: meta.kind,
@@ -116,6 +173,13 @@ export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLe
         avgRugProbability: Math.round(avgRugProbability),
         avgTradeCaution: avgTradeCautionLabel(cautionLevels),
         confidence: confidenceLabel(latest.confidence),
+        coverage: coverageLabel(profile?.confidence),
+        fundingSource: sharedFunder,
+        highRiskLaunches,
+        latestRefreshedAt: latest.refreshedAt,
+        operatorScore,
+        profileStatus: profile?.status ?? "clean",
+        riskyLaunchRatio,
         summary:
           meta.kind === "wallet"
             ? profile?.summary ??
@@ -123,12 +187,28 @@ export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLe
             : profile?.summary ??
               "We see a meaningful connected-wallet pattern, but the exact upstream launch wallet is still hidden behind the current funding graph.",
         flags: Array.from(new Set(flags)).slice(0, 4),
+        topMetrics: profile?.metrics?.slice(0, 4) ?? [],
+        profileSignals:
+          profile?.signals
+            ?.slice()
+            .sort((left, right) => {
+              const toneWeight = { flagged: 0, watch: 1, neutral: 2 } as const;
+              return toneWeight[left.tone] - toneWeight[right.tone];
+            })
+            .slice(0, 4)
+            .map((item) => ({
+              label: item.label,
+              value: item.value,
+              tone: item.tone,
+            })) ?? [],
         latestLaunches: ordered.slice(0, 4).map((item) => ({
           id: item.id,
           name: item.name ?? item.displayName,
           symbol: item.symbol ?? item.displayName.slice(0, 5).toUpperCase(),
           risk: item.status,
           pageMode: item.pageMode,
+          ageMinutes: item.launchRadar.launchAgeMinutes,
+          refreshedAt: item.refreshedAt,
           launchPattern: (() => {
             const pattern = deriveLaunchPatternFromReport(item);
             return pattern ? launchPatternLabel(pattern) : null;
@@ -136,11 +216,14 @@ export function deriveDeveloperLeadProfiles(reports: CheckReport[]): DeveloperLe
         })),
         premiumPrompt:
           meta.kind === "wallet"
-            ? "Want to unlock this launch wallet, its full history, and linked launches? Write Mr Talap."
-            : "Want to reveal the wallet behind this launch cluster and its full launch history? Write Mr Talap.",
+            ? "Unlock the full launch wallet profile, related launches, linked addresses, and repeat operator history with Premium."
+            : "Unlock the hidden wallet behind this launch cluster, reveal linked addresses, and open the full launch history with Premium.",
       };
     })
     .sort((left, right) => {
+      if (right.operatorScore !== left.operatorScore) {
+        return right.operatorScore - left.operatorScore;
+      }
       if (left.kind !== right.kind) {
         return left.kind === "wallet" ? -1 : 1;
       }
