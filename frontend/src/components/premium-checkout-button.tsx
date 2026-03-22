@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppIcon } from "@/components/app-icon";
 import {
   ApiError,
   getPremiumCheckoutSession,
@@ -193,11 +194,12 @@ export function PremiumCheckoutButton({
                 </p>
               </div>
               <button
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                aria-label="Close premium checkout"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-[#3b82f6]/30 hover:bg-white/10 hover:text-white"
                 onClick={() => setOpen(false)}
                 type="button"
               >
-                Close
+                <AppIcon className="h-5 w-5" name="close" />
               </button>
             </div>
 

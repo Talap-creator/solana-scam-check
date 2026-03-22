@@ -37,6 +37,7 @@ type AppIconName =
   | "info"
   | "priority"
   | "verified"
+  | "close"
   | "neutral-face"
   | "happy-face"
   | "sad-face"
@@ -342,6 +343,13 @@ export function AppIcon({ className, name }: AppIconProps) {
         <svg {...props}>
           <circle cx="12" cy="12" r="8.5" />
           <path d="m8.5 12.2 2.4 2.4 4.7-5.1" />
+        </svg>
+      );
+    case "close":
+      return (
+        <svg {...props}>
+          <path d="m7 7 10 10" />
+          <path d="M17 7 7 17" />
         </svg>
       );
     case "neutral-face":

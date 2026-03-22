@@ -9,17 +9,39 @@ type DeveloperWalletBoardProps = {
   profiles: DeveloperLeadProfile[];
 };
 
-function riskTone(value: number) {
-  if (value >= 75) return "border-rose-500/20 bg-rose-500/10 text-rose-200";
-  if (value >= 50) return "border-orange-400/20 bg-orange-400/10 text-orange-100";
-  if (value >= 25) return "border-amber-400/20 bg-amber-400/10 text-amber-100";
+function riskBadge(score: number) {
+  if (score >= 75) return "border-rose-500/20 bg-rose-500/10 text-rose-200";
+  if (score >= 50) return "border-orange-400/20 bg-orange-400/10 text-orange-100";
+  if (score >= 25) return "border-amber-400/20 bg-amber-400/10 text-amber-100";
   return "border-sky-400/20 bg-sky-400/10 text-sky-100";
+}
+
+function cautionTone(value: string) {
+  if (/avoid/i.test(value)) return "text-rose-300";
+  if (/high/i.test(value)) return "text-orange-200";
+  if (/moderate/i.test(value)) return "text-amber-200";
+  return "text-emerald-200";
 }
 
 function modeLabel(value: DeveloperLeadProfile["latestLaunches"][number]["pageMode"]) {
   if (value === "early_launch") return "Early launch";
   if (value === "early_market") return "Early market";
   return "Mature";
+}
+
+function walletKindLabel(profile: DeveloperLeadProfile) {
+  if (profile.kind === "wallet") {
+    return "Launch wallet";
+  }
+  return "Wallet cluster";
+}
+
+function latestLaunchLabel(profile: DeveloperLeadProfile) {
+  const latest = profile.latestLaunches[0];
+  if (!latest) {
+    return "No launch yet";
+  }
+  return `${latest.name} | ${latest.symbol}`;
 }
 
 export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
@@ -30,90 +52,176 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
     [profiles, selectedId],
   );
 
+  const walletCount = profiles.filter((item) => item.kind === "wallet").length;
+  const flaggedCount = profiles.filter((item) => item.avgRugProbability >= 50).length;
+  const avgRug = profiles.length
+    ? Math.round(profiles.reduce((total, item) => total + item.avgRugProbability, 0) / profiles.length)
+    : 0;
+
   return (
     <>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Tracked wallets</p>
+          <p className="mt-3 text-3xl font-black text-white">{walletCount}</p>
+          <p className="mt-2 text-sm text-slate-400">Launch wallets resolved from recent token checks.</p>
+        </article>
+        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">High-risk operators</p>
+          <p className="mt-3 text-3xl font-black text-white">{flaggedCount}</p>
+          <p className="mt-2 text-sm text-slate-400">Wallets or clusters already tied to repeated risky launches.</p>
+        </article>
+        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Average rug risk</p>
+          <p className="mt-3 text-3xl font-black text-white">{avgRug}%</p>
+          <p className="mt-2 text-sm text-slate-400">Across the currently surfaced launch wallets and clusters.</p>
+        </article>
+      </div>
+
       {profiles.length ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {profiles.map((profile) => (
-            <button
-              key={profile.id}
-              className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6 text-left transition hover:border-[#3b82f6]/25 hover:bg-[linear-gradient(180deg,rgba(11,23,42,0.98),rgba(8,14,26,0.98))]"
-              onClick={() => setSelectedId(profile.id)}
-              type="button"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
-                      {profile.kind === "wallet" ? "Launch wallet" : "Signal cluster"}
-                    </span>
-                    {profile.unresolved ? (
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
-                        Redacted
+        <>
+          <div className="mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))]">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#93c5fd]">
+                  Launch wallet board
+                </p>
+                <p className="mt-2 text-sm text-slate-400">
+                  Wallets and linked launch clusters ranked like a feed, not a marketing page.
+                </p>
+              </div>
+              <span className="hidden rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd] sm:inline-flex">
+                Updated from recent token reports
+              </span>
+            </div>
+
+            <div className="hidden overflow-x-auto lg:block">
+              <table className="min-w-full text-left text-sm">
+                <thead className="border-b border-white/8 bg-white/[0.02] text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  <tr>
+                    <th className="px-5 py-4">Wallet</th>
+                    <th className="px-5 py-4">Launches</th>
+                    <th className="px-5 py-4">Avg rug risk</th>
+                    <th className="px-5 py-4">Trade caution</th>
+                    <th className="px-5 py-4">Confidence</th>
+                    <th className="px-5 py-4">Latest launch</th>
+                    <th className="px-5 py-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/8">
+                  {profiles.map((profile) => {
+                    const latest = profile.latestLaunches[0];
+                    return (
+                      <tr
+                        key={profile.id}
+                        className="transition hover:bg-white/[0.03]"
+                      >
+                        <td className="px-5 py-4 align-top">
+                          <div className="min-w-[230px]">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
+                                {walletKindLabel(profile)}
+                              </span>
+                              {profile.unresolved ? (
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
+                                  Hidden source
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-3 text-base font-bold text-white">{profile.label}</p>
+                            <p className="mt-1 text-xs text-slate-500">{profile.walletPreview}</p>
+                            <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">{profile.summary}</p>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 align-top text-white">{profile.launches}</td>
+                        <td className="px-5 py-4 align-top">
+                          <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${riskBadge(profile.avgRugProbability)}`}>
+                            {profile.avgRugProbability}%
+                          </span>
+                        </td>
+                        <td className={`px-5 py-4 align-top text-sm font-semibold ${cautionTone(profile.avgTradeCaution)}`}>
+                          {profile.avgTradeCaution}
+                        </td>
+                        <td className="px-5 py-4 align-top text-sm text-slate-300">{profile.confidence}</td>
+                        <td className="px-5 py-4 align-top">
+                          {latest ? (
+                            <div className="min-w-[220px]">
+                              <p className="text-sm font-semibold text-white">{latestLaunchLabel(profile)}</p>
+                              <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                                {modeLabel(latest.pageMode)} | {latest.launchPattern ?? "No pattern"}
+                              </p>
+                              <p className="mt-1 text-xs font-semibold text-slate-300">{latest.risk.toUpperCase()}</p>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-slate-500">No launch yet</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-right align-top">
+                          <button
+                            className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-[#93c5fd] transition hover:bg-[#3b82f6]/20"
+                            onClick={() => setSelectedId(profile.id)}
+                            type="button"
+                          >
+                            Unlock wallet
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="grid gap-4 p-4 lg:hidden">
+              {profiles.map((profile) => {
+                const latest = profile.latestLaunches[0];
+                return (
+                  <button
+                    key={profile.id}
+                    className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5 text-left transition hover:border-[#3b82f6]/20"
+                    onClick={() => setSelectedId(profile.id)}
+                    type="button"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
+                        {walletKindLabel(profile)}
                       </span>
-                    ) : null}
-                  </div>
-                  <h2 className="mt-4 text-2xl font-black tracking-[-0.05em] text-white">{profile.label}</h2>
-                  <p className="mt-2 text-sm leading-7 text-slate-400">{profile.summary}</p>
-                </div>
-                <div className={`rounded-2xl border px-4 py-3 text-right ${riskTone(profile.avgRugProbability)}`}>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-75">Avg rug risk</p>
-                  <p className="mt-2 text-2xl font-black">{profile.avgRugProbability}%</p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Tracked launches</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{profile.launches}</p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Trade caution</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{profile.avgTradeCaution}</p>
-                </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Confidence</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{profile.confidence}</p>
-                </div>
-              </div>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {profile.flags.map((flag) => (
-                  <span key={flag} className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-300">
-                    {flag}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-5 border-t border-white/10 pt-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Latest launches</p>
-                <div className="mt-3 grid gap-3">
-                  {profile.latestLaunches.slice(0, 2).map((launch) => (
-                    <div key={launch.id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <div>
-                        <p className="text-sm font-semibold text-white">{launch.name}</p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
-                          {launch.symbol} · {modeLabel(launch.pageMode)}
-                        </p>
+                      <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${riskBadge(profile.avgRugProbability)}`}>
+                        {profile.avgRugProbability}% risk
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-xl font-black tracking-[-0.04em] text-white">{profile.label}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">{profile.summary}</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Launches</p>
+                        <p className="mt-2 text-lg font-semibold text-white">{profile.launches}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#93c5fd]">
-                          {launch.launchPattern ?? "No pattern"}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-300">{launch.risk.toUpperCase()}</p>
+                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Trade caution</p>
+                        <p className={`mt-2 text-lg font-semibold ${cautionTone(profile.avgTradeCaution)}`}>{profile.avgTradeCaution}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+                    {latest ? (
+                      <div className="mt-4 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Latest launch</p>
+                        <p className="mt-2 text-sm font-semibold text-white">{latestLaunchLabel(profile)}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                          {modeLabel(latest.pageMode)} | {latest.launchPattern ?? "No pattern"}
+                        </p>
+                      </div>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
       ) : (
-        <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-8 text-center">
-          <p className="text-lg font-semibold text-white">No developer-linked launch wallets are tracked yet.</p>
+        <div className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-8 text-center">
+          <p className="text-lg font-semibold text-white">No launch wallets are tracked yet.</p>
           <p className="mt-3 text-sm leading-7 text-slate-400">
-            Run more token checks and launch scans. Once the wallet graph picks up shared funding routes or linked launch clusters, they will appear here.
+            Run more token checks and launch scans. Once the wallet graph resolves funding routes or linked wallet clusters, they will show up here like a feed.
           </p>
         </div>
       )}
@@ -125,7 +233,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
-                    {selected.kind === "wallet" ? "Launch wallet" : "Signal cluster"}
+                    {walletKindLabel(selected)}
                   </span>
                   <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">
                     Premium detail
@@ -135,11 +243,11 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                 <p className="mt-2 text-sm text-slate-400">{selected.walletPreview}</p>
               </div>
               <button
-                className="rounded-full border border-white/10 bg-white/5 p-3 text-slate-300 transition hover:border-[#3b82f6]/30 hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:border-[#3b82f6]/30 hover:text-white"
                 onClick={() => setSelectedId(null)}
                 type="button"
               >
-                <AppIcon className="h-5 w-5" name="info" />
+                <AppIcon className="h-5 w-5" name="close" />
               </button>
             </div>
 
@@ -186,7 +294,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                     <div key={launch.id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                       <p className="text-sm font-semibold text-white">{launch.name}</p>
                       <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
-                        {launch.symbol} · {launch.launchPattern ?? "No pattern"}
+                        {launch.symbol} | {launch.launchPattern ?? "No pattern"}
                       </p>
                       <p className="mt-2 text-sm text-slate-300">{launch.risk.toUpperCase()}</p>
                     </div>
