@@ -263,8 +263,8 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
               <span className="text-xs font-mono text-slate-500">(c) 2024 DECENTRALIZED DATA PROTOCOL</span>
             </div>
             <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <Link href="/developers">Documentation</Link>
-              <Link href="/developers">API</Link>
+              <span>Documentation</span>
+              <span>API Keys</span>
               <span>Legal</span>
               <span>Discord</span>
             </div>

@@ -663,7 +663,7 @@ export function ReportView({ report }: ReportViewProps) {
             <div className="flex gap-8">
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Terms of Service</Link>
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Privacy Policy</Link>
-              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/developers">API Documentation</Link>
+              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/coins">API Documentation</Link>
             </div>
             <p className="text-xs text-slate-500">(c) 2024 SolanaTrust Analysis Labs.</p>
           </div>
