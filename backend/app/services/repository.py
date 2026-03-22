@@ -49,9 +49,11 @@ class ReportRepository:
         self.reports[report.id] = report
         index_key = (report.entity_type, report.entity_id)
         self.entity_index.setdefault(index_key, []).append(report.id)
-        if persist and report.entity_type == "token":
-            self._persist_launch_feed_reports([report])
-            self._persist_developer_operator_reports([report])
+        if persist:
+            self._persist_check_report(report)
+            if report.entity_type == "token":
+                self._persist_launch_feed_reports([report])
+                self._persist_developer_operator_reports([report])
         return report
 
     def create_report(self, entity_type: EntityType, raw_value: str) -> CheckOverview:
@@ -74,7 +76,9 @@ class ReportRepository:
     def get_report(self, check_id: str) -> CheckOverview | None:
         report = self.reports.get(check_id)
         if report is None:
-            report = self._rehydrate_persisted_launch_report(check_id=check_id)
+            report = self._rehydrate_persisted_check_report(check_id=check_id)
+            if report is None:
+                report = self._rehydrate_persisted_launch_report(check_id=check_id)
             if report is None:
                 return None
         report.refreshed_at = relative_time(report.created_at)
@@ -84,6 +88,9 @@ class ReportRepository:
         normalized_entity_id = normalize_entity_id(entity_type, entity_id)
         report_ids = self.entity_index.get((entity_type, normalized_entity_id), [])
         if not report_ids:
+            persisted = self._latest_persisted_check_report(entity_type=entity_type, entity_id=normalized_entity_id)
+            if persisted is not None:
+                return persisted
             if entity_type != "token":
                 return None
             return self._rehydrate_persisted_launch_report(mint=normalized_entity_id)
@@ -93,10 +100,20 @@ class ReportRepository:
         normalized = normalize_entity_id(entity_type, entity_id)
         if self.entity_index.get((entity_type, normalized)):
             return True
-        if entity_type != "token":
-            return False
         try:
             with SessionLocal() as db:
+                persisted = (
+                    db.query(models.PersistedCheckReport.report_id)
+                    .filter(
+                        models.PersistedCheckReport.entity_type == entity_type,
+                        models.PersistedCheckReport.entity_id == normalized,
+                    )
+                    .first()
+                )
+                if persisted is not None:
+                    return True
+                if entity_type != "token":
+                    return False
                 return db.get(models.LaunchFeedToken, normalized) is not None
         except SQLAlchemyError:
             return False
@@ -175,6 +192,83 @@ class ReportRepository:
             self._persist_developer_operator_reports(token_reports)
         items = self._load_persisted_developer_operator_items()
         return items[:limit]
+
+    def _persist_check_report(self, report: CheckOverview) -> None:
+        try:
+            payload = report.model_dump(mode="json")
+            with SessionLocal() as db:
+                existing = db.get(models.PersistedCheckReport, report.id)
+                if existing is None:
+                    db.add(
+                        models.PersistedCheckReport(
+                            report_id=report.id,
+                            entity_type=report.entity_type,
+                            entity_id=report.entity_id,
+                            display_name=report.display_name,
+                            created_at=_coerce_utc_datetime(report.created_at),
+                            persisted_at=utc_now(),
+                            report_json=payload,
+                        )
+                    )
+                else:
+                    existing.entity_type = report.entity_type
+                    existing.entity_id = report.entity_id
+                    existing.display_name = report.display_name
+                    existing.created_at = _coerce_utc_datetime(report.created_at)
+                    existing.persisted_at = utc_now()
+                    existing.report_json = payload
+                db.commit()
+        except SQLAlchemyError:
+            return
+
+    def _rehydrate_persisted_check_report(self, *, check_id: str) -> CheckOverview | None:
+        try:
+            with SessionLocal() as db:
+                record = db.get(models.PersistedCheckReport, check_id)
+        except SQLAlchemyError:
+            return None
+
+        if record is None:
+            return None
+
+        try:
+            report = CheckOverview.model_validate(record.report_json)
+        except Exception:
+            return None
+
+        self.register_report(report, persist=False)
+        return report
+
+    def _latest_persisted_check_report(
+        self,
+        *,
+        entity_type: EntityType,
+        entity_id: str,
+    ) -> CheckOverview | None:
+        try:
+            with SessionLocal() as db:
+                record = (
+                    db.query(models.PersistedCheckReport)
+                    .filter(
+                        models.PersistedCheckReport.entity_type == entity_type,
+                        models.PersistedCheckReport.entity_id == entity_id,
+                    )
+                    .order_by(models.PersistedCheckReport.created_at.desc())
+                    .first()
+                )
+        except SQLAlchemyError:
+            return None
+
+        if record is None:
+            return None
+
+        try:
+            report = CheckOverview.model_validate(record.report_json)
+        except Exception:
+            return None
+
+        self.register_report(report, persist=False)
+        return report
 
     def _persist_launch_feed_reports(self, reports: list[CheckOverview]) -> None:
         token_reports = [report for report in reports if report.entity_type == "token"]

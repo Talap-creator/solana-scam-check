@@ -206,6 +206,18 @@ class DeveloperOperatorSnapshot(Base):
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
+class PersistedCheckReport(Base):
+    __tablename__ = "persisted_check_reports"
+
+    report_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    entity_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(200), index=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    persisted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    report_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+
 class BillingEvent(Base):
     __tablename__ = "billing_events"
 
