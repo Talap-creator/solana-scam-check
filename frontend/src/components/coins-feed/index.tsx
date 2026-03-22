@@ -212,7 +212,7 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
                       <div className="px-6 py-4">Market Cap</div>
                       <div className="px-6 py-4">Rug Risk</div>
                       <div className="px-6 py-4">Trade Caution</div>
-                      <div className="px-6 py-4">Launch Quality</div>
+                      <div className="px-6 py-4">Launch Pattern</div>
                       <div className="px-6 py-4">Status</div>
                     </div>
 
@@ -263,8 +263,8 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
               <span className="text-xs font-mono text-slate-500">(c) 2024 DECENTRALIZED DATA PROTOCOL</span>
             </div>
             <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-400">
-              <span>Documentation</span>
-              <span>API Keys</span>
+              <Link href="/developers">Documentation</Link>
+              <Link href="/developers">API</Link>
               <span>Legal</span>
               <span>Discord</span>
             </div>

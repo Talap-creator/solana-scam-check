@@ -42,9 +42,9 @@ const audienceCards = [
 ] as const;
 
 const developerBullets = [
-  "WebSocket streams for new launches",
-  "Historical security data archive",
-  "Batch risk assessment endpoints",
+  "Token, wallet, and project risk endpoints",
+  "Launch feed API with live refresh windows",
+  "Recheck flows and developer-ready JSON responses",
 ] as const;
 
 const teamMembers = [
@@ -134,15 +134,16 @@ function riskDot(score: number) {
 
 export default async function Home() {
   const checks = await getChecks();
-  const feedPreview = checks.slice(0, 3);
-  const previewItems = checks.slice(0, 4).map((item) => ({
+  const tokenChecks = checks.filter((item) => item.entityType === "token");
+  const feedPreview = tokenChecks.slice(0, 3);
+  const previewItems = tokenChecks.slice(0, 4).map((item) => ({
     displayName: item.displayName,
     status: item.status,
   }));
   const landingNav = [
     { href: "#engine", label: "Intelligence" },
     { href: "/coins", label: "Live Feed", external: false },
-    { href: "#developers", label: "Developers" },
+    { href: "/developers", label: "API", external: false },
     { href: "#team", label: "Team" },
     { href: "#pricing", label: "Pricing" },
   ] as const;
@@ -220,9 +221,8 @@ export default async function Home() {
                   <div className="relative max-w-xl">
                     <SearchCheckForm
                       leadingIcon
-                      placeholder="Enter token mint address (e.g. EPjFW...)"
+                      placeholder="Enter token mint, wallet, or project URL"
                       submitLabel="Analyze"
-                      tokenOnly
                       variant="landing"
                     />
                   </div>
@@ -493,9 +493,9 @@ export default async function Home() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid items-center gap-16 lg:grid-cols-2">
                 <div className="space-y-6">
-                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">Built for Developers</h2>
+                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">API for Developers</h2>
                   <p className="text-lg text-slate-400">
-                    Integrate SolanaTrust into your project with just a few lines of code. Our low-latency API provides real-time risk assessments for any Solana mint address.
+                    Integrate SolanaTrust into your product with token, wallet, and project checks, plus a launch feed endpoint for real-time Solana risk monitoring.
                   </p>
                   <ul className="space-y-4">
                     {developerBullets.map((bullet) => (
@@ -505,35 +505,39 @@ export default async function Home() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 inline-flex rounded-lg border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-6 py-3 font-bold text-[#3b82f6]">
-                    In development
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link className="inline-flex rounded-lg bg-[#3b82f6] px-6 py-3 font-bold text-white hover:brightness-110" href="/developers">
+                      Open API reference
+                    </Link>
+                    <a
+                      className="inline-flex rounded-lg border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-6 py-3 font-bold text-[#93c5fd]"
+                      href={APP_TELEGRAM_URL}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Contact on Telegram
+                    </a>
                   </div>
                 </div>
                 <div className="group relative">
                   <div className="absolute -inset-1 rounded-xl bg-[#3b82f6]/20 opacity-30 blur transition duration-1000 group-hover:opacity-50" />
                   <div className="relative overflow-hidden rounded-xl bg-[#0a1120] p-6 text-sm font-mono leading-relaxed text-slate-300">
                     <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
-                      <span className="text-xs text-slate-500">risk_assessment.js</span>
+                      <span className="text-xs text-slate-500">solanatrust-api.js</span>
                       <AppIcon className="h-4 w-4 text-slate-500" name="copy" />
                     </div>
-                    <pre><code>{`const trust = require('@solanatrust/sdk');
+                    <pre><code>{`const response = await fetch('https://solana-scam-check.onrender.com/api/v1/check/wallet', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    address: '8PX1DbLyJQzY63K5kTz2S88xJ5UQh1dBnmfV91rYx4cR'
+  })
+});
 
-const client = new trust.Client(process.env.ST_KEY);
+const report = await response.json();
 
-async function checkRisk(mintAddress) {
-  const score = await client.getRiskScore(mintAddress);
-
-  if (score.riskLevel === 'CRITICAL') {
-    return blockTransaction();
-  }
-
-  console.log(\`Risk Score: \${score.total}\`);
-}`}</code></pre>
-                  </div>
-                  <div className="absolute inset-0 grid place-items-center rounded-xl bg-[rgba(2,6,23,0.52)] backdrop-blur-[6px]">
-                    <div className="rounded-full border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-5 py-2 text-sm font-bold text-[#93c5fd]">
-                      In development
-                    </div>
+console.log(report.entity_type);
+console.log(report.check_id);`}</code></pre>
                   </div>
                 </div>
               </div>

@@ -7,26 +7,58 @@ import { AppIcon } from "@/components/app-icon";
 import { ApiError, submitCheck, type SubmitEntityType } from "@/lib/api";
 
 const progressStops = [12, 28, 44, 68, 84];
-const labels = [
-  "Queueing Deep Scan",
-  "Analyzing Contract Ownership",
-  "Checking Liquidity Burn",
-  "Scoring Risk Profile",
-];
+const labelSets = {
+  token: [
+    "Queueing Deep Scan",
+    "Analyzing Contract Ownership",
+    "Checking Liquidity Burn",
+    "Scoring Risk Profile",
+  ],
+  wallet: [
+    "Queueing Wallet Scan",
+    "Tracing Linked Wallets",
+    "Reviewing Transfer Behaviour",
+    "Scoring Wallet Risk",
+  ],
+  project: [
+    "Queueing Project Scan",
+    "Checking Project Footprint",
+    "Reviewing Related Token Signals",
+    "Scoring Project Risk",
+  ],
+} satisfies Record<Exclude<SubmitEntityType, "auto">, string[]>;
+
+const entityTitles = {
+  token: "Analyzing Token Risk...",
+  wallet: "Analyzing Wallet Risk...",
+  project: "Analyzing Project Risk...",
+} satisfies Record<Exclude<SubmitEntityType, "auto">, string>;
+
+const entityIcons = {
+  token: "token",
+  wallet: "wallet",
+  project: "document",
+} as const satisfies Record<Exclude<SubmitEntityType, "auto">, "token" | "wallet" | "document">;
 
 function wait(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function AnalysisLayout({
+  entityType,
   error,
   phase,
   previewLabel,
 }: {
+  entityType: Exclude<SubmitEntityType, "auto">;
   error: string | null;
   phase: number;
   previewLabel: string;
 }) {
+  const labels = labelSets[entityType];
+  const title = entityTitles[entityType];
+  const icon = entityIcons[entityType];
+
   return (
     <main className="min-h-screen bg-[#0a0f1e] font-[family:var(--font-sans)] text-slate-100 antialiased">
       <div className="relative flex min-h-screen flex-col overflow-x-hidden">
@@ -71,14 +103,14 @@ function AnalysisLayout({
               <div className="relative z-10 flex flex-col items-center gap-6">
                 <div className="relative">
                   <div className="scan-orb flex h-24 w-24 items-center justify-center rounded-full border-2 border-[rgba(59,130,246,0.5)] border-t-[#3b82f6]">
-                    <AppIcon className="h-12 w-12 text-[#3b82f6]" name="token" />
+                    <AppIcon className="h-12 w-12 text-[#3b82f6]" name={icon} />
                   </div>
                   <div className="absolute -inset-4 rounded-full border border-[rgba(59,130,246,0.3)] opacity-20 animate-ping" />
                 </div>
 
                 <div className="space-y-2 text-center">
                   <h1 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-                    Analyzing Token Risk...
+                    {title}
                   </h1>
                   <p className="text-xs font-medium uppercase tracking-widest text-[#3b82f6]/70">
                     {labels[Math.min(phase, labels.length - 1)]} for {previewLabel}
@@ -169,6 +201,8 @@ function AnalysisPageContent() {
   const searchParams = useSearchParams();
   const submittedValue = searchParams.get("value") ?? "";
   const submittedEntityType = (searchParams.get("entityType") as SubmitEntityType | null) ?? "token";
+  const entityType =
+    submittedEntityType === "wallet" || submittedEntityType === "project" ? submittedEntityType : "token";
   const [phase, setPhase] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -197,7 +231,7 @@ function AnalysisPageContent() {
     const run = async () => {
       try {
         const [result] = await Promise.all([
-          submitCheck(submittedValue, submittedEntityType),
+          submitCheck(submittedValue, entityType),
           wait(2900),
         ]);
 
@@ -227,14 +261,14 @@ function AnalysisPageContent() {
       cancelled = true;
       window.clearInterval(progressTimer);
     };
-  }, [router, submittedEntityType, submittedValue]);
+  }, [entityType, router, submittedValue]);
 
-  return <AnalysisLayout error={error} phase={phase} previewLabel={previewLabel} />;
+  return <AnalysisLayout entityType={entityType} error={error} phase={phase} previewLabel={previewLabel} />;
 }
 
 export default function AnalysisPage() {
   return (
-    <Suspense fallback={<AnalysisLayout error={null} phase={0} previewLabel="LINK / Chainlink Token" />}>
+    <Suspense fallback={<AnalysisLayout entityType="token" error={null} phase={0} previewLabel="LINK / Chainlink Token" />}>
       <AnalysisPageContent />
     </Suspense>
   );

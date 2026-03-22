@@ -6,6 +6,11 @@ import { useState } from "react";
 import { AppIcon } from "@/components/app-icon";
 import type { LaunchFeedItem } from "@/lib/api";
 import {
+  deriveLaunchPatternFromFeed,
+  launchPatternClass,
+  launchPatternLabel,
+} from "@/lib/launch-pattern";
+import {
   copycatLabel,
   copycatTone,
   formatAge,
@@ -96,6 +101,7 @@ export function CoinsFeedRow({ item, expanded, onToggle }: CoinsFeedRowProps) {
   const conciseSummary = summaryFallback(item);
   const caution = cautionStatus(item.trade_caution_level);
   const status = statusLabel(item);
+  const launchPattern = deriveLaunchPatternFromFeed(item);
 
   return (
     <div className={`overflow-hidden border-b border-primary/10 ${item.rug_risk_level === "critical" ? "bg-rose-500/5" : "bg-transparent"}`}>
@@ -124,7 +130,12 @@ export function CoinsFeedRow({ item, expanded, onToggle }: CoinsFeedRowProps) {
           </div>
         </div>
         <div className="px-6 py-4">
-          <div className="flex gap-0.5">{launchBars(item)}</div>
+          <div className="space-y-2">
+            <div className="flex gap-0.5">{launchBars(item)}</div>
+            <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${launchPatternClass(launchPattern)}`}>
+              {launchPatternLabel(launchPattern)}
+            </span>
+          </div>
         </div>
         <div className="px-6 py-4">
           <span className={`text-xs font-bold uppercase italic tracking-tighter ${status.className}`}>{status.text}</span>
@@ -161,6 +172,10 @@ export function CoinsFeedRow({ item, expanded, onToggle }: CoinsFeedRowProps) {
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
                 <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Trade Caution</p>
                 <p className="mt-1 font-semibold">{tradeCautionLabel(item.trade_caution_level)}</p>
+              </div>
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Launch Pattern</p>
+                <p className="mt-1 font-semibold">{launchPatternLabel(launchPattern)}</p>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
@@ -225,6 +240,10 @@ export function CoinsFeedRow({ item, expanded, onToggle }: CoinsFeedRowProps) {
                 <div>
                   <p className="text-slate-500 dark:text-slate-400">Top reducer</p>
                   <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{item.top_reducer ?? "No material reducer"}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 dark:text-slate-400">Launch pattern</p>
+                  <p className="mt-1 font-semibold text-slate-900 dark:text-slate-100">{launchPatternLabel(launchPattern)}</p>
                 </div>
                 <div>
                   <p className="text-slate-500 dark:text-slate-400">Deployer</p>

@@ -8,12 +8,31 @@ import { RecheckButton } from "@/components/recheck-button";
 import { WatchlistToggleButton } from "@/components/watchlist-toggle-button";
 import { getAccessToken } from "@/lib/auth";
 import { getMe } from "@/lib/api";
+import { deriveDeveloperWalletProfile } from "@/lib/developer-wallet-profile";
+import {
+  deriveLaunchPatternFromReport,
+  launchPatternClass,
+  launchPatternLabel,
+  launchPatternSummary,
+} from "@/lib/launch-pattern";
 import { type CheckReport } from "@/lib/mock-data";
 
 type ReportViewProps = { report: CheckReport };
 
 function shortAddress(value: string) {
   return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function entityLabel(entityType: CheckReport["entityType"]) {
+  if (entityType === "wallet") return "Wallet";
+  if (entityType === "project") return "Project";
+  return "Token";
+}
+
+function analyzerLabel(entityType: CheckReport["entityType"]) {
+  if (entityType === "wallet") return "Wallet Checker";
+  if (entityType === "project") return "Project Scanner";
+  return "Token Analyzer";
 }
 
 function metricValue(report: CheckReport, labels: string[], fallback: string) {
@@ -134,6 +153,12 @@ function riskDimensionDescription(title: string) {
   }
 }
 
+function developerProfileTone(status: "clean" | "watch" | "flagged") {
+  if (status === "flagged") return "border-rose-500/20 bg-rose-500/10 text-rose-200";
+  if (status === "watch") return "border-amber-400/20 bg-amber-400/10 text-amber-100";
+  return "border-sky-400/20 bg-sky-400/10 text-sky-100";
+}
+
 function ReportPaywall({ compact = false }: { compact?: boolean }) {
   return (
     <div className="absolute inset-0 grid place-items-center rounded-[28px] bg-[rgba(2,6,23,0.52)] p-4 backdrop-blur-[9px]">
@@ -180,7 +205,12 @@ export function ReportView({ report }: ReportViewProps) {
   const cautionTone = statusTone(report.tradeCaution?.level ?? "moderate");
   const rugTone = statusTone(report.status);
   const confidenceTone = report.confidence >= 0.75 ? statusTone("low") : report.confidence >= 0.45 ? statusTone("moderate") : statusTone("unknown");
+  const isTokenReport = report.entityType === "token";
   const isEarly = report.pageMode !== "mature";
+  const reportKind = entityLabel(report.entityType);
+  const reportAnalyzerLabel = analyzerLabel(report.entityType);
+  const launchPattern = deriveLaunchPatternFromReport(report);
+  const developerWalletProfile = deriveDeveloperWalletProfile(report);
 
   useEffect(() => {
     let cancelled = false;
@@ -237,7 +267,7 @@ export function ReportView({ report }: ReportViewProps) {
   ];
   const reportNav = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: `/report/${report.entityType}/${report.id}`, label: "Token Analyzer" },
+    { href: `/report/${report.entityType}/${report.id}`, label: reportAnalyzerLabel },
     { href: "/coins", label: "Launch Feed" },
   ] as const;
 
@@ -253,7 +283,7 @@ export function ReportView({ report }: ReportViewProps) {
               </div>
               <nav className="hidden items-center gap-6 md:flex">
                 <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/dashboard">Dashboard</Link>
-                <span className="border-b-2 border-primary pb-1 text-sm font-medium text-white">Token Analyzer</span>
+                <span className="border-b-2 border-primary pb-1 text-sm font-medium text-white">{reportAnalyzerLabel}</span>
                 <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/coins">Launch Feed</Link>
               </nav>
             </div>
@@ -266,7 +296,7 @@ export function ReportView({ report }: ReportViewProps) {
                 <Link
                   key={item.href}
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
-                    item.label === "Token Analyzer"
+                    item.label === reportAnalyzerLabel
                       ? "border border-primary/25 bg-primary/15 text-primary"
                       : "border border-primary/20 bg-primary/8 text-[#93c5fd]"
                   }`}
@@ -288,9 +318,20 @@ export function ReportView({ report }: ReportViewProps) {
                 </div>
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">{pageModeLabel(report.pageMode)}</span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-slate-300">{marketAge}</span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-slate-300">{marketSource}</span>
+                    <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-primary/80">
+                      {isTokenReport ? pageModeLabel(report.pageMode) : `${reportKind} Risk Checker`}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-slate-300">
+                      {isTokenReport ? marketAge : `${report.factors.length} active signals`}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-slate-300">
+                      {isTokenReport ? marketSource : report.reviewState}
+                    </span>
+                    {launchPattern ? (
+                      <span className={`rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] ${launchPatternClass(launchPattern)}`}>
+                        {launchPatternLabel(launchPattern)}
+                      </span>
+                    ) : null}
                   </div>
                   <div>
                     <div className="flex flex-wrap items-end gap-3">
@@ -317,43 +358,85 @@ export function ReportView({ report }: ReportViewProps) {
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${launchTone.border}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Launch Risk</p>
-                    <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${launchTone.accent}`}>{launchRiskLabel(report.launchRisk.level)}</h3>
-                  </div>
-                  <div className={`rounded-2xl border p-3 ${launchTone.badge}`}><AppIcon className="h-6 w-6" name="rocket" /></div>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{report.launchRisk.summary}</p>
-                <div className="mt-4 space-y-2">
-                  {report.launchRisk.drivers.slice(0, 2).map((item) => <div key={item} className="rounded-2xl border border-white/8 bg-white/4 px-3 py-2 text-xs text-slate-300">{item}</div>)}
-                </div>
-              </article>
+              {isTokenReport ? (
+                <>
+                  <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${launchTone.border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Launch Risk</p>
+                        <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${launchTone.accent}`}>{launchRiskLabel(report.launchRisk.level)}</h3>
+                      </div>
+                      <div className={`rounded-2xl border p-3 ${launchTone.badge}`}><AppIcon className="h-6 w-6" name="rocket" /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{report.launchRisk.summary}</p>
+                    <div className="mt-4 space-y-2">
+                      {report.launchRisk.drivers.slice(0, 2).map((item) => <div key={item} className="rounded-2xl border border-white/8 bg-white/4 px-3 py-2 text-xs text-slate-300">{item}</div>)}
+                    </div>
+                  </article>
 
-              <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${cautionTone.border}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Trade Caution</p>
-                    <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${cautionTone.accent}`}>{report.tradeCaution?.label ?? "Moderate caution"}</h3>
-                  </div>
-                  <div className={`rounded-2xl border p-3 ${cautionTone.badge}`}><AppIcon className="h-6 w-6" name="chart" /></div>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{report.tradeCaution?.summary ?? "Trade setup is still stabilizing while live execution conditions develop."}</p>
-                <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">Score {report.tradeCaution?.score ?? report.marketExecutionRisk}</p>
-              </article>
+                  <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${cautionTone.border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Trade Caution</p>
+                        <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${cautionTone.accent}`}>{report.tradeCaution?.label ?? "Moderate caution"}</h3>
+                      </div>
+                      <div className={`rounded-2xl border p-3 ${cautionTone.badge}`}><AppIcon className="h-6 w-6" name="chart" /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{report.tradeCaution?.summary ?? "Trade setup is still stabilizing while live execution conditions develop."}</p>
+                    <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">Score {report.tradeCaution?.score ?? report.marketExecutionRisk}</p>
+                  </article>
 
-              <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${rugTone.border}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">{rugEstimateTitle(report)}</p>
-                    <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${rugTone.accent}`}>{rugEstimateValue(report)}</h3>
-                  </div>
-                  <div className={`rounded-2xl border p-3 ${rugTone.badge}`}><AppIcon className="h-6 w-6" name="verified-user" /></div>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{rugEstimateNote(report)}</p>
-                <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">{report.rugProbability}% model output</p>
-              </article>
+                  <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${rugTone.border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">{rugEstimateTitle(report)}</p>
+                        <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${rugTone.accent}`}>{rugEstimateValue(report)}</h3>
+                      </div>
+                      <div className={`rounded-2xl border p-3 ${rugTone.badge}`}><AppIcon className="h-6 w-6" name="verified-user" /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{rugEstimateNote(report)}</p>
+                    <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">{report.rugProbability}% model output</p>
+                  </article>
+                </>
+              ) : (
+                <>
+                  <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${rugTone.border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">{reportKind} Risk</p>
+                        <h3 className={`mt-3 text-3xl font-black tracking-[-0.05em] ${rugTone.accent}`}>{report.status.toUpperCase()}</h3>
+                      </div>
+                      <div className={`rounded-2xl border p-3 ${rugTone.badge}`}><AppIcon className="h-6 w-6" name={report.entityType === "wallet" ? "wallet" : "document"} /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{report.summary}</p>
+                    <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">{report.score}/100 final score</p>
+                  </article>
+
+                  <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${statusTone(report.behaviourRisk >= 75 ? "critical" : report.behaviourRisk >= 50 ? "high" : report.behaviourRisk >= 25 ? "medium" : "low").border}`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Behaviour Risk</p>
+                        <h3 className="mt-3 text-3xl font-black tracking-[-0.05em] text-white">{report.behaviourRisk}/100</h3>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-3"><AppIcon className="h-6 w-6" name="hub" /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">Behavioural and coordination signals across this {report.entityType} report.</p>
+                    <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">{report.factors.length} active findings</p>
+                  </article>
+
+                  <article className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-slate-400">Coverage</p>
+                        <h3 className="mt-3 text-3xl font-black tracking-[-0.05em] text-white">{report.reviewState}</h3>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-white/5 p-3"><AppIcon className="h-6 w-6" name="analytics" /></div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">This report summarizes the current signal set available for the selected {reportKind.toLowerCase()}.</p>
+                    <p className="mt-4 text-xs font-mono uppercase tracking-[0.2em] text-slate-500">{report.entityType} entity</p>
+                  </article>
+                </>
+              )}
 
               <article className={`rounded-[26px] border bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-5 ${confidenceTone.border}`}>
                 <div className="flex items-center justify-between">
@@ -372,49 +455,87 @@ export function ReportView({ report }: ReportViewProps) {
           <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(26,39,63,0.95),rgba(13,22,39,0.96))]">
             <div className="flex items-center gap-3 border-b border-white/10 px-6 py-4">
               <AppIcon className="h-5 w-5 text-primary" name="document" />
-              <h3 className="text-lg font-bold text-white">Security Summary</h3>
+              <h3 className="text-lg font-bold text-white">{isTokenReport ? "Security Summary" : `${reportKind} Summary`}</h3>
             </div>
             <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
               <div>
                 <p className="text-lg leading-8 text-slate-200">{report.summary}</p>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  {(signalsDown.length ? signalsDown : report.launchRisk.drivers.map((item, index) => ({ code: `launch-driver-${index}`, label: item, explanation: item, severity: "low" as const, weight: 0 }))).slice(0, 3).map((item) => <span key={item.code} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs text-primary">{item.label}</span>)}
+                  {(signalsDown.length
+                    ? signalsDown
+                    : isTokenReport
+                      ? report.launchRisk.drivers.map((item, index) => ({ code: `launch-driver-${index}`, label: item, explanation: item, severity: "low" as const, weight: 0 }))
+                      : report.factors.slice(0, 3)
+                  ).slice(0, 3).map((item) => <span key={item.code} className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs text-primary">{item.label}</span>)}
                 </div>
               </div>
               <div className="rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.3),transparent_56%),linear-gradient(180deg,rgba(5,12,24,0.92),rgba(6,13,26,0.98))] p-5">
                 <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-slate-500">Current posture</p>
-                <p className="mt-4 text-2xl font-black tracking-[-0.05em] text-white">{pageModeLabel(report.pageMode)}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{report.launchRadar.summary}</p>
+                <p className="mt-4 text-2xl font-black tracking-[-0.05em] text-white">{isTokenReport ? pageModeLabel(report.pageMode) : `${reportKind} report`}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  {isTokenReport
+                    ? report.launchRadar.summary
+                    : "This report combines the currently available behavioural, structural, and history-derived signals for the selected entity."}
+                </p>
               </div>
             </div>
           </section>
 
-          {isEarly ? <section className="mt-6 rounded-[28px] border border-primary/15 bg-[linear-gradient(180deg,rgba(6,18,34,0.96),rgba(5,12,24,0.98))] p-6"><div className="flex items-center gap-3"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><AppIcon className="h-5 w-5" name="info" /></div><div><h3 className="text-lg font-bold text-white">Why this verdict is still early</h3><p className="mt-1 text-sm text-slate-400">Token age is still low, holder structure can still change, behavioural signals may not have emerged yet, and liquidity conditions can shift rapidly during launch.</p></div></div></section> : null}
+          {isTokenReport && isEarly ? <section className="mt-6 rounded-[28px] border border-primary/15 bg-[linear-gradient(180deg,rgba(6,18,34,0.96),rgba(5,12,24,0.98))] p-6"><div className="flex items-center gap-3"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><AppIcon className="h-5 w-5" name="info" /></div><div><h3 className="text-lg font-bold text-white">Why this verdict is still early</h3><p className="mt-1 text-sm text-slate-400">Token age is still low, holder structure can still change, behavioural signals may not have emerged yet, and liquidity conditions can shift rapidly during launch.</p></div></div></section> : null}
+
+          {isTokenReport ? (
+            <>
+              <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                <div className="flex items-center gap-3"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><AppIcon className="h-5 w-5" name="radar" /></div><div><h3 className="text-lg font-bold text-white">Launch Radar</h3><p className="mt-1 text-sm text-slate-400">Early launch-specific signals, separate from mature behavioural and scam-history scoring.</p></div></div>
+                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {[
+                    { label: "Launch age", value: report.launchRadar.launchAgeMinutes !== null ? `${report.launchRadar.launchAgeMinutes}m` : marketAge },
+                    { label: "Initial liquidity band", value: report.launchRadar.initialLiquidityBand },
+                    { label: "Early trade pressure", value: report.launchRadar.earlyTradePressure },
+                    { label: "Launch concentration", value: report.launchRadar.launchConcentration },
+                    { label: "Copycat / name collision", value: report.launchRadar.copycatStatus },
+                    { label: "Early cluster activity", value: report.launchRadar.earlyClusterActivity },
+                  ].map((item) => <article key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">{item.label}</p><p className="mt-3 text-lg font-semibold capitalize text-white">{item.value}</p></article>)}
+                </div>
+                <p className="mt-5 max-w-4xl text-sm leading-7 text-slate-300">{report.launchRadar.summary}</p>
+              </section>
+
+              {launchPattern ? (
+                <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                  <div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${launchPatternClass(launchPattern)}`}><AppIcon className="h-5 w-5" name="rocket" /></div><div><h3 className="text-lg font-bold text-white">Launch Pattern</h3><p className="mt-1 text-sm text-slate-400">A shorthand classification for the earliest launch behaviour.</p></div></div>
+                  <div className="mt-6 grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+                    <div className={`rounded-[24px] border p-5 ${launchPatternClass(launchPattern)}`}><p className="text-[11px] font-bold uppercase tracking-[0.24em] opacity-80">Current pattern</p><p className="mt-3 text-2xl font-black tracking-[-0.05em]">{launchPatternLabel(launchPattern)}</p></div>
+                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5"><p className="text-sm leading-7 text-slate-300">{launchPatternSummary(launchPattern)}</p></div>
+                  </div>
+                </section>
+              ) : null}
+
+              {developerWalletProfile ? (
+                <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                  <div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${developerProfileTone(developerWalletProfile.status)}`}><AppIcon className="h-5 w-5" name="wallet" /></div><div><h3 className="text-lg font-bold text-white">Developer Wallet Profile</h3><p className="mt-1 text-sm text-slate-400">Funding overlap, linked wallets, and deployer-adjacent selling pressure.</p></div></div>
+                  <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5"><p className="text-sm leading-7 text-slate-200">{developerWalletProfile.summary}</p><p className="mt-4 text-sm leading-7 text-slate-400">{developerWalletProfile.note}</p></div>
+                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+                      <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Profile confidence</p><span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${developerProfileTone(developerWalletProfile.status)}`}>{developerWalletProfile.confidence}</span></div>
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        {developerWalletProfile.metrics.map((metric) => <div key={metric.label} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{metric.label}</p><p className="mt-2 text-lg font-semibold text-white">{metric.value}</p></div>)}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="warning" /></div><div><h3 className="text-lg font-bold text-white">Early Warnings</h3><p className="mt-1 text-sm text-slate-400">Compact launch alerts that explain what still looks unstable right now.</p></div></div>
+                <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {(report.earlyWarnings.length ? report.earlyWarnings : ["No acute early-launch warnings are active right now."]).map((item) => <div key={item} className="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">{item}</div>)}
+                </div>
+              </section>
+            </>
+          ) : null}
 
           <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-            <div className="flex items-center gap-3"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><AppIcon className="h-5 w-5" name="radar" /></div><div><h3 className="text-lg font-bold text-white">Launch Radar</h3><p className="mt-1 text-sm text-slate-400">Early launch-specific signals, separate from mature behavioural and scam-history scoring.</p></div></div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {[
-                { label: "Launch age", value: report.launchRadar.launchAgeMinutes !== null ? `${report.launchRadar.launchAgeMinutes}m` : marketAge },
-                { label: "Initial liquidity band", value: report.launchRadar.initialLiquidityBand },
-                { label: "Early trade pressure", value: report.launchRadar.earlyTradePressure },
-                { label: "Launch concentration", value: report.launchRadar.launchConcentration },
-                { label: "Copycat / name collision", value: report.launchRadar.copycatStatus },
-                { label: "Early cluster activity", value: report.launchRadar.earlyClusterActivity },
-              ].map((item) => <article key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">{item.label}</p><p className="mt-3 text-lg font-semibold capitalize text-white">{item.value}</p></article>)}
-            </div>
-            <p className="mt-5 max-w-4xl text-sm leading-7 text-slate-300">{report.launchRadar.summary}</p>
-          </section>
-
-          <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-            <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="warning" /></div><div><h3 className="text-lg font-bold text-white">Early Warnings</h3><p className="mt-1 text-sm text-slate-400">Compact launch alerts that explain what still looks unstable right now.</p></div></div>
-            <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {(report.earlyWarnings.length ? report.earlyWarnings : ["No acute early-launch warnings are active right now."]).map((item) => <div key={item} className="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-200">{item}</div>)}
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-            <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="analytics" /></div><div><h3 className="text-lg font-bold text-white">Risk Dimensions</h3><p className="mt-1 text-sm text-slate-400">Five dimensions that feed the final token assessment.</p></div></div>
+            <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="analytics" /></div><div><h3 className="text-lg font-bold text-white">Risk Dimensions</h3><p className="mt-1 text-sm text-slate-400">Five dimensions that feed the current {reportKind.toLowerCase()} assessment.</p></div></div>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               {dimensions.map((item) => {
                 const tone = statusTone(item.score >= 75 ? "critical" : item.score >= 50 ? "high" : item.score >= 25 ? "medium" : "low");
@@ -429,13 +550,19 @@ export function ReportView({ report }: ReportViewProps) {
               <div className="space-y-6">
                 <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
                   <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="hub" /></div><div><h3 className="text-lg font-bold text-white">Behavioral Analysis</h3><p className="mt-1 text-sm text-slate-400">Wallet coordination, exit patterns, and live liquidity behaviour.</p></div></div>
-                  {report.pageMode === "early_launch" ? <div className="mt-5 rounded-[22px] border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-6 text-slate-300">Behaviour modules are less reliable during the first minutes of trading because coordinated patterns and insider exits may not have emerged yet.</div> : null}
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {modules.map((item) => {
-                      const tone = statusTone(item.score >= 75 ? "critical" : item.score >= 55 ? "high" : item.score >= 30 ? "medium" : "low");
-                      return <article key={item.key} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5"><div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${tone.badge}`}><AppIcon className="h-5 w-5" name={item.key.includes("developer") ? "hub" : item.key.includes("early") ? "history" : item.key.includes("insider") ? "chart" : "drop"} /></div><div><h4 className="text-sm font-bold text-white">{item.title}</h4><p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{item.subtitle}</p></div></div><div className="mt-5"><div className="mb-2 flex items-center justify-between text-xs"><span className="text-slate-500">Module score</span><span className="font-mono text-slate-200">{item.score}</span></div><div className="h-2 overflow-hidden rounded-full bg-[#0b1325]"><div className="h-full rounded-full bg-[linear-gradient(90deg,#3b82f6,#60a5fa)]" style={{ width: `${Math.max(14, Math.min(item.score, 100))}%` }} /></div></div><p className="mt-4 text-sm leading-6 text-slate-300">{item.summary}</p></article>;
-                    })}
-                  </div>
+                  {isTokenReport && report.pageMode === "early_launch" ? <div className="mt-5 rounded-[22px] border border-primary/15 bg-primary/8 px-4 py-3 text-sm leading-6 text-slate-300">Behaviour modules are less reliable during the first minutes of trading because coordinated patterns and insider exits may not have emerged yet.</div> : null}
+                  {modules.length ? (
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      {modules.map((item) => {
+                        const tone = statusTone(item.score >= 75 ? "critical" : item.score >= 55 ? "high" : item.score >= 30 ? "medium" : "low");
+                        return <article key={item.key} className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5"><div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${tone.badge}`}><AppIcon className="h-5 w-5" name={item.key.includes("developer") ? "hub" : item.key.includes("early") ? "history" : item.key.includes("insider") ? "chart" : "drop"} /></div><div><h4 className="text-sm font-bold text-white">{item.title}</h4><p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">{item.subtitle}</p></div></div><div className="mt-5"><div className="mb-2 flex items-center justify-between text-xs"><span className="text-slate-500">Module score</span><span className="font-mono text-slate-200">{item.score}</span></div><div className="h-2 overflow-hidden rounded-full bg-[#0b1325]"><div className="h-full rounded-full bg-[linear-gradient(90deg,#3b82f6,#60a5fa)]" style={{ width: `${Math.max(14, Math.min(item.score, 100))}%` }} /></div></div><p className="mt-4 text-sm leading-6 text-slate-300">{item.summary}</p></article>;
+                      })}
+                    </div>
+                  ) : (
+                    <div className="mt-6 rounded-[24px] border border-white/8 bg-white/[0.03] p-5 text-sm leading-7 text-slate-300">
+                      No module-level behavioural breakdown is available for this {reportKind.toLowerCase()} yet. Use the top signals and timeline sections for the current high-level read.
+                    </div>
+                  )}
                 </section>
 
                 <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
@@ -456,34 +583,61 @@ export function ReportView({ report }: ReportViewProps) {
 
             <LockablePanel compact locked={!isAuthed}>
               <div className="space-y-6">
-                <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-                  <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="chart" /></div><div><h3 className="text-lg font-bold text-white">Market Execution</h3><p className="mt-1 text-sm text-slate-400">Trader-facing entry and exit conditions in the detected pool.</p></div></div>
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-end justify-between"><div><p className="mb-1 text-xs text-slate-500">Price USD</p><p className="font-mono text-2xl font-bold text-white">{price}</p></div><div className="text-right"><p className={`text-sm font-bold ${cautionTone.accent}`}>{report.tradeCaution?.label ?? "Moderate caution"}</p><p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Current setup</p></div></div>
-                    <div className="space-y-3 border-t border-white/10 pt-4">
-                      <div className="flex justify-between text-sm"><span className="text-slate-500">Market Cap</span><span className="text-slate-200">{marketCap}</span></div>
-                      <div className="flex justify-between text-sm"><span className="text-slate-500">24H Volume</span><span className="text-slate-200">{volume}</span></div>
-                      <div className="flex justify-between text-sm"><span className="text-slate-500">Liquidity</span><span className="text-slate-200">{report.liquidity}</span></div>
-                    </div>
-                  </div>
-                </section>
+                {isTokenReport ? (
+                  <>
+                    <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                      <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="chart" /></div><div><h3 className="text-lg font-bold text-white">Market Execution</h3><p className="mt-1 text-sm text-slate-400">Trader-facing entry and exit conditions in the detected pool.</p></div></div>
+                      <div className="mt-6 space-y-4">
+                        <div className="flex items-end justify-between"><div><p className="mb-1 text-xs text-slate-500">Price USD</p><p className="font-mono text-2xl font-bold text-white">{price}</p></div><div className="text-right"><p className={`text-sm font-bold ${cautionTone.accent}`}>{report.tradeCaution?.label ?? "Moderate caution"}</p><p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Current setup</p></div></div>
+                        <div className="space-y-3 border-t border-white/10 pt-4">
+                          <div className="flex justify-between text-sm"><span className="text-slate-500">Market Cap</span><span className="text-slate-200">{marketCap}</span></div>
+                          <div className="flex justify-between text-sm"><span className="text-slate-500">24H Volume</span><span className="text-slate-200">{volume}</span></div>
+                          <div className="flex justify-between text-sm"><span className="text-slate-500">Liquidity</span><span className="text-slate-200">{report.liquidity}</span></div>
+                        </div>
+                      </div>
+                    </section>
 
-                <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-                  <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="happy-face" /></div><div><h3 className="text-lg font-bold text-white">Social Sentiment</h3><p className="mt-1 text-sm text-slate-400">Lightweight market mood split based on maturity and behaviour pressure.</p></div></div>
-                  <div className="mt-6 flex items-center justify-between gap-2">
-                    <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-primary" name="happy-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Bullish</span><span className="text-lg font-bold text-white">{socials.bullish}%</span></div>
-                    <div className="h-8 w-px bg-white/10" />
-                    <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-slate-500" name="neutral-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Neutral</span><span className="text-lg font-bold text-white">{socials.neutral}%</span></div>
-                    <div className="h-8 w-px bg-white/10" />
-                    <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-rose-300" name="sad-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Bearish</span><span className="text-lg font-bold text-white">{socials.bearish}%</span></div>
-                  </div>
-                </section>
+                    <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                      <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="happy-face" /></div><div><h3 className="text-lg font-bold text-white">Social Sentiment</h3><p className="mt-1 text-sm text-slate-400">Lightweight market mood split based on maturity and behaviour pressure.</p></div></div>
+                      <div className="mt-6 flex items-center justify-between gap-2">
+                        <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-primary" name="happy-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Bullish</span><span className="text-lg font-bold text-white">{socials.bullish}%</span></div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-slate-500" name="neutral-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Neutral</span><span className="text-lg font-bold text-white">{socials.neutral}%</span></div>
+                        <div className="h-8 w-px bg-white/10" />
+                        <div className="flex flex-1 flex-col items-center"><AppIcon className="mb-1 h-5 w-5 text-rose-300" name="sad-face" /><span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">Bearish</span><span className="text-lg font-bold text-white">{socials.bearish}%</span></div>
+                      </div>
+                    </section>
+                  </>
+                ) : (
+                  <>
+                    <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                      <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name={report.entityType === "wallet" ? "wallet" : "document"} /></div><div><h3 className="text-lg font-bold text-white">{reportKind} Details</h3><p className="mt-1 text-sm text-slate-400">Key metrics available for the selected entity report.</p></div></div>
+                      <div className="mt-6 space-y-3">
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Review state</span><span className="text-slate-200">{report.reviewState}</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Confidence</span><span className="text-slate-200">{report.confidence.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Top findings</span><span className="text-slate-200">{report.factors.length}</span></div>
+                        <div className="flex justify-between text-sm"><span className="text-slate-500">Refreshed</span><span className="text-slate-200">{report.refreshedAt}</span></div>
+                      </div>
+                    </section>
+
+                    <section className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+                      <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="sensors" /></div><div><h3 className="text-lg font-bold text-white">Signal Notes</h3><p className="mt-1 text-sm text-slate-400">What this non-token report currently emphasizes.</p></div></div>
+                      <div className="mt-6 grid gap-3">
+                        {(report.factors.length ? report.factors : [{ code: "no-signals", explanation: "No meaningful risk signal was detected yet.", label: "No signal", severity: "low", weight: 0 }]).slice(0, 4).map((item) => (
+                          <div key={item.code} className="rounded-[22px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-200">
+                            {item.explanation}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </>
+                )}
               </div>
             </LockablePanel>
           </div>
 
           <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-            <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="history" /></div><div><h3 className="text-lg font-bold text-white">Timeline</h3><p className="mt-1 text-sm text-slate-400">Fresh launches emphasize event sequence because timing matters as much as static scores.</p></div></div>
+            <div className="flex items-center gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="history" /></div><div><h3 className="text-lg font-bold text-white">Timeline</h3><p className="mt-1 text-sm text-slate-400">{isTokenReport ? "Fresh launches emphasize event sequence because timing matters as much as static scores." : "Timeline highlights the most recent state changes and background refresh events for this report."}</p></div></div>
             <div className="relative mt-6 pl-4">
               <div className="absolute bottom-2 left-2 top-2 w-px bg-white/10" />
               <div className="space-y-6">
@@ -496,7 +650,7 @@ export function ReportView({ report }: ReportViewProps) {
           </section>
 
           <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,16,31,0.94),rgba(5,11,22,0.98))] p-6">
-            <div className="flex items-start gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="info" /></div><div><h3 className="text-lg font-bold text-white">Disclaimer</h3><p className="mt-2 max-w-5xl text-sm leading-7 text-slate-400">{report.pageMode === "early_launch" ? "Very new launches can change quickly. Low current signal visibility does not mean low final risk, and additional holder or liquidity behaviour may appear as trading continues." : report.pageMode === "early_market" ? "First-day assessments are more stable than minute-one launch reads, but holder concentration, liquidity conditions, and behavioural anomalies can still change materially." : "This report is a probabilistic risk assessment, not a guarantee. Traders should still verify token contracts, liquidity ownership, and execution conditions before entering a position."}</p></div></div>
+            <div className="flex items-start gap-3"><div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-slate-200"><AppIcon className="h-5 w-5" name="info" /></div><div><h3 className="text-lg font-bold text-white">Disclaimer</h3><p className="mt-2 max-w-5xl text-sm leading-7 text-slate-400">{isTokenReport ? (report.pageMode === "early_launch" ? "Very new launches can change quickly. Low current signal visibility does not mean low final risk, and additional holder or liquidity behaviour may appear as trading continues." : report.pageMode === "early_market" ? "First-day assessments are more stable than minute-one launch reads, but holder concentration, liquidity conditions, and behavioural anomalies can still change materially." : "This report is a probabilistic risk assessment, not a guarantee. Traders should still verify token contracts, liquidity ownership, and execution conditions before entering a position.") : `This ${reportKind.toLowerCase()} report is probabilistic and should be treated as decision support, not a guarantee. Combine it with your own review before acting on the entity.`}</p></div></div>
           </section>
         </main>
 
@@ -509,7 +663,7 @@ export function ReportView({ report }: ReportViewProps) {
             <div className="flex gap-8">
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Terms of Service</Link>
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Privacy Policy</Link>
-              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/coins">API Documentation</Link>
+              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/developers">API Documentation</Link>
             </div>
             <p className="text-xs text-slate-500">(c) 2024 SolanaTrust Analysis Labs.</p>
           </div>

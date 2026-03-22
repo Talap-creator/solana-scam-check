@@ -18,7 +18,7 @@ type SearchCheckFormProps = {
 export function SearchCheckForm({
   defaultValue = "",
   submitLabel = "Check now",
-  placeholder = "Paste a token mint address",
+  placeholder = "Paste a Solana token, wallet, or project URL",
   tokenOnly = false,
   leadingIcon = false,
   variant = "default",
@@ -29,20 +29,27 @@ export function SearchCheckForm({
   const [entityType, setEntityType] = useState<SubmitEntityType>("token");
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-  const tokenOnlyMode = entityType !== "token";
   const selectorHidden = tokenOnly;
+
+  const activePlaceholder =
+    selectorHidden || entityType === "token"
+      ? placeholder
+      : entityType === "wallet"
+        ? "Enter Solana wallet address"
+        : "Enter project domain or URL";
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const trimmedValue = value.trim();
     if (!trimmedValue) {
-      setError("Enter a token mint address.");
-      return;
-    }
-
-    if (tokenOnlyMode) {
-      setError("Wallet and project checks are still in development. Token checks are live now.");
+      setError(
+        entityType === "wallet"
+          ? "Enter a Solana wallet address."
+          : entityType === "project"
+            ? "Enter a project domain or URL."
+            : "Enter a token mint address.",
+      );
       return;
     }
 
@@ -92,8 +99,8 @@ export function SearchCheckForm({
             value={entityType}
           >
             <option value="token">Token</option>
-            <option value="wallet">Wallet (In development)</option>
-            <option value="project">Project (In development)</option>
+            <option value="wallet">Wallet</option>
+            <option value="project">Project</option>
           </select>
         )}
         {leadingIcon ? (
@@ -113,7 +120,7 @@ export function SearchCheckForm({
               : "min-w-0 flex-1 rounded-xl border border-transparent bg-white/5 px-4 py-4 text-sm outline-none placeholder:text-[var(--muted)]"
           }
           onChange={(event) => setValue(event.target.value)}
-          placeholder={placeholder}
+          placeholder={activePlaceholder}
           type="text"
           value={value}
         />
@@ -123,10 +130,10 @@ export function SearchCheckForm({
               ? "rounded-lg bg-[var(--accent)] px-8 font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
               : "rounded-xl bg-[var(--accent)] px-6 py-4 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
           }
-          disabled={isPending || tokenOnlyMode}
+          disabled={isPending}
           type="submit"
         >
-          {tokenOnlyMode ? "In development" : isPending ? "Checking..." : submitLabel}
+          {isPending ? "Checking..." : submitLabel}
         </button>
       </div>
       {error ? <p className="mt-3 text-sm text-[var(--critical)]">{error}</p> : null}
