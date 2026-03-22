@@ -1,5 +1,6 @@
 import { type CheckReport } from "@/lib/mock-data";
 import { getClientApiBaseUrl, getServerApiBaseUrl } from "@/lib/api-base";
+import type { DeveloperLeadProfile } from "@/lib/developer-leads";
 
 export type WatchlistItem = {
   name: string;
@@ -97,6 +98,44 @@ export type LaunchFeedQuery = {
   liquidity?: LaunchFeedLiquidity;
   copycat_only?: boolean;
   q?: string;
+};
+
+type ApiDeveloperProfile = {
+  id: string;
+  kind: "cluster" | "wallet";
+  label: string;
+  wallet_preview: string;
+  unresolved: boolean;
+  funding_source: string | null;
+  launches: number;
+  high_risk_launches: number;
+  avg_rug_probability: number;
+  avg_trade_caution: string;
+  confidence: string;
+  coverage: string;
+  latest_refreshed_at: string;
+  operator_score: number;
+  profile_status: "clean" | "watch" | "flagged";
+  risky_launch_ratio: number;
+  summary: string;
+  premium_prompt: string;
+  flags: string[];
+  top_metrics: Array<{ label: string; value: string }>;
+  profile_signals: Array<{
+    label: string;
+    tone: "neutral" | "watch" | "flagged";
+    value: string;
+  }>;
+  latest_launches: Array<{
+    age_minutes: number | null;
+    id: string;
+    launch_pattern: string | null;
+    name: string;
+    page_mode: CheckReport["pageMode"];
+    refreshed_at: string;
+    risk: CheckReport["status"];
+    symbol: string;
+  }>;
 };
 
 type ApiReport = {
@@ -592,6 +631,43 @@ export async function getLaunchFeed(query: LaunchFeedQuery = {}): Promise<{ item
   }
 
   return response.json() as Promise<{ items: LaunchFeedItem[]; next_cursor: string | null }>;
+}
+
+export async function getDeveloperProfiles(limit = 200): Promise<DeveloperLeadProfile[]> {
+  const data = await fetchJson<{ items: ApiDeveloperProfile[] }>(`/api/v1/feed/developers?limit=${limit}`);
+  return data.items.map((item) => ({
+    id: item.id,
+    kind: item.kind,
+    label: item.label,
+    walletPreview: item.wallet_preview,
+    unresolved: item.unresolved,
+    fundingSource: item.funding_source,
+    launches: item.launches,
+    highRiskLaunches: item.high_risk_launches,
+    avgRugProbability: item.avg_rug_probability,
+    avgTradeCaution: item.avg_trade_caution,
+    confidence: item.confidence,
+    coverage: item.coverage,
+    latestRefreshedAt: item.latest_refreshed_at,
+    operatorScore: item.operator_score,
+    profileStatus: item.profile_status,
+    riskyLaunchRatio: item.risky_launch_ratio,
+    summary: item.summary,
+    premiumPrompt: item.premium_prompt,
+    flags: item.flags,
+    topMetrics: item.top_metrics,
+    profileSignals: item.profile_signals,
+    latestLaunches: item.latest_launches.map((launch) => ({
+      ageMinutes: launch.age_minutes,
+      id: launch.id,
+      launchPattern: launch.launch_pattern,
+      name: launch.name,
+      pageMode: launch.page_mode,
+      refreshedAt: launch.refreshed_at,
+      risk: launch.risk,
+      symbol: launch.symbol,
+    })),
+  }));
 }
 
 function detectEntityType(value: string): Exclude<SubmitEntityType, "auto"> {

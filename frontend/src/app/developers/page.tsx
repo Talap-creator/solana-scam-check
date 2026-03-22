@@ -3,8 +3,7 @@ import { DeveloperWalletBoard } from "@/components/developer-wallet-board";
 import { AppIcon } from "@/components/app-icon";
 import { LandingHeaderAction } from "@/components/landing-header-action";
 import { SearchCheckForm } from "@/components/search-check-form";
-import { getChecks } from "@/lib/api";
-import { deriveDeveloperLeadProfiles } from "@/lib/developer-leads";
+import { getDeveloperProfiles } from "@/lib/api";
 
 const landingNav = [
   { href: "/#engine", label: "Intelligence" },
@@ -21,8 +20,7 @@ const valueProps = [
 ] as const;
 
 export default async function DevelopersPage() {
-  const checks = await getChecks();
-  const profiles = deriveDeveloperLeadProfiles(checks);
+  const profiles = await getDeveloperProfiles();
 
   return (
     <main className="min-h-screen bg-[#020617] text-slate-100 antialiased">

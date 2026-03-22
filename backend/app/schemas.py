@@ -266,6 +266,57 @@ class LaunchFeedResponse(BaseModel):
     next_cursor: str | None = None
 
 
+class DeveloperOperatorSignalItem(BaseModel):
+    label: str
+    tone: Literal["neutral", "watch", "flagged"]
+    value: str
+
+
+class DeveloperOperatorMetricItem(BaseModel):
+    label: str
+    value: str
+
+
+class DeveloperOperatorLaunchItem(BaseModel):
+    age_minutes: int | None = None
+    id: str
+    launch_pattern: str | None = None
+    name: str
+    page_mode: PageMode
+    refreshed_at: datetime
+    risk: RiskStatus
+    symbol: str
+
+
+class DeveloperOperatorItem(BaseModel):
+    id: str
+    kind: Literal["cluster", "wallet"]
+    label: str
+    wallet_preview: str
+    unresolved: bool = False
+    funding_source: str | None = None
+    launches: int
+    high_risk_launches: int
+    avg_rug_probability: int
+    avg_trade_caution: str
+    confidence: str
+    coverage: str
+    latest_refreshed_at: datetime
+    operator_score: int
+    profile_status: Literal["clean", "watch", "flagged"] = "clean"
+    risky_launch_ratio: int
+    summary: str
+    premium_prompt: str
+    flags: list[str] = Field(default_factory=list)
+    top_metrics: list[DeveloperOperatorMetricItem] = Field(default_factory=list)
+    profile_signals: list[DeveloperOperatorSignalItem] = Field(default_factory=list)
+    latest_launches: list[DeveloperOperatorLaunchItem] = Field(default_factory=list)
+
+
+class DeveloperOperatorFeedResponse(BaseModel):
+    items: list[DeveloperOperatorItem]
+
+
 class WatchlistResponse(BaseModel):
     items: list[WatchlistItem]
 

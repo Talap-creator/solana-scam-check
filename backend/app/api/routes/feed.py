@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Query
 
 from ...dependencies import get_repository
-from ...schemas import LaunchFeedResponse
+from ...schemas import DeveloperOperatorFeedResponse, LaunchFeedResponse
 
 
 router = APIRouter(prefix="/api/v1/feed", tags=["feed"])
@@ -34,3 +34,11 @@ async def get_launch_feed(
         items=items,
         next_cursor=next_cursor,
     )
+
+
+@router.get("/developers", response_model=DeveloperOperatorFeedResponse)
+async def get_developer_feed(
+    limit: int = Query(default=200, ge=1, le=500),
+) -> DeveloperOperatorFeedResponse:
+    items = get_repository().build_developer_operator_items(limit=limit)
+    return DeveloperOperatorFeedResponse(items=items)

@@ -167,6 +167,45 @@ class LaunchFeedSnapshot(Base):
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
+class DeveloperOperatorProfile(Base):
+    __tablename__ = "developer_operator_profiles"
+
+    operator_key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    label: Mapped[str] = mapped_column(String(200), nullable=False)
+    wallet_preview: Mapped[str] = mapped_column(String(200), nullable=False)
+    funding_source: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    unresolved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    launches_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    high_risk_launches: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    avg_rug_probability: Mapped[float] = mapped_column(Numeric(7, 4), nullable=False, default=0)
+    avg_trade_caution: Mapped[str] = mapped_column(String(32), nullable=False, default="Moderate caution")
+    confidence_label: Mapped[str] = mapped_column(String(64), nullable=False, default="Limited early data")
+    coverage_label: Mapped[str] = mapped_column(String(64), nullable=False, default="Limited trace")
+    operator_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    profile_status: Mapped[str] = mapped_column(String(16), nullable=False, default="clean")
+    risky_launch_ratio: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    summary: Mapped[str] = mapped_column(String(900), nullable=False)
+    premium_prompt: Mapped[str] = mapped_column(String(500), nullable=False)
+    flags_json: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    top_metrics_json: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    profile_signals_json: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    latest_launches_json: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    latest_refreshed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class DeveloperOperatorSnapshot(Base):
+    __tablename__ = "developer_operator_snapshots"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    operator_key: Mapped[str] = mapped_column(String(160), index=True, nullable=False)
+    snapshot_signature: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 class BillingEvent(Base):
     __tablename__ = "billing_events"
 

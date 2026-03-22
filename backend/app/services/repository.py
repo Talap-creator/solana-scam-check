@@ -13,6 +13,7 @@ from ..db import SessionLocal
 from ..schemas import (
     CheckOverview,
     CopycatStatus,
+    DeveloperOperatorItem,
     EntityType,
     LaunchFeedItem,
     MetricItem,
@@ -50,6 +51,7 @@ class ReportRepository:
         self.entity_index.setdefault(index_key, []).append(report.id)
         if persist and report.entity_type == "token":
             self._persist_launch_feed_reports([report])
+            self._persist_developer_operator_reports([report])
         return report
 
     def create_report(self, entity_type: EntityType, raw_value: str) -> CheckOverview:
@@ -167,6 +169,13 @@ class ReportRepository:
         next_cursor = str(offset + limit) if offset + limit < len(filtered) else None
         return page, next_cursor
 
+    def build_developer_operator_items(self, *, limit: int = 200) -> list[DeveloperOperatorItem]:
+        token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
+        if token_reports:
+            self._persist_developer_operator_reports(token_reports)
+        items = self._load_persisted_developer_operator_items()
+        return items[:limit]
+
     def _persist_launch_feed_reports(self, reports: list[CheckOverview]) -> None:
         token_reports = [report for report in reports if report.entity_type == "token"]
         if not token_reports:
@@ -261,6 +270,103 @@ class ReportRepository:
 
         now = utc_now()
         return [_build_launch_feed_item_from_record(record, now) for record in records]
+
+    def _persist_developer_operator_reports(self, reports: list[CheckOverview]) -> None:
+        token_reports = [report for report in reports if report.entity_type == "token"]
+        if not token_reports:
+            return
+
+        all_token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
+        payloads = _build_developer_operator_payloads(all_token_reports)
+        if not payloads:
+            return
+
+        now = utc_now()
+        try:
+            with SessionLocal() as db:
+                for payload in payloads:
+                    operator_key = str(payload["id"])
+                    snapshot_signature = _build_developer_operator_snapshot_signature(payload)
+                    existing = db.get(models.DeveloperOperatorProfile, operator_key)
+                    if existing is None:
+                        db.add(
+                            models.DeveloperOperatorProfile(
+                                operator_key=operator_key,
+                                kind=str(payload["kind"]),
+                                label=str(payload["label"]),
+                                wallet_preview=str(payload["wallet_preview"]),
+                                funding_source=payload.get("funding_source"),
+                                unresolved=bool(payload["unresolved"]),
+                                launches_count=int(payload["launches"]),
+                                high_risk_launches=int(payload["high_risk_launches"]),
+                                avg_rug_probability=float(payload["avg_rug_probability"]),
+                                avg_trade_caution=str(payload["avg_trade_caution"]),
+                                confidence_label=str(payload["confidence"]),
+                                coverage_label=str(payload["coverage"]),
+                                operator_score=int(payload["operator_score"]),
+                                profile_status=str(payload["profile_status"]),
+                                risky_launch_ratio=int(payload["risky_launch_ratio"]),
+                                summary=str(payload["summary"]),
+                                premium_prompt=str(payload["premium_prompt"]),
+                                flags_json=list(payload["flags"]),
+                                top_metrics_json=_json_ready(list(payload["top_metrics"])),
+                                profile_signals_json=_json_ready(list(payload["profile_signals"])),
+                                latest_launches_json=_json_ready(list(payload["latest_launches"])),
+                                latest_refreshed_at=_coerce_utc_datetime(payload["latest_refreshed_at"]),
+                                first_seen_at=now,
+                                last_seen_at=now,
+                            )
+                        )
+                    else:
+                        existing.kind = str(payload["kind"])
+                        existing.label = str(payload["label"])
+                        existing.wallet_preview = str(payload["wallet_preview"])
+                        existing.funding_source = payload.get("funding_source")
+                        existing.unresolved = bool(payload["unresolved"])
+                        existing.launches_count = int(payload["launches"])
+                        existing.high_risk_launches = int(payload["high_risk_launches"])
+                        existing.avg_rug_probability = float(payload["avg_rug_probability"])
+                        existing.avg_trade_caution = str(payload["avg_trade_caution"])
+                        existing.confidence_label = str(payload["confidence"])
+                        existing.coverage_label = str(payload["coverage"])
+                        existing.operator_score = int(payload["operator_score"])
+                        existing.profile_status = str(payload["profile_status"])
+                        existing.risky_launch_ratio = int(payload["risky_launch_ratio"])
+                        existing.summary = str(payload["summary"])
+                        existing.premium_prompt = str(payload["premium_prompt"])
+                        existing.flags_json = list(payload["flags"])
+                        existing.top_metrics_json = _json_ready(list(payload["top_metrics"]))
+                        existing.profile_signals_json = _json_ready(list(payload["profile_signals"]))
+                        existing.latest_launches_json = _json_ready(list(payload["latest_launches"]))
+                        existing.latest_refreshed_at = _coerce_utc_datetime(payload["latest_refreshed_at"])
+                        existing.last_seen_at = now
+
+                    _append_developer_operator_snapshot(
+                        db,
+                        operator_key=operator_key,
+                        snapshot_signature=snapshot_signature,
+                        payload=payload,
+                        observed_at=now,
+                    )
+                db.commit()
+        except SQLAlchemyError:
+            return
+
+    def _load_persisted_developer_operator_items(self) -> list[DeveloperOperatorItem]:
+        try:
+            with SessionLocal() as db:
+                records = (
+                    db.query(models.DeveloperOperatorProfile)
+                    .order_by(
+                        models.DeveloperOperatorProfile.operator_score.desc(),
+                        models.DeveloperOperatorProfile.latest_refreshed_at.desc(),
+                    )
+                    .all()
+                )
+        except SQLAlchemyError:
+            return []
+
+        return [_build_developer_operator_item_from_record(record) for record in records]
 
     def _rehydrate_persisted_launch_report(
         self,
@@ -656,7 +762,13 @@ def _append_launch_feed_snapshot(
     )
 
 
-def _coerce_utc_datetime(value: datetime) -> datetime:
+def _coerce_utc_datetime(value: datetime | str) -> datetime:
+    if isinstance(value, str):
+        normalized = value.replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone(timezone.utc)
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc)
@@ -992,6 +1104,436 @@ def _filter_launch_feed_items(
         filtered.sort(key=lambda item: item.age_minutes)
 
     return filtered
+
+
+def _build_developer_operator_payloads(reports: list[CheckOverview]) -> list[dict]:
+    token_reports = [report for report in reports if report.entity_type == "token"]
+    grouped: dict[str, list[CheckOverview]] = {}
+    meta: dict[str, dict[str, object]] = {}
+
+    for report in token_reports:
+        metrics = _module_metrics(report, "developer_cluster")
+        shared_funder = metrics.get("shared_funder")
+        resolved_funder = shared_funder if isinstance(shared_funder, str) and len(shared_funder) > 8 else None
+        operator_key = resolved_funder or f"cluster:{report.id}"
+        grouped.setdefault(operator_key, []).append(report)
+        if operator_key not in meta:
+            if resolved_funder:
+                meta[operator_key] = {
+                    "kind": "wallet",
+                    "label": _shorten_wallet_label(resolved_funder),
+                    "wallet_preview": resolved_funder,
+                    "unresolved": False,
+                }
+            else:
+                label_seed = report.symbol or report.display_name[:4].upper()
+                meta[operator_key] = {
+                    "kind": "cluster",
+                    "label": f"Signal Cluster {label_seed}",
+                    "wallet_preview": "Wallet hidden",
+                    "unresolved": True,
+                }
+
+    payloads: list[dict] = []
+    for operator_key, items in grouped.items():
+        ordered = sorted(items, key=lambda item: _coerce_utc_datetime(item.created_at), reverse=True)
+        latest = ordered[0]
+        details = _derive_developer_profile_details(latest)
+        launch_count = len(ordered)
+        avg_rug_probability = round(sum(item.rug_probability for item in ordered) / max(launch_count, 1))
+        avg_trade_caution = _avg_trade_caution_label(
+            [item.trade_caution.level if item.trade_caution is not None else "moderate" for item in ordered]
+        )
+        critical_count = len([item for item in ordered if item.status == "critical"])
+        high_count = len([item for item in ordered if item.status == "high"])
+        high_risk_launches = critical_count + high_count
+        risky_launch_ratio = round((high_risk_launches / max(launch_count, 1)) * 100)
+        operator_score = round(
+            _clamp(
+                avg_rug_probability * 0.52
+                + risky_launch_ratio * 0.28
+                + critical_count * 7
+                + (12 if details["profile_status"] == "flagged" else 6 if details["profile_status"] == "watch" else 0)
+                + _developer_caution_weight(avg_trade_caution),
+                0,
+                100,
+            )
+        )
+        flags = _unique_strings(
+            [
+                *details["watchpoints"],
+                *[
+                    factor.label
+                    for item in ordered
+                    for factor in item.risk_increasers[:2]
+                ],
+            ]
+        )[:4]
+        funding_source = details["funding_source"]
+        latest_launches = [
+            {
+                "id": item.id,
+                "name": item.name or item.display_name,
+                "symbol": item.symbol or item.display_name[:5].upper(),
+                "risk": item.status,
+                "page_mode": item.page_mode,
+                "age_minutes": item.launch_radar.launch_age_minutes,
+                "refreshed_at": _coerce_utc_datetime(item.created_at),
+                "launch_pattern": _developer_launch_pattern_label(item),
+            }
+            for item in ordered[:4]
+        ]
+        payloads.append(
+            {
+                "id": operator_key,
+                "kind": meta[operator_key]["kind"],
+                "label": meta[operator_key]["label"],
+                "wallet_preview": meta[operator_key]["wallet_preview"],
+                "unresolved": meta[operator_key]["unresolved"],
+                "funding_source": funding_source,
+                "launches": launch_count,
+                "high_risk_launches": high_risk_launches,
+                "avg_rug_probability": avg_rug_probability,
+                "avg_trade_caution": avg_trade_caution,
+                "confidence": _confidence_label(latest.confidence),
+                "coverage": details["coverage"],
+                "latest_refreshed_at": _coerce_utc_datetime(latest.created_at),
+                "operator_score": operator_score,
+                "profile_status": details["profile_status"],
+                "risky_launch_ratio": risky_launch_ratio,
+                "summary": details["summary"],
+                "premium_prompt": (
+                    "Unlock the full launch wallet profile, related launches, linked addresses, and repeat operator history with Premium."
+                    if meta[operator_key]["kind"] == "wallet"
+                    else "Unlock the hidden wallet behind this launch cluster, reveal linked addresses, and open the full launch history with Premium."
+                ),
+                "flags": flags,
+                "top_metrics": details["top_metrics"][:4],
+                "profile_signals": details["profile_signals"][:4],
+                "latest_launches": latest_launches,
+            }
+        )
+
+    payloads.sort(
+        key=lambda item: (
+            -int(item["operator_score"]),
+            0 if item["kind"] == "wallet" else 1,
+            -int(item["launches"]),
+            -int(item["avg_rug_probability"]),
+        )
+    )
+    return payloads
+
+
+def _build_developer_operator_item_from_record(record: models.DeveloperOperatorProfile) -> DeveloperOperatorItem:
+    return DeveloperOperatorItem(
+        id=record.operator_key,
+        kind=record.kind,
+        label=record.label,
+        wallet_preview=record.wallet_preview,
+        unresolved=record.unresolved,
+        funding_source=record.funding_source,
+        launches=record.launches_count,
+        high_risk_launches=record.high_risk_launches,
+        avg_rug_probability=round(float(record.avg_rug_probability)),
+        avg_trade_caution=record.avg_trade_caution,
+        confidence=record.confidence_label,
+        coverage=record.coverage_label,
+        latest_refreshed_at=_coerce_utc_datetime(record.latest_refreshed_at),
+        operator_score=record.operator_score,
+        profile_status=record.profile_status,
+        risky_launch_ratio=record.risky_launch_ratio,
+        summary=record.summary,
+        premium_prompt=record.premium_prompt,
+        flags=[str(item) for item in (record.flags_json or [])],
+        top_metrics=list(record.top_metrics_json or []),
+        profile_signals=list(record.profile_signals_json or []),
+        latest_launches=[
+            {
+                **launch,
+                "refreshed_at": _coerce_utc_datetime(launch["refreshed_at"]),
+            }
+            for launch in list(record.latest_launches_json or [])
+        ],
+    )
+
+
+def _build_developer_operator_snapshot_signature(payload: dict) -> str:
+    return hashlib.sha256(json.dumps(_json_ready(payload), sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _append_developer_operator_snapshot(
+    db,
+    *,
+    operator_key: str,
+    snapshot_signature: str,
+    payload: dict,
+    observed_at: datetime,
+) -> None:
+    latest_snapshot = (
+        db.query(models.DeveloperOperatorSnapshot)
+        .filter(models.DeveloperOperatorSnapshot.operator_key == operator_key)
+        .order_by(models.DeveloperOperatorSnapshot.observed_at.desc())
+        .first()
+    )
+    if latest_snapshot is not None and latest_snapshot.snapshot_signature == snapshot_signature:
+        return
+
+    db.add(
+        models.DeveloperOperatorSnapshot(
+            operator_key=operator_key,
+            snapshot_signature=snapshot_signature,
+            payload_json=_json_ready(payload),
+            observed_at=observed_at,
+        )
+    )
+
+
+def _derive_developer_profile_details(report: CheckOverview) -> dict[str, object]:
+    behaviour = report.behaviour_analysis_v2
+    modules = behaviour.modules if behaviour is not None else {}
+    developer = modules.get("developer_cluster")
+    insider = modules.get("insider_selling")
+    developer_metrics = _module_metrics(report, "developer_cluster")
+    insider_metrics = _module_metrics(report, "insider_selling")
+
+    linked_wallets = _read_metric(
+        developer_metrics,
+        "estimated_cluster_wallet_count",
+        "shared_funding_wallet_count",
+        "top_wallets_with_common_funder_count",
+    )
+    cluster_supply = _read_metric(
+        developer_metrics,
+        "estimated_cluster_supply_share",
+        "cluster_supply_control_pct",
+    )
+    funding_ratio = _read_metric(developer_metrics, "shared_funding_ratio")
+    seller_wallets = _read_metric(insider_metrics, "top_holder_exit_density", "seller_wallet_count")
+    exit_similarity = _read_metric(
+        insider_metrics,
+        "wallet_exit_similarity_score",
+        "coordinated_exit_window_score",
+    )
+    funding_source = _read_metric(developer_metrics, "shared_funder")
+
+    profile_status = (
+        "flagged"
+        if (developer and developer.status == "flagged") or (insider and insider.status == "flagged")
+        else "watch"
+        if (developer and developer.status == "watch") or (insider and insider.status == "watch")
+        else "clean"
+    )
+    summary = (
+        developer.summary
+        if developer is not None
+        else insider.summary
+        if insider is not None
+        else "No strong developer-linked wallet coordination is visible yet."
+    )
+    coverage = _coverage_label_from_breakdown(behaviour.confidence_breakdown if behaviour is not None else None)
+    watchpoints = [
+        (
+            f"Shared funding source resolves to {str(funding_source)[:4]}...{str(funding_source)[-4:]}."
+            if isinstance(funding_source, str) and len(str(funding_source)) > 8
+            else None
+        ),
+        "A meaningful share of tracked holder wallets map back into the same funding network."
+        if isinstance(funding_ratio, (int, float)) and float(funding_ratio) >= 0.34
+        else None,
+        "Linked holder wallets control a noticeable share of tracked supply."
+        if isinstance(cluster_supply, (int, float)) and float(cluster_supply) >= 12
+        else None,
+        "Multiple tracked wallets are contributing to current exit pressure."
+        if isinstance(seller_wallets, (int, float)) and float(seller_wallets) >= 2
+        else None,
+    ]
+
+    profile_signals = [
+        {
+            "label": "Shared funding coverage",
+            "value": _format_ratio_percent(funding_ratio),
+            "tone": _numeric_tone(_ratio_to_percent(funding_ratio), 34, 55),
+        },
+        {
+            "label": "Cluster supply control",
+            "value": _format_percent(cluster_supply),
+            "tone": _numeric_tone(cluster_supply, 12, 24),
+        },
+        {
+            "label": "Exit wallet density",
+            "value": _format_count(seller_wallets, "n/a"),
+            "tone": _numeric_tone(seller_wallets, 2, 3),
+        },
+        {
+            "label": "Exit timing compression",
+            "value": _format_ratio_percent(exit_similarity),
+            "tone": _numeric_tone(_ratio_to_percent(exit_similarity), 40, 65),
+        },
+    ]
+
+    return {
+        "profile_status": profile_status,
+        "summary": summary,
+        "coverage": coverage,
+        "funding_source": funding_source if isinstance(funding_source, str) else None,
+        "watchpoints": [item for item in watchpoints if item],
+        "top_metrics": [
+            {"label": "Linked wallets", "value": _format_count(linked_wallets)},
+            {"label": "Cluster supply", "value": _format_percent(cluster_supply)},
+            {"label": "Seller wallets", "value": _format_count(seller_wallets)},
+            {"label": "Funding overlap", "value": _format_ratio_percent(funding_ratio)},
+        ],
+        "profile_signals": sorted(
+            profile_signals,
+            key=lambda item: {"flagged": 0, "watch": 1, "neutral": 2}[item["tone"]],
+        ),
+    }
+
+
+def _module_metrics(report: CheckOverview, key: str) -> dict[str, object]:
+    behaviour = report.behaviour_analysis_v2
+    if behaviour is None:
+        return {}
+    module = behaviour.modules.get(key)
+    if module is None:
+        return {}
+    return dict(module.evidence.metrics or {})
+
+
+def _read_metric(metrics: dict[str, object], *keys: str) -> object | None:
+    for key in keys:
+        if key in metrics and metrics[key] is not None:
+            return metrics[key]
+    return None
+
+
+def _confidence_label(value: float) -> str:
+    if value >= 0.75:
+        return "High confidence"
+    if value >= 0.45:
+        return "Moderate confidence"
+    return "Limited early data"
+
+
+def _coverage_label_from_breakdown(breakdown) -> str:
+    if breakdown is None:
+        return "Limited trace"
+    depth = getattr(breakdown, "funding_trace_depth", "shallow")
+    if depth == "deep":
+        return "Deep trace"
+    if depth == "moderate":
+        return "Partial trace"
+    return "Limited trace"
+
+
+def _avg_trade_caution_label(levels: list[str]) -> str:
+    if "avoid" in levels:
+        return "Avoid"
+    if "high" in levels:
+        return "High caution"
+    if "moderate" in levels:
+        return "Moderate caution"
+    return "Low caution"
+
+
+def _developer_caution_weight(level: str) -> int:
+    if "Avoid" in level:
+        return 16
+    if "High" in level:
+        return 11
+    if "Moderate" in level:
+        return 6
+    return 2
+
+
+def _clamp(value: float, min_value: float, max_value: float) -> float:
+    return max(min_value, min(max_value, value))
+
+
+def _shorten_wallet_label(value: str) -> str:
+    return f"{value[:4]}...{value[-4:]}"
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for value in values:
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        result.append(value)
+    return result
+
+
+def _format_count(value: object | None, fallback: str = "0") -> str:
+    if isinstance(value, (int, float)):
+        return str(int(round(float(value))))
+    return fallback
+
+
+def _format_percent(value: object | None, fallback: str = "n/a") -> str:
+    if isinstance(value, (int, float)):
+        return f"{float(value):.1f}%"
+    return fallback
+
+
+def _format_ratio_percent(value: object | None, fallback: str = "n/a") -> str:
+    if isinstance(value, (int, float)):
+        return f"{float(value) * 100:.1f}%"
+    return fallback
+
+
+def _ratio_to_percent(value: object | None) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value) * 100
+    return None
+
+
+def _numeric_tone(value: object | None, watch_threshold: float, flagged_threshold: float) -> str:
+    if not isinstance(value, (int, float)):
+        return "neutral"
+    if float(value) >= flagged_threshold:
+        return "flagged"
+    if float(value) >= watch_threshold:
+        return "watch"
+    return "neutral"
+
+
+def _developer_launch_pattern_label(report: CheckOverview) -> str | None:
+    if report.entity_type != "token":
+        return None
+    behaviour = report.behaviour_analysis_v2
+    modules = behaviour.modules if behaviour is not None else {}
+    developer = modules.get("developer_cluster")
+    early_buyers = modules.get("early_buyers")
+    insider_selling = modules.get("insider_selling")
+    liquidity = modules.get("liquidity_management")
+
+    if liquidity and liquidity.status == "flagged" and (
+        (report.trade_caution is not None and report.trade_caution.level in {"high", "avoid"})
+        or report.launch_risk.level in {"high", "critical"}
+    ):
+        return "Liquidity trap"
+    if (developer and developer.status == "flagged") or (insider_selling and insider_selling.status == "flagged"):
+        return "Insider"
+    if (
+        (early_buyers and early_buyers.status in {"flagged", "watch"})
+        or report.launch_radar.early_cluster_activity != "none"
+        or report.launch_radar.early_trade_pressure == "aggressive"
+    ):
+        return "Sniper"
+    return "Organic"
+
+
+def _json_ready(value):
+    if isinstance(value, datetime):
+        return _coerce_utc_datetime(value).isoformat()
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    return value
 
 
 def _parse_cursor(value: str | None) -> int:
