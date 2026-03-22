@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AppIcon } from "@/components/app-icon";
-import { APP_TELEGRAM_URL } from "@/lib/plans";
+import { PremiumCheckoutButton } from "@/components/premium-checkout-button";
 import type { DeveloperLeadProfile } from "@/lib/developer-leads";
 
 type DeveloperWalletBoardProps = {
@@ -269,14 +269,10 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
             <div className="mt-6 rounded-[26px] border border-white/10 bg-[rgba(255,255,255,0.03)] p-5">
               <p className="text-sm leading-7 text-slate-300">{selected.premiumPrompt}</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <a
+                <PremiumCheckoutButton
                   className="rounded-xl bg-[#3b82f6] px-5 py-3 text-center text-sm font-bold text-white"
-                  href={APP_TELEGRAM_URL}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Write Mr Talap
-                </a>
+                  label="Unlock with Premium"
+                />
                 <button
                   className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-slate-100"
                   onClick={() => setSelectedId(null)}
