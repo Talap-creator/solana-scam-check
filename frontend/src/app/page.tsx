@@ -42,9 +42,32 @@ const audienceCards = [
 ] as const;
 
 const developerBullets = [
-  "WebSocket streams for new launches",
-  "Historical security data archive",
-  "Batch risk assessment endpoints",
+  "Shared funding routes across holder wallets",
+  "Deployer-linked wallet clusters and supply control",
+  "Seller pressure and coordinated exit timing",
+] as const;
+
+const developerIntelPreview = [
+  {
+    detail: "3 linked holder wallets resolve back into the same funding graph.",
+    label: "Shared funding coverage",
+    value: "42.0%",
+  },
+  {
+    detail: "Linked cluster controls enough supply to move launch-time risk materially.",
+    label: "Cluster supply control",
+    value: "18.4%",
+  },
+  {
+    detail: "Two tracked exit wallets now overlap inside the same compressed sell window.",
+    label: "Exit wallet density",
+    value: "2 wallets",
+  },
+  {
+    detail: "Multi-hop funding traces still collapse back to one shared origin.",
+    label: "Trace depth",
+    value: "1.7 hops",
+  },
 ] as const;
 
 const teamMembers = [
@@ -143,7 +166,7 @@ export default async function Home() {
   const landingNav = [
     { href: "#engine", label: "Intelligence" },
     { href: "/coins", label: "Live Feed", external: false },
-    { href: "#developers", label: "Developers", external: false },
+    { href: "/developers", label: "Developers", external: false },
     { href: "#team", label: "Team" },
     { href: "#pricing", label: "Pricing" },
   ] as const;
@@ -493,9 +516,9 @@ export default async function Home() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid items-center gap-16 lg:grid-cols-2">
                 <div className="space-y-6">
-                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">Built for Developers</h2>
+                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">Deployer and Wallet Intelligence</h2>
                   <p className="text-lg text-slate-400">
-                    Integrate SolanaTrust into your project with just a few lines of code. Our low-latency API provides real-time risk assessments for any Solana mint address.
+                    Surface the wallet-level signals traders usually have to stitch together by hand: shared funders, linked holder clusters, seller pressure, and repeat launch behaviour.
                   </p>
                   <ul className="space-y-4">
                     {developerBullets.map((bullet) => (
@@ -505,34 +528,35 @@ export default async function Home() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-4 inline-flex rounded-lg border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-6 py-3 font-bold text-[#3b82f6]">
-                    In development
+                  <div className="flex flex-wrap gap-3">
+                    <Link className="inline-flex rounded-lg border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-6 py-3 font-bold text-[#3b82f6]" href="/developers">
+                      Open developer intel
+                    </Link>
+                    <span className="inline-flex rounded-lg border border-white/10 bg-white/5 px-6 py-3 font-bold text-slate-300">
+                      Live in token reports
+                    </span>
                   </div>
                 </div>
                 <div className="group relative">
                   <div className="absolute -inset-1 rounded-xl bg-[#3b82f6]/20 opacity-30 blur transition duration-1000 group-hover:opacity-50" />
-                  <div className="relative overflow-hidden rounded-xl bg-[#0a1120] p-6 text-sm font-mono leading-relaxed text-slate-300">
-                    <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-2">
-                      <span className="text-xs text-slate-500">risk_assessment.js</span>
-                      <AppIcon className="h-4 w-4 text-slate-500" name="copy" />
+                  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0a1120] p-6">
+                    <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Signal layer</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-200">What traders do not want to trace by hand</p>
+                      </div>
+                      <span className="rounded-full border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
+                        Live
+                      </span>
                     </div>
-                    <pre><code>{`const trust = require('@solanatrust/sdk');
-
-const client = new trust.Client(process.env.ST_KEY);
-
-async function checkRisk(mintAddress) {
-  const score = await client.getRiskScore(mintAddress);
-
-  if (score.riskLevel === 'CRITICAL') {
-    return blockTransaction();
-  }
-
-  console.log(\`Risk Score: \${score.total}\`);
-}`}</code></pre>
-                  </div>
-                  <div className="absolute inset-0 grid place-items-center rounded-xl bg-[rgba(2,6,23,0.52)] backdrop-blur-[6px]">
-                    <div className="rounded-full border border-[#3b82f6]/30 bg-[#3b82f6]/10 px-5 py-2 text-sm font-bold text-[#93c5fd]">
-                      In development
+                    <div className="grid gap-3">
+                      {developerIntelPreview.map((item) => (
+                        <article key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">{item.label}</p>
+                          <p className="mt-3 text-lg font-semibold text-slate-100">{item.value}</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-400">{item.detail}</p>
+                        </article>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -562,7 +586,7 @@ async function checkRisk(mintAddress) {
                 <h3 className="mb-6 font-bold">Product</h3>
                 <ul className="space-y-4 text-sm text-slate-400">
                   <li>Risk Engine</li>
-                  <li>API Reference</li>
+                  <li>Developer Intel</li>
                   <li>Live Feed</li>
                   <li>Pricing</li>
                   <li>Team</li>

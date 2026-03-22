@@ -16,6 +16,7 @@ import {
   launchPatternSummary,
 } from "@/lib/launch-pattern";
 import { type CheckReport } from "@/lib/mock-data";
+import { deriveWalletIntelligenceProfile } from "@/lib/wallet-intelligence";
 
 type ReportViewProps = { report: CheckReport };
 
@@ -159,6 +160,12 @@ function developerProfileTone(status: "clean" | "watch" | "flagged") {
   return "border-sky-400/20 bg-sky-400/10 text-sky-100";
 }
 
+function intelligenceSignalTone(tone: "neutral" | "watch" | "flagged") {
+  if (tone === "flagged") return "border-rose-500/20 bg-rose-500/8";
+  if (tone === "watch") return "border-amber-400/20 bg-amber-400/8";
+  return "border-white/8 bg-white/[0.03]";
+}
+
 function ReportPaywall({ compact = false }: { compact?: boolean }) {
   return (
     <div className="absolute inset-0 grid place-items-center rounded-[28px] bg-[rgba(2,6,23,0.52)] p-4 backdrop-blur-[9px]">
@@ -211,6 +218,7 @@ export function ReportView({ report }: ReportViewProps) {
   const reportAnalyzerLabel = analyzerLabel(report.entityType);
   const launchPattern = deriveLaunchPatternFromReport(report);
   const developerWalletProfile = deriveDeveloperWalletProfile(report);
+  const walletIntelligenceProfile = deriveWalletIntelligenceProfile(report);
 
   useEffect(() => {
     let cancelled = false;
@@ -512,15 +520,47 @@ export function ReportView({ report }: ReportViewProps) {
 
               {developerWalletProfile ? (
                 <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
-                  <div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${developerProfileTone(developerWalletProfile.status)}`}><AppIcon className="h-5 w-5" name="wallet" /></div><div><h3 className="text-lg font-bold text-white">Developer Wallet Profile</h3><p className="mt-1 text-sm text-slate-400">Funding overlap, linked wallets, and deployer-adjacent selling pressure.</p></div></div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${developerProfileTone(developerWalletProfile.status)}`}><AppIcon className="h-5 w-5" name="wallet" /></div><div><h3 className="text-lg font-bold text-white">Developer Wallet Profile</h3><p className="mt-1 text-sm text-slate-400">Funding overlap, linked wallets, and deployer-adjacent selling pressure that traders usually have to trace manually.</p></div></div>
+                    <Link className="rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary" href="/developers">Open Developer Intel</Link>
+                  </div>
                   <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5"><p className="text-sm leading-7 text-slate-200">{developerWalletProfile.summary}</p><p className="mt-4 text-sm leading-7 text-slate-400">{developerWalletProfile.note}</p></div>
+                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+                      <p className="text-sm leading-7 text-slate-200">{developerWalletProfile.summary}</p>
+                      <p className="mt-4 text-sm leading-7 text-slate-400">{developerWalletProfile.note}</p>
+                      <div className="mt-5">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">What matters now</p>
+                        <div className="mt-3 grid gap-3">
+                          {developerWalletProfile.watchpoints.map((item) => (
+                            <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-200">
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
                       <div className="flex items-center justify-between"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Profile confidence</p><span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${developerProfileTone(developerWalletProfile.status)}`}>{developerWalletProfile.confidence}</span></div>
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
                         {developerWalletProfile.metrics.map((metric) => <div key={metric.label} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{metric.label}</p><p className="mt-2 text-lg font-semibold text-white">{metric.value}</p></div>)}
                       </div>
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {developerWalletProfile.coverage.map((item) => (
+                          <span key={item.label} className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
+                            {item.label}: {item.value}
+                          </span>
+                        ))}
+                      </div>
                     </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {developerWalletProfile.signals.slice(0, 6).map((item) => (
+                      <article key={item.label} className={`rounded-[22px] border p-4 ${intelligenceSignalTone(item.tone)}`}>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                        <p className="mt-3 text-lg font-semibold text-white">{item.value}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-400">{item.detail}</p>
+                      </article>
+                    ))}
                   </div>
                 </section>
               ) : null}
@@ -532,6 +572,50 @@ export function ReportView({ report }: ReportViewProps) {
                 </div>
               </section>
             </>
+          ) : null}
+
+          {walletIntelligenceProfile ? (
+            <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3"><div className={`rounded-2xl border p-3 ${developerProfileTone(walletIntelligenceProfile.status)}`}><AppIcon className="h-5 w-5" name="wallet" /></div><div><h3 className="text-lg font-bold text-white">Wallet Intelligence</h3><p className="mt-1 text-sm text-slate-400">The kind of linked-counterparty and launch-history context traders usually gather across multiple tabs.</p></div></div>
+                <Link className="rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-primary" href="/developers">Open Developer Intel</Link>
+              </div>
+              <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${developerProfileTone(walletIntelligenceProfile.status)}`}>{walletIntelligenceProfile.persona}</span>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-slate-200">{walletIntelligenceProfile.summary}</p>
+                  <p className="mt-4 text-sm leading-7 text-slate-400">{walletIntelligenceProfile.note}</p>
+                  <div className="mt-5 grid gap-3">
+                    {walletIntelligenceProfile.watchpoints.map((item) => (
+                      <div key={item} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm leading-6 text-slate-200">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-5">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Wallet snapshot</p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {walletIntelligenceProfile.metrics.map((metric) => (
+                      <div key={metric.label} className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{metric.label}</p>
+                        <p className="mt-2 text-lg font-semibold text-white">{metric.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {walletIntelligenceProfile.signals.map((item) => (
+                  <article key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{item.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
           ) : null}
 
           <section className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))] p-6">
@@ -663,7 +747,7 @@ export function ReportView({ report }: ReportViewProps) {
             <div className="flex gap-8">
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Terms of Service</Link>
               <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/login">Privacy Policy</Link>
-              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/coins">API Documentation</Link>
+              <Link className="text-xs text-slate-500 transition-colors hover:text-primary" href="/developers">Developer Intel</Link>
             </div>
             <p className="text-xs text-slate-500">(c) 2024 SolanaTrust Analysis Labs.</p>
           </div>

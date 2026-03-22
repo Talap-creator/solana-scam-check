@@ -94,13 +94,14 @@ export function SearchCheckForm({
         {selectorHidden ? null : (
           <select
             aria-label="Entity type"
-            className="rounded-xl border border-[color:var(--border)] bg-[rgba(59,130,246,0.08)] px-4 py-4 text-sm outline-none"
+            className="rounded-xl border border-[color:var(--border)] bg-[rgba(59,130,246,0.08)] px-4 py-4 pr-10 text-sm text-slate-100 outline-none appearance-none"
             onChange={(event) => setEntityType(event.target.value as SubmitEntityType)}
+            style={{ colorScheme: "dark" }}
             value={entityType}
           >
-            <option value="token">Token</option>
-            <option value="wallet">Wallet</option>
-            <option value="project">Project</option>
+            <option className="bg-[#081121] text-slate-100" value="token">Token</option>
+            <option className="bg-[#081121] text-slate-100" value="wallet">Wallet</option>
+            <option className="bg-[#081121] text-slate-100" value="project">Project</option>
           </select>
         )}
         {leadingIcon ? (
