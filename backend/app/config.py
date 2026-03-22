@@ -67,7 +67,7 @@ class Settings:
     behaviour_rapid_liquidity_drop_high_pct: float = 0.45
     behaviour_boost_multiplier: float = 1.15
     helio_premium_paylink_id: str | None = None
-    helio_premium_payment_type: str = "paystream"
+    helio_premium_payment_type: str = "paylink"
     helio_webhook_secret: str | None = None
 
 

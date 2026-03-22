@@ -349,7 +349,7 @@ class PremiumCheckoutSessionResponse(BaseModel):
     label: str = "Premium"
     amount_label: str = "$100/month"
     paylink_id: str | None = None
-    payment_type: str = "paystream"
+    payment_type: str = "paylink"
     primary_color: str = "#3b82f6"
     neutral_color: str = "#94a3b8"
     background_color: str = "#020617"
