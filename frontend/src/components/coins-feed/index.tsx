@@ -131,6 +131,7 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
   const feedNav = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/coins", label: "Launch Feed" },
+    { href: "/developers", label: "Developers" },
   ] as const;
 
   return (
@@ -146,10 +147,17 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
                 <h2 className="text-xl font-bold tracking-tight text-slate-100">SolanaTrust</h2>
               </Link>
               <nav className="hidden items-center gap-6 md:flex">
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/dashboard">
-                  Dashboard
-                </Link>
-                <span className="border-b-2 border-primary pb-1 text-sm font-medium text-slate-100">Launch Feed</span>
+                {feedNav.map((item) => (
+                  <Link
+                    key={item.href}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${
+                      pathname === item.href ? "border-b-2 border-primary pb-1 text-slate-100" : "text-slate-400"
+                    }`}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
             </div>
             <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
@@ -160,7 +168,7 @@ export function CoinsFeed({ initialSearchParams }: CoinsFeedProps) {
                 <Link
                   key={item.href}
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
-                    item.href === "/coins"
+                    item.href === pathname
                       ? "border border-primary/25 bg-primary/15 text-primary"
                       : "border border-primary/20 bg-primary/8 text-[#93c5fd]"
                   }`}

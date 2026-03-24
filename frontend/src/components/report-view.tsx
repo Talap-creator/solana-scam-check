@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { AppIcon } from "@/components/app-icon";
 import { RecheckButton } from "@/components/recheck-button";
@@ -193,6 +194,7 @@ function LockablePanel({ children, locked, compact = false }: { children: ReactN
 }
 
 export function ReportView({ report }: ReportViewProps) {
+  const pathname = usePathname();
   const [isAuthed, setIsAuthed] = useState(() => Boolean(getAccessToken()));
   const [shareLabel, setShareLabel] = useState("Share Report");
   const [copyLabel, setCopyLabel] = useState("Copy");
@@ -277,6 +279,7 @@ export function ReportView({ report }: ReportViewProps) {
     { href: "/dashboard", label: "Dashboard" },
     { href: `/report/${report.entityType}/${report.id}`, label: reportAnalyzerLabel },
     { href: "/coins", label: "Launch Feed" },
+    { href: "/developers", label: "Developers" },
   ] as const;
 
   return (
@@ -290,9 +293,17 @@ export function ReportView({ report }: ReportViewProps) {
                 <h2 className="text-xl font-bold tracking-tight text-white">SolanaTrust</h2>
               </div>
               <nav className="hidden items-center gap-6 md:flex">
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/dashboard">Dashboard</Link>
-                <span className="border-b-2 border-primary pb-1 text-sm font-medium text-white">{reportAnalyzerLabel}</span>
-                <Link className="text-sm font-medium text-slate-400 transition-colors hover:text-primary" href="/coins">Launch Feed</Link>
+                {reportNav.map((item) => (
+                  <Link
+                    key={item.href}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${
+                      item.href === pathname ? "border-b-2 border-primary pb-1 text-white" : "text-slate-400"
+                    }`}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
             </div>
             <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
@@ -304,7 +315,7 @@ export function ReportView({ report }: ReportViewProps) {
                 <Link
                   key={item.href}
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
-                    item.label === reportAnalyzerLabel
+                    item.href === pathname
                       ? "border border-primary/25 bg-primary/15 text-primary"
                       : "border border-primary/20 bg-primary/8 text-[#93c5fd]"
                   }`}

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { DeveloperWalletBoard } from "@/components/developer-wallet-board";
 import { AppIcon } from "@/components/app-icon";
 import { LandingHeaderAction } from "@/components/landing-header-action";
-import { SearchCheckForm } from "@/components/search-check-form";
 import { getDeveloperProfiles } from "@/lib/api";
 
 const landingNav = [
@@ -11,12 +10,6 @@ const landingNav = [
   { href: "/developers", label: "Developers" },
   { href: "/#team", label: "Team" },
   { href: "/#pricing", label: "Pricing" },
-] as const;
-
-const valueProps = [
-  "Which launch wallets repeatedly show up around risky launches",
-  "Which linked holder clusters control more supply than they should",
-  "Which launches already show compressed exit behaviour",
 ] as const;
 
 export default async function DevelopersPage() {
@@ -69,42 +62,7 @@ export default async function DevelopersPage() {
           </div>
         </header>
 
-        <section className="relative overflow-hidden py-16 sm:py-20">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_28%)]" />
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
-                  Launch Wallet Intelligence
-                </span>
-                <h1 className="max-w-5xl text-4xl font-black tracking-[-0.05em] text-white sm:text-5xl lg:text-6xl">
-                  Wallets launching tokens, ranked like a feed.
-                </h1>
-                <p className="max-w-4xl text-lg leading-8 text-slate-400">
-                  This page is the wallet side of the launch feed: repeat launch wallets, hidden clusters, linked funding,
-                  and risky operators surfaced in one board instead of making you trace them manually one by one.
-                </p>
-              </div>
-              <div className="max-w-3xl">
-                <SearchCheckForm
-                  leadingIcon
-                  placeholder="Paste a token mint, wallet, or project URL"
-                  submitLabel="Open analysis"
-                  variant="landing"
-                />
-              </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                {valueProps.map((item) => (
-                  <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm leading-6 text-slate-300">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="pb-20">
+        <section className="pb-20 pt-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <DeveloperWalletBoard profiles={profiles} />
           </div>

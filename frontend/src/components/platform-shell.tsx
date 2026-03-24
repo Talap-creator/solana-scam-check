@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 type ShellAction = {
@@ -50,9 +51,11 @@ export function PlatformShell({
   title,
   stats = [],
 }: PlatformShellProps) {
+  const pathname = usePathname();
   const shellNav = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/coins", label: "Launch Feed" },
+    { href: "/developers", label: "Developers" },
     { href: "/history", label: "History" },
     { href: "/watchlist", label: "Watchlist" },
   ] as const;
@@ -75,7 +78,13 @@ export function PlatformShell({
 
               <nav className="hidden items-center gap-6 md:flex">
                 {shellNav.map((item) => (
-                  <Link key={item.href} className="text-sm font-medium text-slate-400 transition-colors hover:text-[#3b82f6]" href={item.href}>
+                  <Link
+                    key={item.href}
+                    className={`text-sm font-medium transition-colors hover:text-[#3b82f6] ${
+                      pathname === item.href ? "text-slate-100" : "text-slate-400"
+                    }`}
+                    href={item.href}
+                  >
                     {item.label}
                   </Link>
                 ))}
@@ -102,7 +111,11 @@ export function PlatformShell({
               {shellNav.map((item) => (
                 <Link
                   key={item.href}
-                  className="shrink-0 rounded-full border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.08)] px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] text-[#93c5fd]"
+                  className={`shrink-0 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
+                    pathname === item.href
+                      ? "border border-[#3b82f6]/30 bg-[#3b82f6]/15 text-[#93c5fd]"
+                      : "border border-[rgba(59,130,246,0.2)] bg-[rgba(59,130,246,0.08)] text-[#93c5fd]"
+                  }`}
                   href={item.href}
                 >
                   {item.label}
