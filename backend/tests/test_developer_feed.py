@@ -1,4 +1,6 @@
 import unittest
+from datetime import datetime, timezone
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import OperationalError
@@ -6,6 +8,7 @@ from sqlalchemy.exc import OperationalError
 from app.db import SessionLocal, init_db
 from app.main import app
 from app.models import DeveloperOperatorProfile, DeveloperOperatorSnapshot
+from app.services.repository import _build_developer_operator_payloads
 
 
 class DeveloperFeedTests(unittest.TestCase):
@@ -54,6 +57,57 @@ class DeveloperFeedTests(unittest.TestCase):
                 .all()
             )
             self.assertEqual(len(snapshots), 1)
+
+    def test_developer_feed_uses_lead_wallet_when_shared_funder_is_missing(self) -> None:
+        report = SimpleNamespace(
+            id="token-report-1",
+            entity_type="token",
+            entity_id="Mint111111111111111111111111111111111111111",
+            display_name="TEST / Test Token",
+            symbol="TEST",
+            name="Test Token",
+            created_at=datetime.now(timezone.utc),
+            status="high",
+            confidence=0.62,
+            page_mode="early_launch",
+            rug_probability=78,
+            trade_caution=SimpleNamespace(level="high"),
+            launch_radar=SimpleNamespace(
+                launch_age_minutes=11,
+                early_cluster_activity="none",
+                early_trade_pressure="balanced",
+            ),
+            risk_increasers=[],
+            behaviour_analysis_v2=SimpleNamespace(
+                confidence_breakdown=[],
+                modules={
+                    "developer_cluster": SimpleNamespace(
+                        status="watch",
+                        summary="Lead wallet can be resolved from the launch cluster.",
+                        evidence=SimpleNamespace(
+                            metrics={
+                                "shared_funder": None,
+                                "lead_wallet": "LeadWallet1111111111111111111111111111111111",
+                                "shared_funding_ratio": 0.42,
+                                "estimated_cluster_wallet_count": 3,
+                                "estimated_cluster_supply_share": 17.8,
+                            }
+                        )
+                    ),
+                    "insider_selling": SimpleNamespace(
+                        status="watch",
+                        evidence=SimpleNamespace(metrics={}),
+                        summary="Seller overlap is still forming.",
+                    ),
+                }
+            ),
+        )
+
+        payloads = _build_developer_operator_payloads([report])
+        self.assertEqual(len(payloads), 1)
+        self.assertEqual(payloads[0]["kind"], "wallet")
+        self.assertEqual(payloads[0]["wallet_preview"], "LeadWallet1111111111111111111111111111111111")
+        self.assertEqual(payloads[0]["id"], "LeadWallet1111111111111111111111111111111111")
 
 
 if __name__ == "__main__":

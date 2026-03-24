@@ -187,11 +187,45 @@ class ReportRepository:
         return page, next_cursor
 
     def build_developer_operator_items(self, *, limit: int = 200) -> list[DeveloperOperatorItem]:
-        token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
+        token_reports = self._developer_operator_source_reports()
         if token_reports:
             self._persist_developer_operator_reports(token_reports)
         items = self._load_persisted_developer_operator_items()
         return items[:limit]
+
+    def _developer_operator_source_reports(self) -> list[CheckOverview]:
+        reports: dict[str, CheckOverview] = {
+            report.id: report
+            for report in self.latest_reports()
+            if report.entity_type == "token"
+        }
+
+        try:
+            with SessionLocal() as db:
+                persisted = (
+                    db.query(models.PersistedCheckReport)
+                    .filter(models.PersistedCheckReport.entity_type == "token")
+                    .order_by(models.PersistedCheckReport.created_at.desc())
+                    .limit(500)
+                    .all()
+                )
+        except SQLAlchemyError:
+            persisted = []
+
+        for record in persisted:
+            if record.report_id in reports:
+                continue
+            try:
+                report = CheckOverview.model_validate(record.report_json)
+            except Exception:
+                continue
+            reports[report.id] = report
+
+        return sorted(
+            reports.values(),
+            key=lambda item: _coerce_utc_datetime(item.created_at),
+            reverse=True,
+        )
 
     def _persist_check_report(self, report: CheckOverview) -> None:
         try:
@@ -370,7 +404,11 @@ class ReportRepository:
         if not token_reports:
             return
 
-        all_token_reports = [report for report in self.latest_reports() if report.entity_type == "token"]
+        all_token_reports = (
+            token_reports
+            if len(token_reports) > 1
+            else [report for report in self.latest_reports() if report.entity_type == "token"]
+        )
         payloads = _build_developer_operator_payloads(all_token_reports)
         if not payloads:
             return
@@ -449,17 +487,17 @@ class ReportRepository:
     def _load_persisted_developer_operator_items(self) -> list[DeveloperOperatorItem]:
         try:
             with SessionLocal() as db:
-                records = (
-                    db.query(models.DeveloperOperatorProfile)
-                    .order_by(
-                        models.DeveloperOperatorProfile.operator_score.desc(),
-                        models.DeveloperOperatorProfile.latest_refreshed_at.desc(),
-                    )
-                    .all()
-                )
+                records = db.query(models.DeveloperOperatorProfile).all()
         except SQLAlchemyError:
             return []
 
+        records.sort(
+            key=lambda record: (
+                -int(record.operator_score),
+                0 if record.kind == "wallet" else 1,
+                -int(_coerce_utc_datetime(record.latest_refreshed_at).timestamp()),
+            )
+        )
         return [_build_developer_operator_item_from_record(record) for record in records]
 
     def _rehydrate_persisted_launch_report(
@@ -1208,15 +1246,18 @@ def _build_developer_operator_payloads(reports: list[CheckOverview]) -> list[dic
     for report in token_reports:
         metrics = _module_metrics(report, "developer_cluster")
         shared_funder = metrics.get("shared_funder")
+        lead_wallet = metrics.get("lead_wallet")
         resolved_funder = shared_funder if isinstance(shared_funder, str) and len(shared_funder) > 8 else None
-        operator_key = resolved_funder or f"cluster:{report.id}"
+        resolved_lead_wallet = lead_wallet if isinstance(lead_wallet, str) and len(lead_wallet) > 8 else None
+        resolved_wallet = resolved_funder or resolved_lead_wallet
+        operator_key = resolved_wallet or f"cluster:{report.id}"
         grouped.setdefault(operator_key, []).append(report)
         if operator_key not in meta:
-            if resolved_funder:
+            if resolved_wallet:
                 meta[operator_key] = {
                     "kind": "wallet",
-                    "label": _shorten_wallet_label(resolved_funder),
-                    "wallet_preview": resolved_funder,
+                    "label": _shorten_wallet_label(resolved_wallet),
+                    "wallet_preview": resolved_wallet,
                     "unresolved": False,
                 }
             else:
@@ -1410,6 +1451,7 @@ def _derive_developer_profile_details(report: CheckOverview) -> dict[str, object
         "coordinated_exit_window_score",
     )
     funding_source = _read_metric(developer_metrics, "shared_funder")
+    lead_wallet = _read_metric(developer_metrics, "lead_wallet")
 
     profile_status = (
         "flagged"
@@ -1430,6 +1472,11 @@ def _derive_developer_profile_details(report: CheckOverview) -> dict[str, object
         (
             f"Shared funding source resolves to {str(funding_source)[:4]}...{str(funding_source)[-4:]}."
             if isinstance(funding_source, str) and len(str(funding_source)) > 8
+            else None
+        ),
+        (
+            f"Lead launch wallet resolves to {str(lead_wallet)[:4]}...{str(lead_wallet)[-4:]}."
+            if isinstance(lead_wallet, str) and len(str(lead_wallet)) > 8
             else None
         ),
         "A meaningful share of tracked holder wallets map back into the same funding network."

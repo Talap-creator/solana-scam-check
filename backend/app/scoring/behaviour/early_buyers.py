@@ -22,6 +22,7 @@ def evaluate_early_buyers(
     overlap_with_top_holders = float(signal.get("overlap_with_top_holders") or 0.0)
     multi_hop_shared_funder_count = int(signal.get("multi_hop_shared_funder_count") or 0)
     funding_trace_depth_avg = float(signal.get("funding_trace_depth_avg") or 0.0)
+    lead_wallet = signal.get("lead_wallet")
     overlap_with_dev_cluster = clamp_unit(
         float(developer_cluster_signal.get("cluster_supply_control_pct") or 0.0) / 100.0
     ) if bool(signal.get("detected")) and bool(developer_cluster_signal.get("detected")) else 0.0
@@ -84,6 +85,7 @@ def evaluate_early_buyers(
             "overlap_with_dev_cluster": round(overlap_with_dev_cluster, 4),
             "multi_hop_shared_funder_count": multi_hop_shared_funder_count,
             "funding_trace_depth_avg": round(funding_trace_depth_avg, 2),
+            "lead_wallet": lead_wallet,
         },
         confidence=confidence_label(confidence_value),
     )

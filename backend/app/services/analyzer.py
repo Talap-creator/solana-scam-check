@@ -1569,6 +1569,7 @@ def detect_developer_wallet_cluster(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "confidence": 0.0,
         }
 
@@ -1606,6 +1607,7 @@ def detect_developer_wallet_cluster(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "shared_funding_ratio": 0.0,
             "timing_similarity_score": 0.0,
             "direct_wallet_overlap_count": 0,
@@ -1667,6 +1669,7 @@ def detect_developer_wallet_cluster(
         "cluster_wallet_count": len(best_cluster),
         "cluster_supply_control_pct": round(cluster_supply_control, 1),
         "shared_funder": best_funder,
+        "lead_wallet": best_cluster[0] if best_cluster else None,
         "shared_funding_ratio": round(shared_funding_ratio, 4),
         "timing_similarity_score": round(timing_similarity_score, 4),
         "direct_wallet_overlap_count": direct_wallet_overlap_count,
@@ -1688,6 +1691,7 @@ def detect_early_buyer_clustering(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "confidence": 0.0,
         }
 
@@ -1698,6 +1702,7 @@ def detect_early_buyer_clustering(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "confidence": 0.0,
         }
 
@@ -1743,6 +1748,7 @@ def detect_early_buyer_clustering(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "shared_funding_ratio": 0.0,
             "same_window_buy_density": 0.0,
             "buy_size_similarity_score": 0.0,
@@ -1794,6 +1800,7 @@ def detect_early_buyer_clustering(
         "cluster_wallet_count": len(best_cluster),
         "cluster_supply_control_pct": round(cluster_supply_control, 1),
         "shared_funder": best_funder,
+        "lead_wallet": best_cluster[0] if best_cluster else None,
         "shared_funding_ratio": round(shared_funding_ratio, 4),
         "same_window_buy_density": round(same_window_buy_density, 4),
         "buy_size_similarity_score": round(buy_size_similarity_score, 4),
@@ -2399,6 +2406,7 @@ def build_live_token_report(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "confidence": 0.0,
         }
     )
@@ -2436,6 +2444,7 @@ def build_live_token_report(
             "cluster_wallet_count": 0,
             "cluster_supply_control_pct": 0.0,
             "shared_funder": None,
+            "lead_wallet": None,
             "confidence": 0.0,
         }
     )
@@ -3030,6 +3039,7 @@ def generate_report(
                 "cluster_wallet_count": max(0, int(round(behaviour_risk / 18))) if behaviour_risk >= 70 else 0,
                 "cluster_supply_control_pct": float(min(100, behaviour_risk)),
                 "shared_funder": None,
+                "lead_wallet": None,
                 "confidence": 0.70 if behaviour_risk >= 70 else 0.20,
             },
             early_buyer_cluster_signal={
@@ -3037,6 +3047,7 @@ def generate_report(
                 "cluster_wallet_count": max(0, int(round(behaviour_risk / 20))) if behaviour_risk >= 68 else 0,
                 "cluster_supply_control_pct": float(min(100, behaviour_risk * 0.85)) if behaviour_risk >= 68 else 0.0,
                 "shared_funder": None,
+                "lead_wallet": None,
                 "confidence": 0.65 if behaviour_risk >= 68 else 0.20,
             },
             insider_selling_signal={
@@ -3136,10 +3147,12 @@ def generate_report(
             copycat_status=copycat_status,
             developer_cluster_signal={
                 "detected": behaviour_risk >= 70,
+                "lead_wallet": None,
                 "confidence": 0.70 if behaviour_risk >= 70 else 0.20,
             },
             early_buyer_cluster_signal={
                 "detected": behaviour_risk >= 68,
+                "lead_wallet": None,
                 "confidence": 0.65 if behaviour_risk >= 68 else 0.20,
             },
             insider_selling_signal={

@@ -15,6 +15,7 @@ def evaluate_developer_cluster(
     cluster_wallets = int(signal.get("cluster_wallet_count") or 0)
     cluster_supply_share = float(signal.get("cluster_supply_control_pct") or 0.0)
     shared_funder = signal.get("shared_funder")
+    lead_wallet = signal.get("lead_wallet")
     shared_funding_ratio = float(signal.get("shared_funding_ratio") or ((cluster_wallets / tracked_wallets) if tracked_wallets else 0.0))
     timing_similarity_score = float(signal.get("timing_similarity_score") or 0.0)
     direct_wallet_overlap_count = int(signal.get("direct_wallet_overlap_count") or 0)
@@ -87,6 +88,7 @@ def evaluate_developer_cluster(
             "estimated_cluster_wallet_count": cluster_wallets,
             "estimated_cluster_supply_share": round(cluster_supply_share, 2),
             "shared_funder": shared_funder,
+            "lead_wallet": lead_wallet,
         },
         confidence=confidence_label(confidence_value),
     )
