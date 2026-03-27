@@ -177,9 +177,10 @@ class OracleAgent:
                     result.error,
                 )
 
-        except Exception:
+        except Exception as exc:
             self._errors += 1
-            logger.exception("Error scoring %s", token.token_address)
+            import traceback
+            logger.error("Error scoring %s: %s\n%s", token.token_address, exc, traceback.format_exc())
 
     async def _get_score(self, token_address: str) -> dict:
         """Get risk score from the existing RugSignal pipeline.
@@ -223,7 +224,9 @@ class OracleAgent:
 
         except Exception as exc:
             logger.warning("Pipeline failed for %s, using fallback: %s", token_address, exc)
-            return {"score": 50, "risk_level": "medium", "confidence": 0.3}
+            fallback = {"score": 50, "risk_level": "medium", "confidence": 0.3}
+            logger.info("Returning fallback score for %s: %s", token_address[:12], fallback)
+            return fallback
 
     async def score_single(self, token_address: str) -> dict:
         """Score a single token on-demand (not part of the loop)."""
