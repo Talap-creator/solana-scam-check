@@ -67,11 +67,14 @@ def startup_event() -> None:
     # Initialize Oracle Agent
     import os
     keypair_env = os.getenv("ORACLE_PUBLISHER_KEYPAIR")
+    # Build devnet RPC URL — prefer Helius devnet if API key is available
+    helius_key = os.getenv("HELIUS_API_KEY", "").strip()
+    default_rpc = f"https://devnet.helius-rpc.com/?api-key={helius_key}" if helius_key else "https://api.devnet.solana.com"
     publisher = SolanaPublisher(
         program_id=os.getenv("ORACLE_PROGRAM_ID", "HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS"),
         publisher_private_key=keypair_env if keypair_env and keypair_env.startswith("[") else None,
         publisher_keypair_path=keypair_env if keypair_env and not keypair_env.startswith("[") else None,
-        rpc_url=os.getenv("ORACLE_RPC_URL", "https://api.devnet.solana.com"),
+        rpc_url=os.getenv("ORACLE_RPC_URL", default_rpc),
     )
     agent = init_oracle_agent(
         settings=settings,
