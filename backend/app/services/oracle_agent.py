@@ -128,6 +128,11 @@ class OracleAgent:
             risk_level = score_result["risk_level"]
             confidence = score_result["confidence"]
 
+            logger.info(
+                "Scoring done: %s score=%d risk=%s conf=%.2f, publishing...",
+                token.token_address[:12], score, risk_level, confidence,
+            )
+
             # Step 2: Publish on-chain
             result = await self._publisher.publish_score(
                 token_mint=token.token_address,

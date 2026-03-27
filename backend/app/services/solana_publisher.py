@@ -171,6 +171,8 @@ class SolanaPublisher:
         a mock signature for demo purposes.
         """
         risk_level_idx = RISK_LEVEL_MAP.get(risk_level, 0)
+        logger.info("publish_score called: token=%s score=%d risk=%s keypair=%s",
+                     token_mint[:12], score, risk_level, "loaded" if self._secret_key else "NONE")
 
         # Auto-initialize oracle PDA if needed
         await self._ensure_oracle_initialized()
