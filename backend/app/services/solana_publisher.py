@@ -134,7 +134,7 @@ class SolanaPublisher:
             ]
             ix = Instruction(program_id, discriminator, accounts)
 
-            resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "confirmed"}])
+            resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
             blockhash = Hash.from_string(resp["result"]["value"]["blockhash"])
 
             msg = Message.new_with_blockhash([ix], publisher_kp.pubkey(), blockhash)
@@ -144,7 +144,7 @@ class SolanaPublisher:
             tx_b64 = base64.b64encode(bytes(tx)).decode()
             send_resp = await self._rpc_call(
                 "sendTransaction",
-                [tx_b64, {"encoding": "base64", "skipPreflight": False}],
+                [tx_b64, {"encoding": "base64", "skipPreflight": True, "preflightCommitment": "finalized", "maxRetries": 3}],
             )
 
             if "error" in send_resp:
@@ -235,8 +235,8 @@ class SolanaPublisher:
 
         ix = Instruction(program_id, ix_data, accounts)
 
-        # Get recent blockhash
-        resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "confirmed"}])
+        # Get recent blockhash — use finalized for stability on devnet
+        resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
         blockhash_str = resp["result"]["value"]["blockhash"]
         blockhash = Hash.from_string(blockhash_str)
 
@@ -244,13 +244,18 @@ class SolanaPublisher:
         tx = Transaction.new_unsigned(msg)
         tx.sign([publisher_kp], blockhash)
 
-        # Send transaction
+        # Send transaction — skip preflight to avoid BlockhashNotFound on devnet
         tx_bytes = bytes(tx)
         tx_b64 = base64.b64encode(tx_bytes).decode()
 
         send_resp = await self._rpc_call(
             "sendTransaction",
-            [tx_b64, {"encoding": "base64", "skipPreflight": False}],
+            [tx_b64, {
+                "encoding": "base64",
+                "skipPreflight": True,
+                "preflightCommitment": "finalized",
+                "maxRetries": 3,
+            }],
         )
 
         if "error" in send_resp:
