@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger(__name__)
 
 from .api.routes.admin import router as admin_router
 from .api.routes.auth import router as auth_router
@@ -69,12 +73,27 @@ def startup_event() -> None:
         publisher_keypair_path=keypair_env if keypair_env and not keypair_env.startswith("[") else None,
         rpc_url=os.getenv("ORACLE_RPC_URL", "https://api.devnet.solana.com"),
     )
-    init_oracle_agent(
+    agent = init_oracle_agent(
         settings=settings,
         publisher=publisher,
         get_db=get_db,
         get_repository=get_repository,
     )
+
+    # Auto-start agent if configured
+    if os.getenv("ORACLE_AUTO_START", "true").lower() == "true":
+        async def _auto_start_agent():
+            import asyncio
+            await asyncio.sleep(2)  # let the server finish startup
+            agent.start(interval_seconds=60)
+            logger.info("Oracle agent auto-started")
+
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            loop.create_task(_auto_start_agent())
+        except RuntimeError:
+            pass  # no event loop yet, agent will be started manually
 
 
 app.include_router(health_router)
