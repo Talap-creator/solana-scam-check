@@ -144,6 +144,7 @@ export default async function Home() {
   const landingNav = [
     { href: "#engine", label: "Intelligence" },
     { href: "/coins", label: "Live Feed", external: false },
+    { href: "#oracle", label: "Oracle" },
     { href: "/developers", label: "Developers", external: false },
     { href: "#team", label: "Team" },
     { href: "#pricing", label: "Pricing" },
@@ -405,6 +406,77 @@ export default async function Home() {
                     </div>
                   </article>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="py-20" id="oracle">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-14 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
+                  On-Chain Oracle
+                </span>
+                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">AI Risk Oracle</h2>
+                <p className="mx-auto max-w-2xl text-slate-400">
+                  Autonomous AI agent publishes risk scores on-chain. Smart contracts read them to protect your funds in real time.
+                </p>
+              </div>
+
+              <div className="grid gap-8 lg:grid-cols-3">
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8">
+                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
+                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="radar" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">AI Scores Tokens</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    The RugSignal ML pipeline analyzes 50+ on-chain features and assigns a risk score from 0 to 100 for each monitored token.
+                  </p>
+                </article>
+
+                <article className="rounded-2xl border border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.15),rgba(15,23,42,0.98))] p-8 shadow-[0_24px_70px_rgba(59,130,246,0.1)]">
+                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
+                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="shield" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">Published On-Chain</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    Scores are written to Solana PDAs via the RugSignal Oracle program. Fully verifiable, transparent, and immutable.
+                  </p>
+                </article>
+
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8">
+                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
+                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="wallet" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">Guarded Vaults</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    Smart contracts read oracle scores to automatically block risky swaps. If a token goes critical, emergency exit withdraws your funds.
+                  </p>
+                </article>
+              </div>
+
+              <div className="mt-10 flex flex-col items-center gap-4">
+                <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-6 py-4">
+                  <div className="flex gap-1">
+                    <div className="h-2 w-8 rounded-full bg-emerald-500/60" />
+                    <div className="h-2 w-6 rounded-full bg-yellow-500/60" />
+                    <div className="h-2 w-4 rounded-full bg-red-500/60" />
+                  </div>
+                  <span className="text-sm text-slate-300">AI Score</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-sm text-slate-300">Solana PDA</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-sm text-slate-300">GuardedSwap</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-sm font-bold text-emerald-400">Protected</span>
+                </div>
+                <Link
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition hover:brightness-110"
+                  href="/oracle"
+                >
+                  <AppIcon className="h-4 w-4" name="shield" />
+                  Open Oracle Dashboard
+                </Link>
+                <p className="text-xs text-slate-500">Free users get 5 oracle operations per day</p>
               </div>
             </div>
           </section>
