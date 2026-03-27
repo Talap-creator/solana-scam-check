@@ -235,37 +235,48 @@ class SolanaPublisher:
 
         ix = Instruction(program_id, ix_data, accounts)
 
-        # Get recent blockhash — use finalized for stability on devnet
-        resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
-        blockhash_str = resp["result"]["value"]["blockhash"]
-        blockhash = Hash.from_string(blockhash_str)
+        # Retry loop — devnet public RPC blockhash can go stale
+        last_error = None
+        for attempt in range(3):
+            resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
+            blockhash_str = resp["result"]["value"]["blockhash"]
+            blockhash = Hash.from_string(blockhash_str)
 
-        msg = Message.new_with_blockhash([ix], publisher_kp.pubkey(), blockhash)
-        tx = Transaction.new_unsigned(msg)
-        tx.sign([publisher_kp], blockhash)
+            msg = Message.new_with_blockhash([ix], publisher_kp.pubkey(), blockhash)
+            tx = Transaction.new_unsigned(msg)
+            tx.sign([publisher_kp], blockhash)
 
-        # Send transaction — skip preflight to avoid BlockhashNotFound on devnet
-        tx_bytes = bytes(tx)
-        tx_b64 = base64.b64encode(tx_bytes).decode()
+            tx_b64 = base64.b64encode(bytes(tx)).decode()
 
-        send_resp = await self._rpc_call(
-            "sendTransaction",
-            [tx_b64, {
-                "encoding": "base64",
-                "skipPreflight": True,
-                "preflightCommitment": "finalized",
-                "maxRetries": 3,
-            }],
-        )
-
-        if "error" in send_resp:
-            return PublishResult(
-                success=False, error=json.dumps(send_resp["error"])
+            send_resp = await self._rpc_call(
+                "sendTransaction",
+                [tx_b64, {
+                    "encoding": "base64",
+                    "skipPreflight": True,
+                    "preflightCommitment": "finalized",
+                    "maxRetries": 5,
+                }],
             )
 
-        sig = send_resp["result"]
-        logger.info("Published score on-chain: tx=%s token=%s score=%d", sig, token_mint, score)
-        return PublishResult(success=True, tx_signature=sig)
+            if "error" not in send_resp:
+                sig = send_resp["result"]
+                logger.info("Published score on-chain: tx=%s token=%s score=%d", sig, token_mint, score)
+                return PublishResult(success=True, tx_signature=sig)
+
+            err = send_resp["error"]
+            last_error = json.dumps(err)
+            err_msg = err.get("message", "") if isinstance(err, dict) else str(err)
+
+            if "BlockhashNotFound" in err_msg:
+                logger.warning("BlockhashNotFound (attempt %d/3), retrying...", attempt + 1)
+                import asyncio
+                await asyncio.sleep(2)
+                continue
+
+            # Non-retryable error
+            return PublishResult(success=False, error=last_error)
+
+        return PublishResult(success=False, error=last_error)
 
     async def _send_publish_tx_raw(
         self,

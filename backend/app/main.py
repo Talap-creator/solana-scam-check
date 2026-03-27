@@ -85,7 +85,7 @@ def startup_event() -> None:
         async def _auto_start_agent():
             import asyncio
             await asyncio.sleep(2)  # let the server finish startup
-            agent.start(interval_seconds=60)
+            agent.start(interval_seconds=90)
             logger.info("Oracle agent auto-started")
 
         import asyncio
