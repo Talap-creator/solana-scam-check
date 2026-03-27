@@ -62,9 +62,11 @@ def startup_event() -> None:
 
     # Initialize Oracle Agent
     import os
+    keypair_env = os.getenv("ORACLE_PUBLISHER_KEYPAIR")
     publisher = SolanaPublisher(
         program_id=os.getenv("ORACLE_PROGRAM_ID", "HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS"),
-        publisher_keypair_path=os.getenv("ORACLE_PUBLISHER_KEYPAIR"),
+        publisher_private_key=keypair_env if keypair_env and keypair_env.startswith("[") else None,
+        publisher_keypair_path=keypair_env if keypair_env and not keypair_env.startswith("[") else None,
         rpc_url=os.getenv("ORACLE_RPC_URL", "https://api.devnet.solana.com"),
     )
     init_oracle_agent(

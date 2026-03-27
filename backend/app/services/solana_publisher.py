@@ -80,12 +80,15 @@ class SolanaPublisher:
 
         # Load keypair
         if publisher_private_key:
-            self._secret_key = base64.b58decode(publisher_private_key) if hasattr(base64, 'b58decode') else self._load_key_from_json(publisher_private_key)
+            self._secret_key = self._load_key_from_json(publisher_private_key)
+            logger.info("Publisher keypair loaded from env (pubkey will be logged on first publish)")
         elif publisher_keypair_path:
             self._secret_key = self._load_keypair(publisher_keypair_path)
+            logger.info("Publisher keypair loaded from file: %s", publisher_keypair_path)
         else:
             self._secret_key = None
             logger.warning("No publisher keypair configured — running in dry-run mode")
+        self._oracle_initialized = False
 
     @staticmethod
     def _load_keypair(path: str) -> bytes:
@@ -97,6 +100,60 @@ class SolanaPublisher:
     def _load_key_from_json(raw: str) -> bytes:
         """Load keypair from JSON array string."""
         return bytes(json.loads(raw)[:64])
+
+    async def _ensure_oracle_initialized(self) -> None:
+        """Initialize oracle config PDA on-chain if it doesn't exist yet."""
+        if self._oracle_initialized or self._secret_key is None:
+            return
+        try:
+            from solders.keypair import Keypair
+            from solders.pubkey import Pubkey
+            from solders.system_program import ID as SYSTEM_PROGRAM_ID
+            from solders.transaction import Transaction
+            from solders.instruction import Instruction, AccountMeta
+            from solders.message import Message
+            from solders.hash import Hash
+
+            program_id = Pubkey.from_string(self.program_id)
+            publisher_kp = Keypair.from_bytes(self._secret_key)
+            oracle_pda, _ = Pubkey.find_program_address([b"oracle"], program_id)
+
+            # Check if oracle account already exists
+            resp = await self._rpc_call("getAccountInfo", [str(oracle_pda), {"encoding": "base64"}])
+            if resp.get("result", {}).get("value") is not None:
+                logger.info("Oracle config PDA already initialized: %s", oracle_pda)
+                self._oracle_initialized = True
+                return
+
+            # Build initialize_oracle instruction
+            discriminator = _discriminator("global", "initialize_oracle")
+            accounts = [
+                AccountMeta(oracle_pda, is_signer=False, is_writable=True),
+                AccountMeta(publisher_kp.pubkey(), is_signer=True, is_writable=True),
+                AccountMeta(SYSTEM_PROGRAM_ID, is_signer=False, is_writable=False),
+            ]
+            ix = Instruction(program_id, discriminator, accounts)
+
+            resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "confirmed"}])
+            blockhash = Hash.from_string(resp["result"]["value"]["blockhash"])
+
+            msg = Message.new_with_blockhash([ix], publisher_kp.pubkey(), blockhash)
+            tx = Transaction.new_unsigned(msg)
+            tx.sign([publisher_kp], blockhash)
+
+            tx_b64 = base64.b64encode(bytes(tx)).decode()
+            send_resp = await self._rpc_call(
+                "sendTransaction",
+                [tx_b64, {"encoding": "base64", "skipPreflight": False}],
+            )
+
+            if "error" in send_resp:
+                logger.warning("Failed to initialize oracle: %s", send_resp["error"])
+            else:
+                logger.info("Oracle initialized on-chain: tx=%s", send_resp["result"])
+                self._oracle_initialized = True
+        except Exception as exc:
+            logger.warning("Oracle init check failed (will retry): %s", exc)
 
     async def publish_score(
         self,
@@ -111,6 +168,9 @@ class SolanaPublisher:
         a mock signature for demo purposes.
         """
         risk_level_idx = RISK_LEVEL_MAP.get(risk_level, 0)
+
+        # Auto-initialize oracle PDA if needed
+        await self._ensure_oracle_initialized()
 
         if self._secret_key is None:
             # Dry-run mode: simulate for demo
