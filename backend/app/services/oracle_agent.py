@@ -186,6 +186,10 @@ class OracleAgent:
             repository = self._get_repository()
             report = repository.create_report("token", token_address)
 
+            if report is None:
+                logger.warning("create_report returned None for %s", token_address)
+                return {"score": 50, "risk_level": "medium", "confidence": 0.3}
+
             if self._get_pipeline:
                 pipeline = self._get_pipeline()
                 result = pipeline.run(report=report)
@@ -195,12 +199,17 @@ class OracleAgent:
                     "confidence": result.response.confidence,
                 }
 
-            # Fallback: extract from V1 report
-            overview = report.get("overview", report)
-            score = overview.get("score", overview.get("rug_probability", 50))
-            score = int(score) if score is not None else 50
-            confidence = overview.get("confidence", 0.5)
+            # Fallback: extract from V1 report (could be dict or object)
+            if isinstance(report, dict):
+                overview = report.get("overview", report)
+                score = overview.get("score", overview.get("rug_probability", 50))
+                confidence = overview.get("confidence", 0.5)
+            else:
+                overview = getattr(report, "overview", report)
+                score = getattr(overview, "score", None) or getattr(overview, "rug_probability", 50)
+                confidence = getattr(overview, "confidence", 0.5)
 
+            score = int(score) if score is not None else 50
             return {
                 "score": score,
                 "risk_level": _risk_level_from_score(score),
