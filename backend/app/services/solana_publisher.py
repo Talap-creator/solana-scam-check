@@ -135,6 +135,9 @@ class SolanaPublisher:
             ix = Instruction(program_id, discriminator, accounts)
 
             resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
+            if "error" in resp or "result" not in resp:
+                logger.warning("Oracle init: getLatestBlockhash failed: %s", resp.get("error", resp))
+                return
             blockhash = Hash.from_string(resp["result"]["value"]["blockhash"])
 
             msg = Message.new_with_blockhash([ix], publisher_kp.pubkey(), blockhash)
@@ -239,6 +242,12 @@ class SolanaPublisher:
         last_error = None
         for attempt in range(3):
             resp = await self._rpc_call("getLatestBlockhash", [{"commitment": "finalized"}])
+            if "error" in resp or "result" not in resp:
+                err_detail = resp.get("error", resp)
+                logger.warning("getLatestBlockhash RPC error: %s", err_detail)
+                import asyncio
+                await asyncio.sleep(2)
+                continue
             blockhash_str = resp["result"]["value"]["blockhash"]
             blockhash = Hash.from_string(blockhash_str)
 
