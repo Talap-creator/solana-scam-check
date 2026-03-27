@@ -200,7 +200,7 @@ def list_publish_history(
 
 
 @router.post("/agent/start")
-def start_agent():
+async def start_agent():
     agent = get_oracle_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="Oracle agent not initialized")
@@ -209,7 +209,7 @@ def start_agent():
 
 
 @router.post("/agent/stop")
-def stop_agent():
+async def stop_agent():
     agent = get_oracle_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="Oracle agent not initialized")
