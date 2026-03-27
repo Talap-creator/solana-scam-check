@@ -240,6 +240,35 @@ class BillingEvent(Base):
     user: Mapped[User | None] = relationship(back_populates="billing_events")
 
 
+class OracleMonitoredToken(Base):
+    __tablename__ = "oracle_monitored_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    token_address: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_risk_level: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    last_confidence: Mapped[float | None] = mapped_column(Numeric(5, 4), nullable=True)
+    last_published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_tx_signature: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class OraclePublishEvent(Base):
+    __tablename__ = "oracle_publish_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    token_address: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(16), nullable=False)
+    confidence: Mapped[float] = mapped_column(Numeric(5, 4), nullable=False)
+    tx_signature: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 def build_billing_event_key(
     *,
     event_id: str | None,

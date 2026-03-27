@@ -910,6 +910,93 @@ export async function deleteAdminOverride(tokenAddress: string): Promise<void> {
   );
 }
 
+// ─── Oracle API ──────────────────────────────────────────────────────────────
+
+export type OracleStatus = {
+  agent_running: boolean;
+  last_run: string | null;
+  total_published: number;
+  errors: number;
+  monitored_tokens: number;
+};
+
+export type OracleScore = {
+  token_address: string;
+  score: number | null;
+  risk_level: string | null;
+  confidence: number | null;
+  last_published_at: string | null;
+  tx_signature: string | null;
+  display_name: string | null;
+};
+
+export type OraclePublishEvent = {
+  id: string;
+  token_address: string;
+  score: number;
+  risk_level: string;
+  confidence: number;
+  tx_signature: string | null;
+  status: string;
+  error_message: string | null;
+  published_at: string;
+};
+
+export async function getOracleStatus(): Promise<OracleStatus> {
+  return fetchJson<OracleStatus>("/api/v1/oracle/status");
+}
+
+export async function getOracleScores(): Promise<OracleScore[]> {
+  return fetchJson<OracleScore[]>("/api/v1/oracle/scores");
+}
+
+export async function getOracleHistory(limit = 50): Promise<OraclePublishEvent[]> {
+  return fetchJson<OraclePublishEvent[]>(`/api/v1/oracle/history?limit=${limit}`);
+}
+
+export async function addOracleMonitor(tokenAddress: string, displayName?: string): Promise<void> {
+  const response = await fetch(`${getClientApiBaseUrl()}/api/v1/oracle/monitor`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token_address: tokenAddress, display_name: displayName }),
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+    throw new ApiError(normalizeApiDetail(payload?.detail, "Failed to add monitor"), response.status);
+  }
+}
+
+export async function removeOracleMonitor(tokenAddress: string): Promise<void> {
+  const response = await fetch(`${getClientApiBaseUrl()}/api/v1/oracle/monitor/${tokenAddress}`, {
+    method: "DELETE",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+    throw new ApiError(normalizeApiDetail(payload?.detail, "Failed to remove monitor"), response.status);
+  }
+}
+
+export async function startOracleAgent(): Promise<void> {
+  const response = await fetch(`${getClientApiBaseUrl()}/api/v1/oracle/agent/start`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) throw new ApiError("Failed to start agent", response.status);
+}
+
+export async function stopOracleAgent(): Promise<void> {
+  const response = await fetch(`${getClientApiBaseUrl()}/api/v1/oracle/agent/stop`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) throw new ApiError("Failed to stop agent", response.status);
+}
+
 export async function logoutUser(): Promise<void> {
   const response = await fetch(`${getClientApiBaseUrl()}/api/v1/auth/logout`, {
     method: "POST",

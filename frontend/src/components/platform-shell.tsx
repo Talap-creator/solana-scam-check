@@ -56,6 +56,7 @@ export function PlatformShell({
     { href: "/dashboard", label: "Dashboard" },
     { href: "/coins", label: "Launch Feed" },
     { href: "/developers", label: "Developers" },
+    { href: "/oracle", label: "Oracle" },
     { href: "/history", label: "History" },
     { href: "/watchlist", label: "Watchlist" },
   ] as const;
