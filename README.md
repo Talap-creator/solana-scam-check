@@ -1,106 +1,131 @@
-# RugSignal
+# RugSignal — AI Oracle for Solana Token Risk
 
-RugSignal is a Solana risk-intelligence app for early launch screening, token report analysis, live launch-feed monitoring, and account-linked watchlists.
+**AI agent that scores Solana tokens for rug pull risk and enforces decisions on-chain via smart contract.**
 
-## Stack
+> National Solana Hackathon by Decentrathon 2026 | Case 2: AI + Blockchain
 
-- `frontend`: Next.js 16, React 19, TypeScript
-- `backend`: FastAPI, SQLAlchemy, PostgreSQL or SQLite
-- `data sources`: Solana RPC, Helius asset metadata, DexScreener market data
+## The Problem
 
-## Project Layout
+Rug pulls on Solana steal millions. Existing tools only warn — they don't prevent. Smart contracts remain static and can't adapt to changing risk.
 
-```text
+## The Solution
+
+RugSignal combines AI analysis with on-chain enforcement:
+
+1. **AI Agent** analyzes token on-chain data (holders, liquidity, authorities, deployer history)
+2. **GPT-4o-mini** scores the token (0-100 risk) with reasoning
+3. **Score is published on-chain** to Solana PDA via Oracle program
+4. **GuardedVault smart contract** reads the AI score and **blocks risky swaps automatically**
+
+```
+Token Added → AI Analyzes → Score Published On-Chain → Swap Attempt → Contract Reads Score → BLOCK or ALLOW
+```
+
+## Architecture
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│   Frontend       │     │   Backend         │     │   Solana Devnet     │
+│   Next.js        │────▶│   FastAPI          │────▶│   Anchor Program    │
+│   Phantom Wallet │     │   AI Agent (GPT)  │     │   PDA: Oracle       │
+│   Vault Panel    │     │   Oracle Publisher │     │   PDA: Scores       │
+│                  │◀────│                    │     │   PDA: Vaults       │
+└─────────────────┘     └──────────────────┘     └─────────────────────┘
+```
+
+### Smart Contract Instructions (Anchor/Rust)
+
+| Instruction | Description |
+|---|---|
+| `initialize_oracle` | Set publisher authority |
+| `publish_score` | AI agent writes risk score to PDA |
+| `create_vault` | User creates vault with risk threshold |
+| `deposit` | User deposits SOL into vault |
+| `guarded_swap` | **Checks AI score vs threshold — rejects if risky** |
+| `emergency_exit` | Withdraw all funds if token goes critical (score ≥ 75) |
+| `update_threshold` | Adjust vault risk tolerance |
+
+**Program ID:** `HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS`
+
+### AI Scoring Pipeline
+
+1. **Feature extraction** — 56 on-chain features (authorities, holder distribution, liquidity, deployer history, behavioral signals)
+2. **Rule engine** — weighted heuristic scoring across 6 risk categories
+3. **AI Agent (GPT-4o-mini)** — analyzes features, returns score + natural language reasoning
+4. **On-chain publish** — score written to Solana PDA, verifiable by anyone
+
+### Key PDA Derivations
+
+```
+Oracle Config:  seeds = ["oracle"]
+Token Score:    seeds = ["score", token_mint]
+User Vault:     seeds = ["vault", owner]
+Vault SOL:      seeds = ["vault_sol", owner]
+```
+
+## Demo Flow
+
+1. Connect Phantom wallet (Solana Devnet)
+2. Add token address to Oracle Monitor
+3. AI agent scores it automatically (every 90s)
+4. Score appears in ON-CHAIN SCORES table with Explorer link
+5. Create GuardedVault with risk threshold (e.g., 50)
+6. Deposit devnet SOL
+7. **Simulate Swap** — contract checks score:
+   - Score ≤ threshold → **SWAP ALLOWED** (green)
+   - Score > threshold → **BLOCKED by GuardedVault** (red)
+8. Change threshold to see different outcomes
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Blockchain | Solana Devnet, Anchor Framework |
+| Smart Contract | Rust (Anchor) |
+| Backend | Python, FastAPI, SQLAlchemy, PostgreSQL |
+| AI | OpenAI GPT-4o-mini |
+| Frontend | Next.js 16, React 19, TypeScript |
+| Wallet | Phantom, Solflare (Solana Wallet Adapter) |
+| Deploy | Render (backend), Vercel (frontend) |
+
+## Project Structure
+
+```
 rugsignal/
-|-- frontend/
-|-- backend/
-|-- docs/
-|-- docker-compose.yml
-|-- README.md
-`-- TECH_SPEC.md
+├── programs/rugsignal_oracle/src/lib.rs  # Anchor smart contract
+├── backend/
+│   ├── app/services/ai_scorer.py         # GPT-4o-mini integration
+│   ├── app/services/oracle_agent.py      # Autonomous scoring loop
+│   ├── app/services/solana_publisher.py  # On-chain tx publisher
+│   └── app/scoring/                      # Rule engine + features
+├── frontend/
+│   ├── src/app/oracle/page.tsx           # Oracle dashboard
+│   ├── src/components/oracle/
+│   │   ├── vault-panel.tsx               # GuardedVault UI
+│   │   └── wallet-provider.tsx           # Solana wallet adapter
+│   └── src/app/page.tsx                  # Landing page
+└── README.md
 ```
 
-## Local Run
+## Environment Variables
 
-Frontend:
-
-```powershell
-cd frontend
-npm install
-npm run build
-npm run start
+### Backend
+```
+HELIUS_API_KEY=           # Solana RPC (mainnet data)
+OPENAI_API_KEY=           # GPT-4o-mini for AI scoring
+ORACLE_PUBLISHER_KEYPAIR= # JSON array of keypair bytes
+ORACLE_PROGRAM_ID=        # HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS
+ORACLE_RPC_URL=           # https://api.devnet.solana.com
+DATABASE_URL=             # PostgreSQL connection
+JWT_SECRET_KEY=           # Auth secret
 ```
 
-Backend:
+## Live Demo
 
-```powershell
-cd backend
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-.venv\Scripts\python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
+- **Website:** https://solanatrust.tech
+- **Oracle Dashboard:** https://solanatrust.tech/oracle
+- **Program on Explorer:** https://explorer.solana.com/address/HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS?cluster=devnet
 
-Run policy:
+## Team
 
-- do not use `next dev`
-- do not use `uvicorn --reload`
-- keep local runs in lightweight production mode unless you are explicitly debugging
-
-## Docker Deploy
-
-1. Copy `.env.example` to `.env`
-2. Fill `JWT_SECRET_KEY`
-3. Add `HELIUS_API_KEY` or a dedicated `SOLANA_RPC_URL`
-4. Run:
-
-```powershell
-docker compose up --build -d
-```
-
-Published services:
-
-- frontend: `http://localhost:3000`
-- backend: `http://localhost:8000`
-- postgres: `localhost:5432`
-
-Notes:
-
-- frontend uses a standalone Next.js build
-- browser auth/API calls go through Next same-origin `/api/v1/*` proxy routes, so the backend URL is only needed on the server side
-- backend runs `uvicorn app.main:app --host 0.0.0.0 --port 8000`
-- postgres uses the named volume `rugsignal_postgres_data`
-
-## Key Routes
-
-- `/`
-- `/coins`
-- `/dashboard`
-- `/watchlist`
-- `/report/[entityType]/[reportId]`
-- `/admin`
-
-## Key API Endpoints
-
-- `GET /health`
-- `GET /api/v1/overview`
-- `GET /api/v1/checks`
-- `GET /api/v1/checks/{check_id}`
-- `GET /api/v1/feed/launches`
-- `GET /api/v1/watchlist`
-- `POST /api/v1/check/token`
-- `POST /api/v1/recheck/{entity_type}/{entity_id}`
-- `POST /v2/scan/token`
-
-## Token Report Contract
-
-The token report now exposes explicit early-stage fields:
-
-- `page_mode`: `early_launch | early_market | mature`
-- `launch_risk`
-- `trade_caution`
-- `launch_radar`
-- `early_warnings`
-- `market_source`
-
-This keeps very new tokens from showing misleading `LOW + High confidence` messaging and makes early-launch uncertainty explicit in the UI.
+Built by SolanaTrust team for National Solana Hackathon by Decentrathon 2026.
