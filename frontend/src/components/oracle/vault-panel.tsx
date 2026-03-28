@@ -151,6 +151,51 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     await sendTx(ix, `exit_${tokenMint.slice(0, 8)}`);
   }, [publicKey, vaultPda, vaultSolPda, sendTx]);
 
+  const [swapResult, setSwapResult] = useState<{ token: string; blocked: boolean; sig?: string; error?: string } | null>(null);
+
+  const guardedSwap = useCallback(async (tokenMint: string, tokenScore: number | null) => {
+    if (!publicKey || !vaultPda || !vaultSolPda) return;
+    const mintPk = new PublicKey(tokenMint);
+    const scorePda = findPDA([Buffer.from("score"), mintPk.toBuffer()]);
+    const disc = discriminator("guarded_swap");
+    // amount: 1000 lamports (nominal test swap)
+    const amountBuf = Buffer.alloc(8);
+    amountBuf.writeBigUInt64LE(BigInt(1000));
+    const data = Buffer.concat([disc, amountBuf]);
+
+    const ix = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: vaultPda, isSigner: false, isWritable: true },
+        { pubkey: scorePda, isSigner: false, isWritable: false },
+        { pubkey: mintPk, isSigner: false, isWritable: false },
+        { pubkey: vaultSolPda, isSigner: false, isWritable: true },
+        { pubkey: publicKey, isSigner: true, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      data,
+    });
+
+    setLoading(`swap_${tokenMint.slice(0, 8)}`);
+    setSwapResult(null);
+    try {
+      const { blockhash } = await connection.getLatestBlockhash("finalized");
+      const tx = new Transaction();
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = publicKey;
+      tx.add(ix);
+      const sig = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(sig, "confirmed");
+      setSwapResult({ token: tokenMint, blocked: false, sig });
+    } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      const blocked = errMsg.toLowerCase().includes("risk") || errMsg.includes("0x1770") || errMsg.includes("custom program error");
+      setSwapResult({ token: tokenMint, blocked, error: errMsg });
+    } finally {
+      setLoading(null);
+    }
+  }, [publicKey, vaultPda, vaultSolPda, connection, sendTransaction]);
+
   const criticalTokens = scores.filter(s => s.risk_level === "critical" || (s.score != null && s.score >= 75));
 
   return (
@@ -257,7 +302,71 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
             </div>
           )}
 
-          {vault.balance === 0 && criticalTokens.length === 0 && (
+          {/* Test Guarded Swap */}
+          {scores.length > 0 && (
+            <div className="rounded-xl border border-[rgba(59,130,246,0.12)] bg-white/[0.02] p-4">
+              <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#60a5fa]">Test Guarded Swap</p>
+              <p className="mb-3 text-xs text-slate-500">
+                Sends a real on-chain tx — contract checks AI score vs your threshold ({vault.riskThreshold}/100). Score &gt; threshold = blocked.
+              </p>
+              <div className="space-y-2">
+                {scores.map(t => {
+                  const score = t.score ?? 0;
+                  const willBlock = vault && score > vault.riskThreshold;
+                  const label = `swap_${t.token_address.slice(0, 8)}`;
+                  return (
+                    <div key={t.token_address} className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="truncate text-sm text-slate-300">
+                          {t.display_name || `${t.token_address.slice(0, 8)}...`}
+                        </span>
+                        <span className={`shrink-0 text-xs font-bold ${score >= 75 ? "text-rose-400" : score >= 50 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {score}/100
+                        </span>
+                        <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${willBlock ? "bg-rose-400/15 text-rose-300" : "bg-emerald-400/15 text-emerald-300"}`}>
+                          {willBlock ? "WILL BLOCK" : "WILL PASS"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => guardedSwap(t.token_address, t.score)}
+                        disabled={!!loading || vault.balance === 0}
+                        className="shrink-0 rounded-lg border border-[rgba(59,130,246,0.3)] bg-[rgba(37,99,235,0.1)] px-3 py-1.5 text-xs font-bold text-blue-300 disabled:opacity-50 hover:bg-[rgba(37,99,235,0.2)]"
+                      >
+                        {loading === label ? "Sending..." : "Simulate Swap"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {swapResult && (
+                <div className={`mt-3 rounded-lg p-3 text-xs ${swapResult.blocked ? "border border-rose-400/30 bg-rose-400/10" : swapResult.sig ? "border border-emerald-400/30 bg-emerald-400/10" : "border border-rose-400/30 bg-rose-400/10"}`}>
+                  {swapResult.blocked ? (
+                    <>
+                      <p className="font-bold text-rose-300">BLOCKED by GuardedVault</p>
+                      <p className="mt-1 text-rose-400/80">Contract rejected the swap — token risk score exceeds your threshold.</p>
+                    </>
+                  ) : swapResult.sig ? (
+                    <>
+                      <p className="font-bold text-emerald-300">Swap ALLOWED</p>
+                      <p className="mt-1 text-emerald-400/80">Token score is within your threshold. Tx: {swapResult.sig.slice(0, 16)}...</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-rose-300">Transaction failed</p>
+                      <p className="mt-1 break-all text-rose-400/80">{swapResult.error}</p>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {vault.balance === 0 && (
+                <p className="mt-2 text-xs text-amber-400/70">Deposit SOL first to enable swap simulation.</p>
+              )}
+            </div>
+          )}
+
+          {vault.balance === 0 && scores.length === 0 && (
             <p className="text-xs text-slate-500">Deposit SOL to enable guarded swaps. Emergency exit activates when a monitored token goes Critical (score ≥ 75).</p>
           )}
         </div>
