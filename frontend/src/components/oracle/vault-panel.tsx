@@ -37,7 +37,7 @@ interface VaultInfo {
 }
 
 export function VaultPanel({ scores }: { scores: OracleScore[] }) {
-  const { publicKey, sendTransaction, connected } = useWallet();
+  const { publicKey, signTransaction, connected } = useWallet();
   const { connection } = useConnection();
 
   const [vault, setVault] = useState<VaultInfo | null>(null);
@@ -85,7 +85,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   }, [connected, loadVault]);
 
   const sendTx = useCallback(async (ix: TransactionInstruction, label: string) => {
-    if (!publicKey) return;
+    if (!publicKey || !signTransaction) return;
     setLoading(label);
     setMsg("");
     try {
@@ -94,15 +94,23 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection, { maxRetries: 5, preflightCommitment: "confirmed" });
-      // Poll for confirmation up to 45s
+
+      // Phantom signs, WE send through our connection
+      const signed = await signTransaction(tx);
+      const sig = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+        maxRetries: 5,
+      });
+
+      // Poll for confirmation
       let confirmed = false;
       for (let i = 0; i < 4; i++) {
         await new Promise(r => setTimeout(r, 8000));
         const status = await connection.getSignatureStatus(sig);
         const conf = status?.value?.confirmationStatus;
         if (conf === "confirmed" || conf === "finalized") { confirmed = true; break; }
-        if (status?.value?.err) break;
+        if (status?.value?.err) { setMsg(`err:On-chain error: ${JSON.stringify(status.value.err)}`); setLoading(null); return; }
         setMsg(`pending:${sig}`);
       }
       if (!confirmed) {
@@ -118,7 +126,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     } finally {
       setLoading(null);
     }
-  }, [publicKey, connection, sendTransaction, loadVault]);
+  }, [publicKey, connection, signTransaction, loadVault]);
 
   const createVault = useCallback(async () => {
     if (!publicKey || !vaultPda) return;
@@ -214,7 +222,13 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection, { maxRetries: 5, preflightCommitment: "confirmed" });
+      if (!signTransaction) return;
+      const signed = await signTransaction(tx);
+      const sig = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+        maxRetries: 5,
+      });
       try {
         await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
         setSwapResult({ token: tokenMint, blocked: false, sig });
@@ -228,7 +242,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     } finally {
       setLoading(null);
     }
-  }, [publicKey, vaultPda, vaultSolPda, connection, sendTransaction]);
+  }, [publicKey, vaultPda, vaultSolPda, connection, signTransaction]);
 
   const criticalTokens = scores.filter(s => s.risk_level === "critical" || (s.score != null && s.score >= 75));
 
