@@ -62,13 +62,20 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
                 </div>
               </td>
               <td className="px-6 py-4">
-                {s.score !== null ? (
-                  <span className="font-[family:var(--font-display)] text-xl font-black">
-                    {s.score}
-                  </span>
-                ) : (
-                  <span className="text-slate-500">--</span>
-                )}
+                <div>
+                  {s.score !== null ? (
+                    <span className="font-[family:var(--font-display)] text-xl font-black">
+                      {s.score}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500">--</span>
+                  )}
+                  {s.reasoning && (
+                    <p className="mt-1 text-xs italic text-slate-400/70 leading-snug max-w-[260px]">
+                      {s.reasoning}
+                    </p>
+                  )}
+                </div>
               </td>
               <td className="px-6 py-4">
                 {s.risk_level ? (

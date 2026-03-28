@@ -128,6 +128,7 @@ class OracleAgent:
             score = score_result["score"]
             risk_level = score_result["risk_level"]
             confidence = score_result["confidence"]
+            reasoning = score_result.get("reasoning", "")
 
             logger.info(
                 "Scoring done: %s score=%d risk=%s conf=%.2f, publishing...",
@@ -148,6 +149,7 @@ class OracleAgent:
                 score=score,
                 risk_level=risk_level,
                 confidence=confidence,
+                reasoning=reasoning or None,
                 tx_signature=result.tx_signature,
                 status="published" if result.success else "failed",
                 error_message=result.error,
@@ -160,6 +162,7 @@ class OracleAgent:
             token.last_confidence = confidence
             token.last_published_at = datetime.now(timezone.utc)
             token.last_tx_signature = result.tx_signature
+            token.last_reasoning = reasoning or None
 
             if result.success:
                 self._total_published += 1

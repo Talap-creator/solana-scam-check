@@ -252,6 +252,7 @@ class OracleMonitoredToken(Base):
     last_confidence: Mapped[float | None] = mapped_column(Numeric(5, 4), nullable=True)
     last_published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_tx_signature: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    last_reasoning: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
 
@@ -264,6 +265,7 @@ class OraclePublishEvent(Base):
     risk_level: Mapped[str] = mapped_column(String(16), nullable=False)
     confidence: Mapped[float] = mapped_column(Numeric(5, 4), nullable=False)
     tx_signature: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    reasoning: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
     error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)

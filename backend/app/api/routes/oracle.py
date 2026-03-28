@@ -36,6 +36,7 @@ class OracleScoreResponse(BaseModel):
     last_published_at: str | None
     tx_signature: str | None
     display_name: str | None
+    reasoning: str | None
 
 
 class OracleStatusResponse(BaseModel):
@@ -52,6 +53,7 @@ class PublishEventResponse(BaseModel):
     score: int
     risk_level: str
     confidence: float
+    reasoning: str | None
     tx_signature: str | None
     status: str
     error_message: str | None
@@ -104,6 +106,7 @@ def list_scores(db: Session = Depends(get_db)):
             last_published_at=t.last_published_at.isoformat() if t.last_published_at else None,
             tx_signature=t.last_tx_signature,
             display_name=t.display_name,
+            reasoning=t.last_reasoning,
         )
         for t in tokens
     ]
@@ -122,6 +125,7 @@ def get_score(token_address: str, db: Session = Depends(get_db)):
         last_published_at=t.last_published_at.isoformat() if t.last_published_at else None,
         tx_signature=t.last_tx_signature,
         display_name=t.display_name,
+        reasoning=t.last_reasoning,
     )
 
 
@@ -190,6 +194,7 @@ def list_publish_history(
             score=e.score,
             risk_level=e.risk_level,
             confidence=float(e.confidence),
+            reasoning=e.reasoning,
             tx_signature=e.tx_signature,
             status=e.status,
             error_message=e.error_message,

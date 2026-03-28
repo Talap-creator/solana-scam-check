@@ -928,6 +928,7 @@ export type OracleScore = {
   last_published_at: string | null;
   tx_signature: string | null;
   display_name: string | null;
+  reasoning: string | null;
 };
 
 export type OraclePublishEvent = {
@@ -936,6 +937,7 @@ export type OraclePublishEvent = {
   score: number;
   risk_level: string;
   confidence: number;
+  reasoning: string | null;
   tx_signature: string | null;
   status: string;
   error_message: string | null;
