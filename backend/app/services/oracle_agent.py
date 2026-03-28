@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from ..config import Settings
 from ..models import OracleMonitoredToken, OraclePublishEvent
 from .solana_publisher import SolanaPublisher
+from .ai_scorer import ai_score_token
 
 logger = logging.getLogger(__name__)
 
@@ -183,50 +184,68 @@ class OracleAgent:
             logger.error("Error scoring %s: %s\n%s", token.token_address, exc, traceback.format_exc())
 
     async def _get_score(self, token_address: str) -> dict:
-        """Get risk score from the existing RugSignal pipeline.
+        """Get risk score using AI agent (Claude) + rule engine fallback.
 
-        Falls back to the V1 report analyzer if the V2 pipeline
-        is not available.
+        1. Gather on-chain features via RugSignal pipeline
+        2. Send features to Claude AI for analysis
+        3. Fall back to rule engine if AI unavailable
         """
+        features = {}
+        rule_score = None
+
+        # Step 1: Gather features from existing pipeline
         try:
             repository = self._get_repository()
             report = repository.create_report("token", token_address)
 
-            if report is None:
-                logger.warning("create_report returned None for %s", token_address)
-                return {"score": 50, "risk_level": "medium", "confidence": 0.3}
+            if report is not None:
+                if self._get_pipeline:
+                    pipeline = self._get_pipeline()
+                    result = pipeline.run(report=report)
+                    rule_score = {
+                        "score": result.response.score,
+                        "risk_level": result.response.risk_level,
+                        "confidence": result.response.confidence,
+                    }
+                    features = getattr(result, "features", {}) or {}
+                else:
+                    if isinstance(report, dict):
+                        overview = report.get("overview", report)
+                        features = report.get("features", {})
+                        score = overview.get("score", overview.get("rug_probability", 50))
+                        confidence = overview.get("confidence", 0.5)
+                    else:
+                        overview = getattr(report, "overview", report)
+                        features = getattr(report, "features", {}) or {}
+                        score = getattr(overview, "score", None) or getattr(overview, "rug_probability", 50)
+                        confidence = getattr(overview, "confidence", 0.5)
 
-            if self._get_pipeline:
-                pipeline = self._get_pipeline()
-                result = pipeline.run(report=report)
-                return {
-                    "score": result.response.score,
-                    "risk_level": result.response.risk_level,
-                    "confidence": result.response.confidence,
-                }
-
-            # Fallback: extract from V1 report (could be dict or object)
-            if isinstance(report, dict):
-                overview = report.get("overview", report)
-                score = overview.get("score", overview.get("rug_probability", 50))
-                confidence = overview.get("confidence", 0.5)
-            else:
-                overview = getattr(report, "overview", report)
-                score = getattr(overview, "score", None) or getattr(overview, "rug_probability", 50)
-                confidence = getattr(overview, "confidence", 0.5)
-
-            score = int(score) if score is not None else 50
-            return {
-                "score": score,
-                "risk_level": _risk_level_from_score(score),
-                "confidence": float(confidence),
-            }
-
+                    score = int(score) if score is not None else 50
+                    rule_score = {
+                        "score": score,
+                        "risk_level": _risk_level_from_score(score),
+                        "confidence": float(confidence),
+                    }
         except Exception as exc:
-            logger.warning("Pipeline failed for %s, using fallback: %s", token_address, exc)
-            fallback = {"score": 50, "risk_level": "medium", "confidence": 0.3}
-            logger.info("Returning fallback score for %s: %s", token_address[:12], fallback)
-            return fallback
+            logger.warning("Feature extraction failed for %s: %s", token_address[:12], exc)
+
+        # Step 2: AI scoring via Claude
+        ai_result = await ai_score_token(token_address, features if isinstance(features, dict) else {})
+        if ai_result:
+            logger.info(
+                "AI agent scored %s: %d (%s) — %s",
+                token_address[:12], ai_result["score"], ai_result["risk_level"],
+                ai_result.get("reasoning", ""),
+            )
+            return ai_result
+
+        # Step 3: Fall back to rule engine
+        if rule_score:
+            logger.info("Using rule engine score for %s: %s", token_address[:12], rule_score)
+            return rule_score
+
+        logger.warning("All scoring failed for %s, using fallback", token_address[:12])
+        return {"score": 50, "risk_level": "medium", "confidence": 0.3}
 
     async def score_single(self, token_address: str) -> dict:
         """Score a single token on-demand (not part of the loop)."""
