@@ -1,10 +1,10 @@
-"""AI Token Risk Scorer — uses Claude to analyze token features."""
+"""AI Token Risk Scorer — uses GPT to analyze token features."""
 
 import json
 import logging
 import os
 
-import anthropic
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -70,14 +70,14 @@ def _build_analysis_prompt(token_address: str, features: dict) -> str:
 
 
 async def ai_score_token(token_address: str, features: dict | None = None) -> dict:
-    """Score a token using Claude AI.
+    """Score a token using GPT.
 
     Returns dict with score, risk_level, confidence, reasoning.
-    Falls back to rule-based scoring if API unavailable.
+    Returns None if API unavailable (falls back to rule engine).
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        logger.warning("ANTHROPIC_API_KEY not set, skipping AI scoring")
+        logger.warning("OPENAI_API_KEY not set, skipping AI scoring")
         return None
 
     if features is None:
@@ -86,15 +86,21 @@ async def ai_score_token(token_address: str, features: dict | None = None) -> di
     prompt = _build_analysis_prompt(token_address, features)
 
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
             max_tokens=300,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        text = message.content[0].text.strip()
+        text = response.choices[0].message.content.strip()
+        # Strip markdown code fences if present
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         result = json.loads(text)
 
         score = max(0, min(100, int(result.get("score", 50))))
