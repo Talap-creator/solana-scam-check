@@ -89,8 +89,8 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
       // Poll for confirmation up to 45s
       let confirmed = false;
-      for (let i = 0; i < 15; i++) {
-        await new Promise(r => setTimeout(r, 3000));
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 5000));
         const status = await connection.getSignatureStatus(sig);
         const conf = status?.value?.confirmationStatus;
         if (conf === "confirmed" || conf === "finalized") { confirmed = true; break; }

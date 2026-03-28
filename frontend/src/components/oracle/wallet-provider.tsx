@@ -8,7 +8,7 @@ import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adap
 // Import default styles
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-const DEVNET_RPC = "https://api.devnet.solana.com";
+const DEVNET_RPC = "https://rpc.ankr.com/solana_devnet";
 
 export function OracleWalletProvider({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(
