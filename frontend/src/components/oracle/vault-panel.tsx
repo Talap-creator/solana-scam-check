@@ -244,6 +244,14 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
           {walletSol !== null && (
             <p className="text-xs text-slate-500">Wallet balance: {walletSol.toFixed(3)} SOL (devnet)</p>
           )}
+          {vaultPda && (
+            <p className="text-xs text-slate-600">
+              Vault PDA:{" "}
+              <a href={`https://explorer.solana.com/address/${vaultPda.toBase58()}?cluster=devnet`} target="_blank" rel="noreferrer" className="text-blue-500 underline font-mono">
+                {vaultPda.toBase58().slice(0, 20)}...
+              </a>
+            </p>
+          )}
           <div className="flex items-center gap-3">
             <label className="text-xs text-slate-400">Risk threshold (0-100)</label>
             <input
