@@ -68,8 +68,9 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       }
       // Parse vault: skip 8-byte discriminator
       // Layout: owner(32) balance(8) risk_threshold(1) created_at(8) bump(1)
-      const data = Buffer.from(info.data);
-      const balance = Number(data.readBigUInt64LE(40));
+      const data = new Uint8Array(info.data);
+      const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+      const balance = Number(view.getBigUint64(40, true));
       const riskThreshold = data[48];
       setVault({ exists: true, balance, riskThreshold });
     } catch (e) {
