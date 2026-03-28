@@ -74,17 +74,25 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     setLoading(label);
     setMsg("");
     try {
-      const { blockhash } = await connection.getLatestBlockhash("finalized");
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction();
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
       const sig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(sig, "confirmed");
-      setMsg(`Success: ${sig.slice(0, 16)}...`);
+      try {
+        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+      } catch {
+        // timeout — tx may still land, show explorer link
+        setMsg(`pending:${sig}`);
+        setLoading(null);
+        void loadVault();
+        return;
+      }
+      setMsg(`ok:${sig}`);
       await loadVault();
     } catch (e) {
-      setMsg(`Error: ${e instanceof Error ? e.message : String(e)}`);
+      setMsg(`err:${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setLoading(null);
     }
@@ -179,14 +187,18 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     setLoading(`swap_${tokenMint.slice(0, 8)}`);
     setSwapResult(null);
     try {
-      const { blockhash } = await connection.getLatestBlockhash("finalized");
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction();
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
       const sig = await sendTransaction(tx, connection);
-      await connection.confirmTransaction(sig, "confirmed");
-      setSwapResult({ token: tokenMint, blocked: false, sig });
+      try {
+        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+        setSwapResult({ token: tokenMint, blocked: false, sig });
+      } catch {
+        setSwapResult({ token: tokenMint, blocked: false, sig, error: "pending" });
+      }
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : String(e);
       const blocked = errMsg.toLowerCase().includes("risk") || errMsg.includes("0x1770") || errMsg.includes("custom program error");
@@ -348,8 +360,13 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
                     </>
                   ) : swapResult.sig ? (
                     <>
-                      <p className="font-bold text-emerald-300">Swap ALLOWED</p>
-                      <p className="mt-1 text-emerald-400/80">Token score is within your threshold. Tx: {swapResult.sig.slice(0, 16)}...</p>
+                      <p className="font-bold text-emerald-300">{swapResult.error === "pending" ? "Swap sent (confirming)" : "Swap ALLOWED"}</p>
+                      <p className="mt-1 text-emerald-400/80">
+                        Token score is within your threshold.{" "}
+                        <a href={`https://explorer.solana.com/tx/${swapResult.sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline">
+                          View on Explorer
+                        </a>
+                      </p>
                     </>
                   ) : (
                     <>
@@ -372,11 +389,32 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
         </div>
       )}
 
-      {msg && (
-        <p className={`mt-3 text-xs ${msg.startsWith("Error") ? "text-rose-400" : "text-emerald-400"}`}>
-          {msg}
-        </p>
-      )}
+      {msg && (() => {
+        const explorerBase = "https://explorer.solana.com/tx/";
+        if (msg.startsWith("ok:")) {
+          const sig = msg.slice(3);
+          return (
+            <p className="mt-3 text-xs text-emerald-400">
+              Success —{" "}
+              <a href={`${explorerBase}${sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline">
+                view on Explorer
+              </a>
+            </p>
+          );
+        }
+        if (msg.startsWith("pending:")) {
+          const sig = msg.slice(8);
+          return (
+            <p className="mt-3 text-xs text-amber-400">
+              Sent (confirming) —{" "}
+              <a href={`${explorerBase}${sig}?cluster=devnet`} target="_blank" rel="noreferrer" className="underline">
+                check on Explorer
+              </a>
+            </p>
+          );
+        }
+        return <p className="mt-3 text-xs text-rose-400">{msg.startsWith("err:") ? msg.slice(4) : msg}</p>;
+      })()}
     </article>
   );
 }
