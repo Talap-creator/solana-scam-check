@@ -26,6 +26,19 @@ function discriminator(name: string): Buffer {
   return Buffer.from(DISCRIMINATORS[name]);
 }
 
+function encodeU8(val: number): Buffer {
+  const buf = Buffer.alloc(1);
+  buf[0] = val;
+  return buf;
+}
+
+function encodeU64(val: bigint): Buffer {
+  const buf = Buffer.alloc(8);
+  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  view.setBigUint64(0, val, true);
+  return buf;
+}
+
 function findPDA(seeds: Buffer[]): PublicKey {
   return PublicKey.findProgramAddressSync(seeds, PROGRAM_ID)[0];
 }
@@ -132,9 +145,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   const createVault = useCallback(async () => {
     if (!publicKey || !vaultPda) return;
     const disc = discriminator("create_vault");
-    const thresholdBuf = Buffer.alloc(1);
-    thresholdBuf.writeUInt8(parseInt(threshold));
-    const data = Buffer.concat([disc, thresholdBuf]);
+    const data = Buffer.concat([disc, encodeU8(parseInt(threshold))]);
 
     const ix = new TransactionInstruction({
       programId: PROGRAM_ID,
@@ -152,9 +163,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     if (!publicKey || !vaultPda || !vaultSolPda) return;
     const disc = discriminator("deposit");
     const lamports = BigInt(Math.floor(parseFloat(depositAmount) * LAMPORTS_PER_SOL));
-    const amountBuf = Buffer.alloc(8);
-    amountBuf.writeBigUInt64LE(lamports);
-    const data = Buffer.concat([disc, amountBuf]);
+    const data = Buffer.concat([disc, encodeU64(lamports)]);
 
     const ix = new TransactionInstruction({
       programId: PROGRAM_ID,
@@ -198,9 +207,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     const scorePda = findPDA([Buffer.from("score"), mintPk.toBuffer()]);
     const disc = discriminator("guarded_swap");
     // amount: 1000 lamports (nominal test swap)
-    const amountBuf = Buffer.alloc(8);
-    amountBuf.writeBigUInt64LE(BigInt(1000));
-    const data = Buffer.concat([disc, amountBuf]);
+    const data = Buffer.concat([disc, encodeU64(BigInt(1000))]);
 
     const ix = new TransactionInstruction({
       programId: PROGRAM_ID,
