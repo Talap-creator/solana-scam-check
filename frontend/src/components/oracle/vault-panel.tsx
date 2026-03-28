@@ -14,9 +14,16 @@ import { type OracleScore } from "@/lib/api";
 
 const PROGRAM_ID = new PublicKey("HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS");
 
+// Pre-computed Anchor discriminators (sha256("global:<name>")[0..8])
+const DISCRIMINATORS: Record<string, number[]> = {
+  create_vault:  [29, 237, 247, 208, 193, 82, 54, 135],
+  deposit:       [242, 35, 198, 137, 82, 225, 242, 182],
+  guarded_swap:  [163, 231, 16, 17, 60, 249, 219, 214],
+  emergency_exit:[164, 174, 48, 163, 191, 65, 91, 245],
+};
+
 function discriminator(name: string): Buffer {
-  const { createHash } = require("crypto") as typeof import("crypto");
-  return Buffer.from(createHash("sha256").update(`global:${name}`).digest()).subarray(0, 8);
+  return Buffer.from(DISCRIMINATORS[name]);
 }
 
 function findPDA(seeds: Buffer[]): PublicKey {
@@ -86,7 +93,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
+      const sig = await sendTransaction(tx, connection, { maxRetries: 5, preflightCommitment: "confirmed" });
       // Poll for confirmation up to 45s
       let confirmed = false;
       for (let i = 0; i < 4; i++) {
@@ -206,7 +213,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
+      const sig = await sendTransaction(tx, connection, { maxRetries: 5, preflightCommitment: "confirmed" });
       try {
         await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
         setSwapResult({ token: tokenMint, blocked: false, sig });
