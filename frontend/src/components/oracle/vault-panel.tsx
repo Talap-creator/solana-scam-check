@@ -79,11 +79,10 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection);
+      const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
       try {
         await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
       } catch {
-        // timeout — tx may still land, show explorer link
         setMsg(`pending:${sig}`);
         setLoading(null);
         void loadVault();
@@ -192,7 +191,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
       tx.add(ix);
-      const sig = await sendTransaction(tx, connection);
+      const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
       try {
         await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
         setSwapResult({ token: tokenMint, blocked: false, sig });
@@ -228,7 +227,10 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       {!connected ? (
         <p className="text-sm text-slate-400">Connect your Phantom/Solflare wallet (devnet) to use GuardedVault</p>
       ) : vault === null ? (
-        <p className="text-sm text-slate-400">Loading vault...</p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-slate-400">Loading vault...</p>
+          <button onClick={loadVault} className="text-xs text-blue-400 underline">Refresh</button>
+        </div>
       ) : !vault.exists ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-400">No vault yet. Create one with a risk threshold — swaps to tokens above this score will be blocked.</p>
@@ -246,13 +248,18 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
               className="w-20 rounded-lg border border-[rgba(59,130,246,0.2)] bg-[rgba(2,6,23,0.6)] px-3 py-1.5 text-sm text-slate-100 outline-none"
             />
           </div>
-          <button
-            onClick={createVault}
-            disabled={loading === "create"}
-            className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-bold text-white disabled:opacity-50 hover:brightness-110"
-          >
-            {loading === "create" ? "Creating..." : "Create Vault"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={createVault}
+              disabled={loading === "create"}
+              className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-bold text-white disabled:opacity-50 hover:brightness-110"
+            >
+              {loading === "create" ? "Creating..." : "Create Vault"}
+            </button>
+            <button onClick={loadVault} className="text-xs text-slate-400 underline hover:text-slate-200">
+              Refresh
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
