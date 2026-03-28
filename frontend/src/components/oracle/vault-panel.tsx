@@ -87,9 +87,17 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       tx.feePayer = publicKey;
       tx.add(ix);
       const sig = await sendTransaction(tx, connection, { skipPreflight: true, maxRetries: 5, preflightCommitment: "confirmed" });
-      try {
-        await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
-      } catch {
+      // Poll for confirmation up to 45s
+      let confirmed = false;
+      for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 3000));
+        const status = await connection.getSignatureStatus(sig);
+        const conf = status?.value?.confirmationStatus;
+        if (conf === "confirmed" || conf === "finalized") { confirmed = true; break; }
+        if (status?.value?.err) break;
+        setMsg(`pending:${sig}`);
+      }
+      if (!confirmed) {
         setMsg(`pending:${sig}`);
         setLoading(null);
         void loadVault();
