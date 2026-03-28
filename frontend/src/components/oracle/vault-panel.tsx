@@ -39,6 +39,8 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [walletSol, setWalletSol] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const vaultPda = publicKey ? findPDA([Buffer.from("vault"), publicKey.toBuffer()]) : null;
   const vaultSolPda = publicKey ? findPDA([Buffer.from("vault_sol"), publicKey.toBuffer()]) : null;
@@ -46,6 +48,8 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   // Load vault state
   const loadVault = useCallback(async () => {
     if (!publicKey || !vaultPda) return;
+    setRefreshing(true);
+    setLoadError(null);
     try {
       const info = await connection.getAccountInfo(vaultPda);
       const sol = await connection.getBalance(publicKey);
@@ -56,12 +60,15 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       }
       // Parse vault: skip 8-byte discriminator
       // Layout: owner(32) balance(8) risk_threshold(1) created_at(8) bump(1)
-      const data = info.data;
+      const data = Buffer.from(info.data);
       const balance = Number(data.readBigUInt64LE(40));
       const riskThreshold = data[48];
       setVault({ exists: true, balance, riskThreshold });
-    } catch {
-      setVault(null);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : String(e));
+      setVault({ exists: false, balance: 0, riskThreshold: 50 });
+    } finally {
+      setRefreshing(false);
     }
   }, [publicKey, vaultPda, connection]);
 
@@ -229,7 +236,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       ) : vault === null ? (
         <div className="flex items-center gap-3">
           <p className="text-sm text-slate-400">Loading vault...</p>
-          <button onClick={loadVault} className="text-xs text-blue-400 underline">Refresh</button>
+          <button onClick={() => void loadVault()} disabled={refreshing} className="text-xs text-blue-400 underline disabled:opacity-50">{refreshing ? "Loading..." : "Refresh"}</button>
         </div>
       ) : !vault.exists ? (
         <div className="space-y-3">
@@ -256,8 +263,8 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
             >
               {loading === "create" ? "Creating..." : "Create Vault"}
             </button>
-            <button onClick={loadVault} className="text-xs text-slate-400 underline hover:text-slate-200">
-              Refresh
+            <button onClick={() => void loadVault()} disabled={refreshing} className="text-xs text-slate-400 underline hover:text-slate-200 disabled:opacity-50">
+              {refreshing ? "Loading..." : "Refresh"}
             </button>
           </div>
         </div>
@@ -394,6 +401,10 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
             <p className="text-xs text-slate-500">Deposit SOL to enable guarded swaps. Emergency exit activates when a monitored token goes Critical (score ≥ 75).</p>
           )}
         </div>
+      )}
+
+      {loadError && (
+        <p className="mt-2 text-xs text-amber-400">RPC error: {loadError}</p>
       )}
 
       {msg && (() => {
