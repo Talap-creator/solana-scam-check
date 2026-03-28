@@ -20,6 +20,7 @@ const DISCRIMINATORS: Record<string, number[]> = {
   deposit:       [242, 35, 198, 137, 82, 225, 242, 182],
   guarded_swap:  [163, 231, 16, 17, 60, 249, 219, 214],
   emergency_exit:[164, 174, 48, 163, 191, 65, 91, 245],
+  update_threshold:[251, 36, 24, 179, 157, 31, 239, 234],
 };
 
 function discriminator(name: string): Buffer {
@@ -178,6 +179,21 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     await sendTx(ix, "deposit");
   }, [publicKey, vaultPda, vaultSolPda, depositAmount, sendTx]);
 
+  const updateThreshold = useCallback(async () => {
+    if (!publicKey || !vaultPda) return;
+    const disc = discriminator("update_threshold");
+    const data = Buffer.concat([disc, encodeU8(parseInt(threshold))]);
+    const ix = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: vaultPda, isSigner: false, isWritable: true },
+        { pubkey: publicKey, isSigner: true, isWritable: false },
+      ],
+      data,
+    });
+    await sendTx(ix, "threshold");
+  }, [publicKey, vaultPda, threshold, sendTx]);
+
   const emergencyExit = useCallback(async (tokenMint: string) => {
     if (!publicKey || !vaultPda || !vaultSolPda) return;
     const mintPk = new PublicKey(tokenMint);
@@ -324,7 +340,24 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
             </div>
             <div className="rounded-xl border border-[rgba(59,130,246,0.12)] bg-white/[0.03] px-3 py-2">
               <p className="text-xs text-slate-500">Risk threshold</p>
-              <p className="mt-1 text-lg font-bold">{vault.riskThreshold}/100</p>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  type="number" min="0" max="100"
+                  value={threshold}
+                  onChange={e => setThreshold(e.target.value)}
+                  className="w-14 rounded border border-[rgba(59,130,246,0.2)] bg-transparent px-1 py-0.5 text-lg font-bold text-slate-100 outline-none"
+                />
+                <span className="text-sm text-slate-400">/100</span>
+                {parseInt(threshold) !== vault.riskThreshold && (
+                  <button
+                    onClick={updateThreshold}
+                    disabled={!!loading}
+                    className="rounded bg-amber-500/80 px-2 py-0.5 text-xs font-bold text-black disabled:opacity-50"
+                  >
+                    {loading === "threshold" ? "..." : "Update"}
+                  </button>
+                )}
+              </div>
             </div>
             <div className="rounded-xl border border-[rgba(59,130,246,0.12)] bg-white/[0.03] px-3 py-2">
               <p className="text-xs text-slate-500">Wallet</p>
