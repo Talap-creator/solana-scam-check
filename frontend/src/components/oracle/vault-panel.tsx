@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import {
@@ -49,8 +49,9 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const vaultPda = publicKey ? findPDA([Buffer.from("vault"), publicKey.toBuffer()]) : null;
-  const vaultSolPda = publicKey ? findPDA([Buffer.from("vault_sol"), publicKey.toBuffer()]) : null;
+  const pubkeyStr = publicKey?.toBase58() ?? "";
+  const vaultPda = useMemo(() => pubkeyStr ? findPDA([Buffer.from("vault"), new PublicKey(pubkeyStr).toBuffer()]) : null, [pubkeyStr]);
+  const vaultSolPda = useMemo(() => pubkeyStr ? findPDA([Buffer.from("vault_sol"), new PublicKey(pubkeyStr).toBuffer()]) : null, [pubkeyStr]);
 
   // Load vault state
   const loadVault = useCallback(async () => {
