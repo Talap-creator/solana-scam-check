@@ -30,6 +30,7 @@ def init_db() -> None:
 
     Base.metadata.create_all(bind=engine)
     ensure_user_schema_compatibility()
+    ensure_oracle_schema_compatibility()
 
     if settings.admin_bootstrap_email:
         with SessionLocal() as db:
@@ -41,6 +42,22 @@ def init_db() -> None:
             if admin_user is not None and admin_user.role != "admin":
                 admin_user.role = "admin"
                 db.commit()
+
+
+def ensure_oracle_schema_compatibility() -> None:
+    """Add reasoning columns to oracle tables if missing."""
+    inspector = inspect(engine)
+
+    for table, column in [
+        ("oracle_monitored_tokens", "last_reasoning"),
+        ("oracle_publish_events", "reasoning"),
+    ]:
+        if table not in inspector.get_table_names():
+            continue
+        cols = {c["name"] for c in inspector.get_columns(table)}
+        if column not in cols:
+            with engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} VARCHAR(1000)"))
 
 
 def ensure_user_schema_compatibility() -> None:
