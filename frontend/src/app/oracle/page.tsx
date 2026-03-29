@@ -7,6 +7,7 @@ import { OracleAddToken } from "@/components/oracle/oracle-add-token";
 import { OracleFlowDiagram } from "@/components/oracle/oracle-flow-diagram";
 import { OracleWalletProvider } from "@/components/oracle/wallet-provider";
 import { VaultPanel } from "@/components/oracle/vault-panel";
+import { AgentChat } from "@/components/oracle/agent-chat";
 
 export default async function OraclePage() {
   const [status, scores, history] = await Promise.all([
@@ -33,11 +34,14 @@ export default async function OraclePage() {
         headerContent={<OracleAgentControls initialRunning={status.agent_running} />}
       >
         <div className="space-y-8">
+          {/* AI Agent Chat — real-time token analysis */}
+          <AgentChat />
+
           {/* Flow diagram — shows AI → On-chain pipeline */}
           <OracleFlowDiagram />
 
           {/* Controls: add token + how it works */}
-          <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <section id="oracle-add-token" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
             <OracleAddToken />
 
             <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
@@ -66,7 +70,9 @@ export default async function OraclePage() {
           </section>
 
           {/* Guarded Vault — wallet connect + create vault + deposit + emergency exit */}
-          <VaultPanel scores={scores} />
+          <div id="guarded-vault">
+            <VaultPanel scores={scores} />
+          </div>
 
           {/* On-chain scores table */}
           <section>
