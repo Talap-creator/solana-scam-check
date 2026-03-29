@@ -4,7 +4,6 @@ import { OracleScoresTable } from "@/components/oracle/oracle-scores-table";
 import { OracleHistoryTable } from "@/components/oracle/oracle-history-table";
 import { OracleAgentControls } from "@/components/oracle/oracle-agent-controls";
 import { OracleAddToken } from "@/components/oracle/oracle-add-token";
-import { OracleFlowDiagram } from "@/components/oracle/oracle-flow-diagram";
 import { OracleWalletProvider } from "@/components/oracle/wallet-provider";
 import { VaultPanel } from "@/components/oracle/vault-panel";
 import { AgentChat } from "@/components/oracle/agent-chat";
@@ -21,74 +20,52 @@ export default async function OraclePage() {
       <PlatformShell
         eyebrow="Oracle"
         title="AI Risk Oracle"
-        subtitle="Autonomous AI scoring published on-chain. Smart contracts read these scores to protect user funds."
+        subtitle="Autonomous AI agent scores tokens and enforces decisions on-chain via smart contract."
         stats={[
-          { label: "Monitored tokens", value: String(status.monitored_tokens) },
-          { label: "Scores published", value: String(status.total_published) },
+          { label: "Monitored", value: String(status.monitored_tokens) },
+          { label: "Published", value: String(status.total_published) },
           {
-            label: "Agent status",
+            label: "Agent",
             value: status.agent_running ? "Running" : "Stopped",
           },
-          { label: "Errors", value: String(status.errors) },
         ]}
         headerContent={<OracleAgentControls initialRunning={status.agent_running} />}
       >
-        <div className="space-y-8">
-          {/* AI Agent Chat — real-time token analysis */}
+        <div className="space-y-6">
+          {/* Hero: AI Agent Chat */}
           <AgentChat />
 
-          {/* Flow diagram — shows AI → On-chain pipeline */}
-          <OracleFlowDiagram />
-
-          {/* Controls: add token + how it works */}
-          <section id="oracle-add-token" className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+          {/* Add token — compact */}
+          <section id="oracle-add-token">
             <OracleAddToken />
-
-            <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
-              <h2 className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
-                How It Works
-              </h2>
-              <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                <li className="flex gap-2">
-                  <span className="text-[#3b82f6]">1.</span>
-                  Add a token address to monitor
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#3b82f6]">2.</span>
-                  AI agent scores it using RugSignal ML pipeline (50+ features)
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#3b82f6]">3.</span>
-                  Score is published on-chain to Solana program (PDA)
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#3b82f6]">4.</span>
-                  GuardedVault reads score and blocks risky swaps automatically
-                </li>
-              </ul>
-            </article>
           </section>
 
-          {/* Guarded Vault — wallet connect + create vault + deposit + emergency exit */}
-          <div id="guarded-vault">
-            <VaultPanel scores={scores} />
+          {/* Two-column: Vault + Scores */}
+          <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+            <div id="guarded-vault">
+              <VaultPanel scores={scores} />
+            </div>
+            <section className="flex flex-col">
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
+                On-Chain Scores
+              </h2>
+              <div className="flex-1 overflow-auto rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)]">
+                <OracleScoresTable scores={scores} />
+              </div>
+            </section>
           </div>
 
-          {/* On-chain scores table */}
-          <section>
-            <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
-              On-Chain Scores
-            </h2>
-            <OracleScoresTable scores={scores} />
-          </section>
-
-          {/* Publish history */}
-          <section>
-            <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
-              Publish History
-            </h2>
-            <OracleHistoryTable events={history} />
-          </section>
+          {/* Publish history — compact */}
+          <details className="group rounded-[24px] border border-[rgba(59,130,246,0.10)] bg-[rgba(15,23,42,0.60)]">
+            <summary className="cursor-pointer select-none px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
+              Publish History ({history.length})
+              <span className="ml-2 text-slate-500 group-open:hidden">▸</span>
+              <span className="ml-2 text-slate-500 hidden group-open:inline">▾</span>
+            </summary>
+            <div className="px-2 pb-4">
+              <OracleHistoryTable events={history} />
+            </div>
+          </details>
         </div>
       </PlatformShell>
     </OracleWalletProvider>
