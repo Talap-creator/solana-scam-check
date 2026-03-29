@@ -35,6 +35,31 @@ function scoreColor(score: number) {
   return "text-rose-400";
 }
 
+function formatAnalysis(text: string) {
+  // Remove trailing JSON block
+  let clean = text.replace(/\{[^{}]*"score"[^{}]*\}\s*$/, "").trim();
+  // Split into lines and format
+  return clean.split("\n").map((line, i) => {
+    const trimmed = line.trim();
+    if (!trimmed) return <br key={i} />;
+    // ### headings
+    if (trimmed.startsWith("###")) {
+      return <div key={i} className="mt-3 mb-1 text-xs font-bold uppercase tracking-wider text-cyan-400">{trimmed.replace(/^#+\s*/, "")}</div>;
+    }
+    // **bold** inline
+    const parts = trimmed.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <div key={i}>
+        {parts.map((part, j) =>
+          part.startsWith("**") && part.endsWith("**")
+            ? <span key={j} className="font-semibold text-slate-200">{part.slice(2, -2)}</span>
+            : <span key={j}>{part}</span>
+        )}
+      </div>
+    );
+  });
+}
+
 export function AgentChat() {
   const [address, setAddress] = useState("");
   const [steps, setSteps] = useState<string[]>([]);
@@ -243,7 +268,7 @@ export function AgentChat() {
                 Agent Analysis
               </div>
               <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-                {analysisText}
+                {formatAnalysis(analysisText)}
                 {running && (
                   <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-cyan-400" />
                 )}

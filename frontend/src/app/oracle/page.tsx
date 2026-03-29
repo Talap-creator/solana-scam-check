@@ -40,20 +40,18 @@ export default async function OraclePage() {
             <OracleAddToken />
           </section>
 
-          {/* Two-column: Vault + Scores */}
-          <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-            <div id="guarded-vault">
-              <VaultPanel scores={scores} />
-            </div>
-            <section className="flex flex-col">
-              <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
-                On-Chain Scores
-              </h2>
-              <div className="flex-1 overflow-auto rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)]">
-                <OracleScoresTable scores={scores} />
-              </div>
-            </section>
+          {/* Guarded Vault */}
+          <div id="guarded-vault">
+            <VaultPanel scores={scores} />
           </div>
+
+          {/* On-chain scores */}
+          <section>
+            <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
+              On-Chain Scores
+            </h2>
+            <OracleScoresTable scores={scores} />
+          </section>
 
           {/* Publish history — compact */}
           <details className="group rounded-[24px] border border-[rgba(59,130,246,0.10)] bg-[rgba(15,23,42,0.60)]">
