@@ -31,7 +31,7 @@ export default async function OraclePage() {
         ]}
         headerContent={<OracleAgentControls initialRunning={status.agent_running} />}
       >
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Hero: AI Agent Chat */}
           <AgentChat />
 
@@ -55,7 +55,7 @@ export default async function OraclePage() {
 
           {/* Publish history — compact */}
           <details className="group rounded-[24px] border border-[rgba(59,130,246,0.10)] bg-[rgba(15,23,42,0.60)]">
-            <summary className="cursor-pointer select-none px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
+            <summary className="cursor-pointer select-none px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa] sm:px-6 sm:py-4">
               Publish History ({history.length})
               <span className="ml-2 text-slate-500 group-open:hidden">▸</span>
               <span className="ml-2 text-slate-500 hidden group-open:inline">▾</span>

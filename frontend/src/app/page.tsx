@@ -263,12 +263,12 @@ export default async function Home() {
           <section className="bg-[#3b82f6]/5 py-20" id="engine">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="mb-16 text-center">
-                <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-100">Risk Intelligence Engine</h2>
+                <h2 className="mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Risk Intelligence Engine</h2>
                 <p className="text-slate-400">Five pillars of automated security auditing</p>
               </div>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 md:grid-cols-3 lg:grid-cols-5">
                 {engineCards.map((card) => (
-                  <article key={card.title} className="group relative rounded-xl border border-[#3b82f6]/10 bg-[#020617] p-6 transition-all hover:border-[#3b82f6]/40 hover:shadow-lg hover:shadow-[#3b82f6]/5">
+                  <article key={card.title} className="group relative rounded-xl border border-[#3b82f6]/10 bg-[#020617] p-4 transition-all hover:border-[#3b82f6]/40 hover:shadow-lg hover:shadow-[#3b82f6]/5 sm:p-6">
                     <AppIcon className="mb-4 h-10 w-10 text-[#3b82f6]" name={card.icon} />
                     <h3 className="mb-2 text-lg font-bold">{card.title}</h3>
                     <p className="text-sm leading-relaxed text-slate-400">{card.copy}</p>
@@ -282,7 +282,7 @@ export default async function Home() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div>
-                  <h2 className="text-3xl font-bold tracking-tight text-slate-100">Live Solana Launch Feed</h2>
+                  <h2 className="text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Live Solana Launch Feed</h2>
                   <p className="mt-2 text-slate-400">Latest token launches monitored by SolanaTrust</p>
                 </div>
                 <Link className="flex items-center gap-2 rounded-lg border border-[#3b82f6]/20 px-4 py-2 text-sm font-semibold text-[#3b82f6] hover:bg-[#3b82f6]/10" href="/coins">
@@ -294,33 +294,33 @@ export default async function Home() {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-[#3b82f6]/5 text-xs font-semibold uppercase tracking-wider text-slate-400">
                     <tr>
-                      <th className="px-6 py-4">Token Name</th>
-                      <th className="px-6 py-4">Launch Time</th>
-                      <th className="px-6 py-4">Liquidity</th>
-                      <th className="px-6 py-4">Risk Score</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
+                      <th className="px-3 py-3 sm:px-6 sm:py-4">Token Name</th>
+                      <th className="hidden px-3 py-3 sm:table-cell sm:px-6 sm:py-4">Launch Time</th>
+                      <th className="hidden px-3 py-3 md:table-cell sm:px-6 sm:py-4">Liquidity</th>
+                      <th className="px-3 py-3 sm:px-6 sm:py-4">Risk Score</th>
+                      <th className="px-3 py-3 text-right sm:px-6 sm:py-4">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#3b82f6]/5">
                     {feedPreview.map((item) => (
                       <tr key={item.id} className="transition-colors hover:bg-[#3b82f6]/5">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6]/20 font-bold text-[#3b82f6]">
+                        <td className="px-3 py-3 sm:px-6 sm:py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3b82f6]/20 text-sm font-bold text-[#3b82f6] sm:h-8 sm:w-8">
                               {item.displayName.slice(0, 1)}
                             </div>
-                            <span className="font-medium text-slate-100">{item.displayName}</span>
+                            <span className="truncate font-medium text-slate-100">{item.displayName}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-slate-400">{item.refreshedAt}</td>
-                        <td className="px-6 py-4 text-slate-400">{item.liquidity}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold ${riskTone(item.score)}`}>
+                        <td className="hidden px-3 py-3 text-slate-400 sm:table-cell sm:px-6 sm:py-4">{item.refreshedAt}</td>
+                        <td className="hidden px-3 py-3 text-slate-400 md:table-cell sm:px-6 sm:py-4">{item.liquidity}</td>
+                        <td className="px-3 py-3 sm:px-6 sm:py-4">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold sm:text-sm ${riskTone(item.score)}`}>
                             <span className={`h-1.5 w-1.5 rounded-full ${riskDot(item.score)}`} />
                             {item.score}/100
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-3 py-3 text-right sm:px-6 sm:py-4">
                           <Link className="text-[#3b82f6] hover:underline" href={`/report/${item.entityType}/${item.id}`}>
                             View Audit
                           </Link>
@@ -336,12 +336,12 @@ export default async function Home() {
           <section className="bg-[#3b82f6]/5 py-20">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="mb-16 text-center">
-                <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-100">Who is SolanaTrust for?</h2>
+                <h2 className="mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Who is SolanaTrust for?</h2>
                 <p className="text-slate-400">Scalable security intelligence for every stakeholder</p>
               </div>
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-2 lg:grid-cols-4">
                 {audienceCards.map(([title, copy, icon]) => (
-                  <article key={title} className="flex flex-col items-center rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8 text-center">
+                  <article key={title} className="flex flex-col items-center rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 text-center sm:p-8">
                     <div className="mb-6 flex size-16 items-center justify-center rounded-full bg-[#3b82f6]/10">
                       <AppIcon className="h-8 w-8 text-[#3b82f6]" name={icon} />
                     </div>
@@ -359,7 +359,7 @@ export default async function Home() {
                 <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
                   Core Team
                 </span>
-                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">Team</h2>
+                <h2 className="mt-4 mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Team</h2>
                 <p className="mx-auto max-w-2xl text-slate-400">
                   Built by operators focused on product delivery, infrastructure, and Web3 execution.
                 </p>
@@ -368,7 +368,7 @@ export default async function Home() {
                 {teamMembers.map((member) => (
                   <article
                     key={member.name}
-                    className={`overflow-hidden rounded-[28px] border border-[#3b82f6]/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.96))] p-8 shadow-[0_24px_60px_rgba(2,6,23,0.18)]`}
+                    className={`overflow-hidden rounded-[28px] border border-[#3b82f6]/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.96))] p-5 shadow-[0_24px_60px_rgba(2,6,23,0.18)] sm:p-8`}
                   >
                     <div className="-mx-8 -mt-8 mb-8 px-8 py-6" style={{ backgroundImage: member.accent }}>
                       <div className="flex items-start gap-4">
@@ -416,16 +416,16 @@ export default async function Home() {
                 <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
                   On-Chain Oracle
                 </span>
-                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">AI Risk Oracle</h2>
+                <h2 className="mt-4 mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">AI Risk Oracle</h2>
                 <p className="mx-auto max-w-2xl text-slate-400">
                   Autonomous AI agent publishes risk scores on-chain. Smart contracts read them to protect your funds in real time.
                 </p>
               </div>
 
-              <div className="grid gap-8 lg:grid-cols-3">
-                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8">
-                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
-                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="radar" />
+              <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="radar" />
                   </div>
                   <h3 className="mb-3 text-xl font-bold">AI Scores Tokens</h3>
                   <p className="text-sm leading-relaxed text-slate-400">
@@ -433,9 +433,9 @@ export default async function Home() {
                   </p>
                 </article>
 
-                <article className="rounded-2xl border border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.15),rgba(15,23,42,0.98))] p-8 shadow-[0_24px_70px_rgba(59,130,246,0.1)]">
-                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
-                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="shield" />
+                <article className="rounded-2xl border border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.15),rgba(15,23,42,0.98))] p-5 shadow-[0_24px_70px_rgba(59,130,246,0.1)] sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="shield" />
                   </div>
                   <h3 className="mb-3 text-xl font-bold">Published On-Chain</h3>
                   <p className="text-sm leading-relaxed text-slate-400">
@@ -443,9 +443,9 @@ export default async function Home() {
                   </p>
                 </article>
 
-                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-8">
-                  <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-[#3b82f6]/10">
-                    <AppIcon className="h-7 w-7 text-[#3b82f6]" name="wallet" />
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="wallet" />
                   </div>
                   <h3 className="mb-3 text-xl font-bold">Guarded Vaults</h3>
                   <p className="text-sm leading-relaxed text-slate-400">
@@ -455,19 +455,19 @@ export default async function Home() {
               </div>
 
               <div className="mt-10 flex flex-col items-center gap-4">
-                <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] px-6 py-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
                   <div className="flex gap-1">
                     <div className="h-2 w-8 rounded-full bg-emerald-500/60" />
                     <div className="h-2 w-6 rounded-full bg-yellow-500/60" />
                     <div className="h-2 w-4 rounded-full bg-red-500/60" />
                   </div>
-                  <span className="text-sm text-slate-300">AI Score</span>
+                  <span className="text-xs text-slate-300 sm:text-sm">AI Score</span>
                   <span className="text-slate-500">&rarr;</span>
-                  <span className="text-sm text-slate-300">Solana PDA</span>
+                  <span className="text-xs text-slate-300 sm:text-sm">Solana PDA</span>
                   <span className="text-slate-500">&rarr;</span>
-                  <span className="text-sm text-slate-300">GuardedSwap</span>
+                  <span className="text-xs text-slate-300 sm:text-sm">GuardedSwap</span>
                   <span className="text-slate-500">&rarr;</span>
-                  <span className="text-sm font-bold text-emerald-400">Protected</span>
+                  <span className="text-xs font-bold text-emerald-400 sm:text-sm">Protected</span>
                 </div>
                 <Link
                   className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition hover:brightness-110"
@@ -487,7 +487,7 @@ export default async function Home() {
                 <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
                   Access Tiers
                 </span>
-                <h2 className="mt-4 mb-4 text-3xl font-bold tracking-tight text-slate-100">Pricing</h2>
+                <h2 className="mt-4 mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Pricing</h2>
                 <p className="mx-auto max-w-2xl text-slate-400">
                   Simple access tiers for individual users, active traders, and enterprise teams.
                 </p>
@@ -510,7 +510,7 @@ export default async function Home() {
                   return (
                   <article
                     key={plan.key}
-                    className={`rounded-2xl border p-8 ${
+                    className={`rounded-2xl border p-5 sm:p-8 ${
                       plan.featured
                         ? "border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.22),rgba(15,23,42,0.98))] shadow-[0_24px_70px_rgba(59,130,246,0.16)]"
                         : "border-[#3b82f6]/10 bg-[#020617]"
@@ -577,7 +577,7 @@ export default async function Home() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid items-center gap-16 lg:grid-cols-2">
                 <div className="space-y-6">
-                  <h2 className="text-4xl font-bold tracking-tight text-slate-100">Built for Developers</h2>
+                  <h2 className="text-2xl font-bold tracking-tight text-slate-100 sm:text-4xl">Built for Developers</h2>
                   <p className="text-lg text-slate-400">
                     Integrate SolanaTrust into your project with just a few lines of code. Our low-latency API provides real-time risk assessments for any Solana mint address.
                   </p>
@@ -632,8 +632,8 @@ async function checkRisk(mintAddress) {
 
         <footer className="border-t border-[#3b82f6]/10 py-12">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 grid gap-12 md:grid-cols-4">
-              <div className="col-span-2">
+            <div className="mb-12 grid gap-8 sm:gap-12 md:grid-cols-4">
+              <div className="md:col-span-2">
                 <div className="mb-6 flex items-center gap-2 text-[#3b82f6]">
                   <BrandMark />
                   <h2 className="text-lg font-bold tracking-tight text-slate-100">SolanaTrust</h2>

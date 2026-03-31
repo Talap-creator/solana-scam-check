@@ -172,7 +172,7 @@ export function AgentChat() {
   const hasContent = steps.length > 0 || analysisText || verdict || error;
 
   return (
-    <section className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
+    <section className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 sm:p-6">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
         <div className="relative flex h-3 w-3">
@@ -188,7 +188,7 @@ export function AgentChat() {
       </div>
 
       {/* Input row */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input
           type="text"
           value={address}
@@ -238,7 +238,7 @@ export function AgentChat() {
       {hasContent && (
         <div
           ref={scrollRef}
-          className="max-h-[480px] overflow-y-auto rounded-xl border border-[rgba(59,130,246,0.1)] bg-[rgba(2,6,23,0.5)] p-4"
+          className="max-h-[60vh] overflow-y-auto rounded-xl border border-[rgba(59,130,246,0.1)] bg-[rgba(2,6,23,0.5)] p-3 sm:max-h-[480px] sm:p-4"
         >
           {/* Steps */}
           {steps.map((text, i) => (
@@ -314,7 +314,7 @@ export function AgentChat() {
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   onClick={() => scrollToSection("oracle-add-token")}
                   className="flex-1 rounded-lg border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.1)] px-3 py-2 text-xs font-semibold text-[#60a5fa] transition-colors hover:bg-[rgba(59,130,246,0.2)]"

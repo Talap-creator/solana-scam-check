@@ -271,7 +271,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
   const criticalTokens = scores.filter(s => s.risk_level === "critical" || (s.score != null && s.score >= 75));
 
   return (
-    <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
+    <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
           Guarded Vault
@@ -333,7 +333,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
       ) : (
         <div className="space-y-4">
           {/* Vault stats */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-[rgba(59,130,246,0.12)] bg-white/[0.03] px-3 py-2">
               <p className="text-xs text-slate-500">Balance</p>
               <p className="mt-1 text-lg font-bold">{(vault.balance / LAMPORTS_PER_SOL).toFixed(4)} SOL</p>
@@ -366,7 +366,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
           </div>
 
           {/* Deposit */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <input
               type="number"
               min="0.001"
@@ -420,8 +420,8 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
                   const willBlock = vault && score > vault.riskThreshold;
                   const label = `swap_${t.token_address.slice(0, 8)}`;
                   return (
-                    <div key={t.token_address} className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div key={t.token_address} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <span className="truncate text-sm text-slate-300">
                           {t.display_name || `${t.token_address.slice(0, 8)}...`}
                         </span>
@@ -435,7 +435,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
                       <button
                         onClick={() => guardedSwap(t.token_address, t.score)}
                         disabled={!!loading || vault.balance === 0}
-                        className="shrink-0 rounded-lg border border-[rgba(59,130,246,0.3)] bg-[rgba(37,99,235,0.1)] px-3 py-1.5 text-xs font-bold text-blue-300 disabled:opacity-50 hover:bg-[rgba(37,99,235,0.2)]"
+                        className="w-full shrink-0 rounded-lg border border-[rgba(59,130,246,0.3)] bg-[rgba(37,99,235,0.1)] px-3 py-1.5 text-xs font-bold text-blue-300 disabled:opacity-50 hover:bg-[rgba(37,99,235,0.2)] sm:w-auto"
                       >
                         {loading === label ? "Sending..." : "Simulate Swap"}
                       </button>

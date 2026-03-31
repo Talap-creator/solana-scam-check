@@ -54,6 +54,22 @@ async function proxyApiRequest(request: NextRequest, context: RouteContext) {
   }
 
   const upstreamResponse = await fetch(upstreamUrl.toString(), init);
+
+  // SSE: stream through without buffering
+  const isSSE = upstreamResponse.headers.get("content-type")?.includes("text/event-stream");
+  if (isSSE && upstreamResponse.body) {
+    const response = new NextResponse(upstreamResponse.body as ReadableStream, {
+      status: upstreamResponse.status,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-store",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+    return response;
+  }
+
   const payload = await upstreamResponse.text();
   const response = new NextResponse(payload, { status: upstreamResponse.status });
 

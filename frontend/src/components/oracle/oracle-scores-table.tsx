@@ -26,7 +26,7 @@ function timeAgo(iso: string): string {
 export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
   if (scores.length === 0) {
     return (
-      <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-8 text-center text-sm text-slate-400">
+      <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 text-center text-sm text-slate-400 sm:p-8">
         No tokens monitored yet. Add a token address above to start.
       </div>
     );
@@ -37,12 +37,12 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[rgba(59,130,246,0.12)] text-left text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
-            <th className="px-6 py-4">Token</th>
-            <th className="px-6 py-4">Score</th>
-            <th className="px-6 py-4">Risk</th>
-            <th className="px-6 py-4">Confidence</th>
-            <th className="px-6 py-4">Last Published</th>
-            <th className="px-6 py-4">TX</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Token</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Score</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Risk</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Confidence</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Last Published</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">TX</th>
           </tr>
         </thead>
         <tbody>
@@ -51,7 +51,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
               key={s.token_address}
               className="border-b border-[rgba(59,130,246,0.06)] transition-colors hover:bg-[rgba(59,130,246,0.04)]"
             >
-              <td className="px-6 py-4">
+              <td className="px-3 py-3 sm:px-6 sm:py-4">
                 <div>
                   <span className="font-mono text-slate-200">
                     {shortenAddress(s.token_address)}
@@ -61,7 +61,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
                   )}
                 </div>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-3 py-3 sm:px-6 sm:py-4">
                 <div>
                   {s.score !== null ? (
                     <span className="font-[family:var(--font-display)] text-xl font-black">
@@ -77,7 +77,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
                   )}
                 </div>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-3 py-3 sm:px-6 sm:py-4">
                 {s.risk_level ? (
                   <span
                     className={`inline-block rounded-full border px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${riskColors[s.risk_level] ?? "text-slate-400"}`}
@@ -88,13 +88,13 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
                   <span className="text-slate-500">--</span>
                 )}
               </td>
-              <td className="px-6 py-4 text-slate-300">
+              <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-300">
                 {s.confidence !== null ? `${Math.round(s.confidence * 100)}%` : "--"}
               </td>
-              <td className="px-6 py-4 text-slate-400">
+              <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-400">
                 {s.last_published_at ? timeAgo(s.last_published_at) : "never"}
               </td>
-              <td className="px-6 py-4">
+              <td className="px-3 py-3 sm:px-6 sm:py-4">
                 {s.tx_signature ? (
                   <a
                     href={`https://explorer.solana.com/tx/${s.tx_signature}?cluster=devnet`}

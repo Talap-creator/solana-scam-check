@@ -66,7 +66,7 @@ export function OracleAddToken() {
   );
 
   return (
-    <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-6">
+    <article className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 sm:p-6">
       <h2 className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
         Add Token to Monitor
       </h2>
