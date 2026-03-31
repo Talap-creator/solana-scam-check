@@ -291,11 +291,59 @@ def parse_pair(pair: dict, rpc_info: dict | None) -> dict:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+def enrich_csv_with_rpc(csv_path: str):
+    """Add RPC data (mint/freeze authority) to an existing CSV."""
+    import shutil
+
+    log(f"Enriching {csv_path} with Solana RPC data...")
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+    # Find rows missing RPC data
+    need_rpc = [r for r in rows if r.get("mint_authority_exists", "-1") == "-1"]
+    log(f"  {len(need_rpc)}/{len(rows)} rows need RPC enrichment")
+
+    if not need_rpc:
+        log("  Nothing to enrich")
+        return
+
+    mints = [r["mint"] for r in need_rpc]
+    client = httpx.Client(timeout=20, follow_redirects=True)
+    rpc_data = batch_get_mint_info(client, mints)
+
+    enriched = 0
+    for row in rows:
+        rpc = rpc_data.get(row["mint"])
+        if rpc and rpc["mint_authority_exists"] != -1:
+            row["mint_authority_exists"] = rpc["mint_authority_exists"]
+            row["freeze_authority_exists"] = rpc["freeze_authority_exists"]
+            row["supply"] = rpc["supply"]
+            row["decimals"] = rpc["decimals"]
+            enriched += 1
+
+    # Backup and write
+    shutil.copy2(csv_path, csv_path + ".bak")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    log(f"  Enriched {enriched}/{len(need_rpc)} rows. Saved to {csv_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Parse Solana tokens from DexScreener + RPC")
     parser.add_argument("--count", type=int, default=500, help="Target number of unique tokens")
     parser.add_argument("--output", type=str, default=None, help="Output CSV path")
+    parser.add_argument("--skip-rpc", action="store_true", help="Skip Solana RPC enrichment (faster)")
+    parser.add_argument("--enrich-rpc", type=str, default=None, help="Enrich existing CSV with RPC data")
     args = parser.parse_args()
+
+    # Enrich mode: add RPC data to existing CSV
+    if args.enrich_rpc:
+        enrich_csv_with_rpc(args.enrich_rpc)
+        return
 
     target = args.count
     out_path = args.output or str(
@@ -360,11 +408,15 @@ def main():
     log(f"Phase 1 done: {len(seen_mints)} unique tokens discovered")
 
     # Phase 2: Enrich with Solana RPC (mint/freeze authority)
-    log("Phase 2: Fetching on-chain authority data from Solana RPC...")
-    all_mints = list(best_pairs.keys())
-    rpc_data = batch_get_mint_info(client, all_mints)
-    rpc_ok = sum(1 for v in rpc_data.values() if v["mint_authority_exists"] != -1)
-    log(f"  RPC data: {rpc_ok}/{len(all_mints)} tokens enriched")
+    rpc_data: dict[str, dict] = {}
+    if args.skip_rpc:
+        log("Phase 2: SKIPPED (--skip-rpc)")
+    else:
+        log("Phase 2: Fetching on-chain authority data from Solana RPC...")
+        all_mints = list(best_pairs.keys())
+        rpc_data = batch_get_mint_info(client, all_mints)
+        rpc_ok = sum(1 for v in rpc_data.values() if v["mint_authority_exists"] != -1)
+        log(f"  RPC data: {rpc_ok}/{len(all_mints)} tokens enriched")
 
     # Phase 3: Write CSV
     log(f"Phase 3: Writing {len(best_pairs)} rows to {out_path}...")
