@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from ..schemas import CheckOverview
 from .explainability import ExplanationEngine
 from .feature_extractor import TokenFeatureExtractor
+from .ml.inference import MLInferenceEngine
 from .schemas import (
     BehaviourAnalysisResult,
     ModelVersionInfo,
@@ -94,6 +95,7 @@ class TokenScoringPipeline:
     def __init__(self) -> None:
         self.extractor = TokenFeatureExtractor()
         self.explanation = ExplanationEngine()
+        self.ml_engine = MLInferenceEngine()
         self.version = "live_report_adapter_v21"
 
     def run(self, *, report: CheckOverview) -> PipelineResult:
@@ -103,6 +105,15 @@ class TokenScoringPipeline:
         liquidity_rug_component_value = (
             int(liquidity_rug_component) if liquidity_rug_component and liquidity_rug_component.isdigit() else None
         )
+
+        # ML model prediction
+        ml_probability = self.ml_engine.predict_probability(features, rule_score)
+        base_rug_probability = report.rug_probability / 100.0
+        if self.ml_engine.has_model:
+            # Blend rule-based probability with ML model
+            final_probability = 0.6 * base_rug_probability + 0.4 * ml_probability
+        else:
+            final_probability = base_rug_probability
 
         risk_increasers = [
             _to_contributor(
@@ -130,18 +141,20 @@ class TokenScoringPipeline:
             summary=report.summary,
         )
 
+        blended_score = int(final_probability * 100)
+
         response = TokenScanV2Response(
             entity_address=features.token_address,
-            score=report.score,
-            rug_probability=round(report.rug_probability, 2),
+            score=blended_score,
+            rug_probability=round(final_probability * 100, 2),
             technical_risk=report.technical_risk,
             distribution_risk=report.distribution_risk,
             market_execution_risk=report.market_execution_risk,
             market_maturity=report.market_maturity,
             behaviour_risk=report.behaviour_risk,
             rule_score=round(rule_score, 2),
-            ml_probability=round(report.rug_probability / 100.0, 4),
-            final_probability=round(report.rug_probability / 100.0, 4),
+            ml_probability=round(ml_probability, 4),
+            final_probability=round(final_probability, 4),
             risk_level=report.status,
             confidence=report.confidence,
             low_confidence=report.confidence < 0.45,
@@ -155,16 +168,16 @@ class TokenScoringPipeline:
             ),
             top_findings=risk_increasers[:6],
             model=ModelVersionInfo(
-                version=self.version,
+                version=self.ml_engine.version if self.ml_engine.has_model else self.version,
                 rule_engine_version=self.version,
-                calibration_version="integrated_maturity_correction",
+                calibration_version="ml_blended" if self.ml_engine.has_model else "integrated_maturity_correction",
             ),
             explanation=explanation,
             behaviour_analysis=_map_behaviour_analysis(report),
             trade_caution=_map_trade_caution(report),
             feature_metadata={
                 "feature_version": self.extractor.feature_version,
-                "model_version": self.version,
+                "model_version": self.ml_engine.version,
                 "scoring_source": "backend.app.services.analyzer.compute_token_scoring_v21",
                 "summary_source": "backend.app.services.analyzer.build_token_summary",
             },

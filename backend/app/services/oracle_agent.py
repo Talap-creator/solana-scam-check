@@ -14,8 +14,10 @@ from sqlalchemy.orm import Session
 
 from ..config import Settings
 from ..models import OracleMonitoredToken, OraclePublishEvent
+from ..scoring.ml.inference import MLInferenceEngine
 from .solana_publisher import SolanaPublisher
 from .ai_scorer import ai_score_token
+from .dexscreener import DexScreenerClient, pick_most_liquid_pair
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,8 @@ class OracleAgent:
         self._last_run: datetime | None = None
         self._total_published: int = 0
         self._errors: int = 0
+        self._ml_engine = MLInferenceEngine()
+        self._dex_client = DexScreenerClient()
 
     @property
     def is_running(self) -> bool:
@@ -232,17 +236,56 @@ class OracleAgent:
         except Exception as exc:
             logger.warning("Feature extraction failed for %s: %s", token_address[:12], exc)
 
-        # Step 2: AI scoring via Claude
-        ai_result = await ai_score_token(token_address, features if isinstance(features, dict) else {})
+        # Step 2: ML model scoring via DexScreener features
+        ml_probability = -1.0
+        if self._ml_engine.has_model:
+            try:
+                pairs = self._dex_client.get_token_pairs("solana", token_address)
+                pair = pick_most_liquid_pair(pairs)
+                if pair:
+                    ml_probability = self._ml_engine.predict_from_dexscreener(pair)
+                    logger.info(
+                        "ML model scored %s: rug_probability=%.2f%%",
+                        token_address[:12], ml_probability * 100,
+                    )
+            except Exception as exc:
+                logger.warning("ML scoring failed for %s: %s", token_address[:12], exc)
+
+        # Step 3: AI scoring via Claude
+        features_dict = features if isinstance(features, dict) else {}
+        if ml_probability >= 0:
+            features_dict["ml_rug_probability"] = round(ml_probability * 100, 1)
+        ai_result = await ai_score_token(token_address, features_dict)
         if ai_result:
+            # Blend AI score with ML probability if available
+            if ml_probability >= 0:
+                ai_score = ai_result["score"]
+                ml_score = int(ml_probability * 100)
+                blended = int(0.6 * ai_score + 0.4 * ml_score)
+                ai_result["score"] = blended
+                ai_result["risk_level"] = _risk_level_from_score(blended)
+                ai_result["ml_probability"] = round(ml_probability, 4)
             logger.info(
-                "AI agent scored %s: %d (%s) — %s",
+                "AI+ML scored %s: %d (%s) — %s",
                 token_address[:12], ai_result["score"], ai_result["risk_level"],
                 ai_result.get("reasoning", ""),
             )
             return ai_result
 
-        # Step 3: Fall back to rule engine
+        # Step 4: ML-only fallback (no AI available)
+        if ml_probability >= 0:
+            ml_score = int(ml_probability * 100)
+            result = {
+                "score": ml_score,
+                "risk_level": _risk_level_from_score(ml_score),
+                "confidence": 0.7,
+                "ml_probability": round(ml_probability, 4),
+                "reasoning": f"ML model rug probability: {ml_probability * 100:.1f}%",
+            }
+            logger.info("ML-only score for %s: %s", token_address[:12], result)
+            return result
+
+        # Step 5: Fall back to rule engine
         if rule_score:
             logger.info("Using rule engine score for %s: %s", token_address[:12], rule_score)
             return rule_score

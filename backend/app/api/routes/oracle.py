@@ -250,19 +250,43 @@ async def agent_analyze(req: AgentAnalyzeRequest):
             yield f"data: {json.dumps(step)}\n\n"
             await asyncio.sleep(0.6)
 
-        # Phase 2: Try to get real features from the pipeline
+        # Phase 2: ML model scoring via DexScreener
         features: dict = {}
+        ml_score_data: dict | None = None
         try:
-            from ...services.repository import ReportRepository
-            # Try getting real data — but don't fail if unavailable
+            from ...scoring.ml.inference import MLInferenceEngine
+            from ...services.dexscreener import DexScreenerClient, pick_most_liquid_pair
+
+            ml_engine = MLInferenceEngine()
+            if ml_engine.has_model:
+                dex = DexScreenerClient()
+                pairs = dex.get_token_pairs("solana", req.token_address)
+                pair = pick_most_liquid_pair(pairs)
+                if pair:
+                    ml_prob = ml_engine.predict_from_dexscreener(pair)
+                    liq = (pair.get("liquidity") or {}).get("usd", 0)
+                    vol = (pair.get("volume") or {}).get("h24", 0)
+                    name = (pair.get("baseToken") or {}).get("name", "Unknown")
+                    symbol = (pair.get("baseToken") or {}).get("symbol", "???")
+                    ml_score_data = {"probability": ml_prob, "score": int(ml_prob * 100)}
+                    features = {
+                        "name": name, "symbol": symbol,
+                        "liquidity_usd": float(liq), "volume_24h": float(vol),
+                        "ml_rug_probability": round(ml_prob * 100, 1),
+                    }
+                    yield f'data: {json.dumps({"type": "step", "text": f"ML model: {name} ({symbol}) — rug probability {ml_prob*100:.1f}%"})}\n\n'
+                    await asyncio.sleep(0.4)
         except Exception:
             pass
 
         # Phase 3: Stream AI analysis
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            yield f'data: {json.dumps({"type": "analysis", "text": "AI agent unavailable (no API key). Using rule-based fallback."})}\n\n'
-            yield f'data: {json.dumps({"type": "verdict", "score": 50, "risk_level": "medium", "reasoning": "Rule-based assessment: moderate risk."})}\n\n'
+            score = ml_score_data["score"] if ml_score_data else 50
+            risk = "critical" if score >= 75 else "high" if score >= 50 else "medium" if score >= 25 else "low"
+            reasoning = f"ML model rug probability: {ml_score_data['probability']*100:.1f}%" if ml_score_data else "Rule-based assessment: moderate risk."
+            yield f'data: {json.dumps({"type": "analysis", "text": f"AI agent unavailable (no API key). Using ML model fallback. {reasoning}"})}\n\n'
+            yield f'data: {json.dumps({"type": "verdict", "score": score, "risk_level": risk, "reasoning": reasoning})}\n\n'
             yield "data: [DONE]\n\n"
             return
 
@@ -311,11 +335,20 @@ async def agent_analyze(req: AgentAnalyzeRequest):
                 if last_brace >= 0:
                     json_str = full_text[last_brace : full_text.rfind("}") + 1]
                     verdict = json.loads(json_str)
-                    yield f'data: {json.dumps({"type": "verdict", "score": verdict.get("score", 50), "risk_level": verdict.get("risk_level", "medium"), "reasoning": verdict.get("reasoning", "")})}\n\n'
+                    ai_score = verdict.get("score", 50)
+                    # Blend AI score with ML model if available
+                    if ml_score_data:
+                        blended = int(0.6 * ai_score + 0.4 * ml_score_data["score"])
+                        risk = "critical" if blended >= 75 else "high" if blended >= 50 else "medium" if blended >= 25 else "low"
+                        yield f'data: {json.dumps({"type": "verdict", "score": blended, "risk_level": risk, "reasoning": verdict.get("reasoning", ""), "ml_probability": ml_score_data["probability"]})}\n\n'
+                    else:
+                        yield f'data: {json.dumps({"type": "verdict", "score": ai_score, "risk_level": verdict.get("risk_level", "medium"), "reasoning": verdict.get("reasoning", "")})}\n\n'
                 else:
                     raise ValueError("No JSON found")
             except Exception:
-                yield f'data: {json.dumps({"type": "verdict", "score": 50, "risk_level": "medium", "reasoning": "Could not parse verdict"})}\n\n'
+                score = ml_score_data["score"] if ml_score_data else 50
+                risk = "critical" if score >= 75 else "high" if score >= 50 else "medium" if score >= 25 else "low"
+                yield f'data: {json.dumps({"type": "verdict", "score": score, "risk_level": risk, "reasoning": "ML model assessment"})}\n\n'
 
         except Exception as e:
             yield f'data: {json.dumps({"type": "error", "text": str(e)})}\n\n'

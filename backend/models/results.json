@@ -1,0 +1,30 @@
+{
+  "total_tokens": 2350,
+  "rugged": 434,
+  "legit": 1916,
+  "accuracy": 0.8570212765957447,
+  "roc_auc": 0.8988965105875335,
+  "true_positives": 274,
+  "false_positives": 176,
+  "true_negatives": 1740,
+  "false_negatives": 160,
+  "precision_rug": 0.6088888888888889,
+  "recall_rug": 0.631336405529954,
+  "top_features": {
+    "liquidity_usd": 0.6463543772697449,
+    "fdv": 0.03568591922521591,
+    "volume_1h": 0.028216848149895668,
+    "volume_5m": 0.02073383517563343,
+    "price_native": 0.016759755089879036,
+    "txns_5m_sells": 0.016462812200188637,
+    "volume_6h": 0.013826829381287098,
+    "pair_age_hours": 0.013704626820981503,
+    "decimals": 0.01264857966452837,
+    "has_telegram": 0.011509226635098457,
+    "volume_24h": 0.011319026350975037,
+    "buy_sell_ratio_24h": 0.011064269579946995,
+    "txns_24h_buys": 0.010859067551791668,
+    "liquidity_base": 0.010193911381065845,
+    "txns_24h_sells": 0.01010696031153202
+  }
+}

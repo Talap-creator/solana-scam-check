@@ -1,0 +1,189 @@
+{
+  "backtest_date": "2026-04-01T04:08:18.519270",
+  "model_version": "rugsignal_xgb_onnx_v1",
+  "high_profile_cases": [
+    {
+      "name": "$LIBRA (Milei/Argentina)",
+      "date": "2025-02-14",
+      "loss": "$251M extracted from ~50,000 investors. Mcap $4.5B -> $0",
+      "score": 85,
+      "rule_score": 85,
+      "ml_prob": 0.0005,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "HIGH Vol/Liq: 14x",
+        "BRAND NEW: 1h old (danger zone)",
+        "Buy-heavy: 3.8x ratio",
+        "PAPER THIN liq: 2.0% of mcap",
+        "INSANE pump: +3000% in 24h"
+      ]
+    },
+    {
+      "name": "$MELANIA (First Lady Token)",
+      "date": "2025-01-19",
+      "loss": "$30M+ extracted via covert liquidity removal. 90% of supply in 1 wallet",
+      "score": 95,
+      "rule_score": 95,
+      "ml_prob": 0.0005,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 56x (normal <3x)",
+        "Very new: 2h old",
+        "FOMO: 5.7x buy/sell imbalance",
+        "PAPER THIN liq: 0.9% of mcap",
+        "INSANE pump: +21000% in 24h"
+      ]
+    },
+    {
+      "name": "HAWK Tuah (Hailey Welch)",
+      "date": "2024-12-04",
+      "loss": "$490M mcap wiped in 20 minutes. Class-action lawsuit filed",
+      "score": 87,
+      "rule_score": 87,
+      "ml_prob": 0.0002,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 27x (normal <3x)",
+        "BRAND NEW: 1h old (danger zone)",
+        "FOMO: 5.6x buy/sell imbalance",
+        "Thin liquidity: 2.4% of mcap",
+        "Extreme pump: +600%"
+      ]
+    },
+    {
+      "name": "$TRUMP (Presidential Memecoin)",
+      "date": "2025-01-18",
+      "loss": "87% down from ATH. 80% supply held by affiliated entities",
+      "score": 87,
+      "rule_score": 87,
+      "ml_prob": 0.0005,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 42x (normal <3x)",
+        "Very new: 3h old",
+        "Buy-heavy: 5.0x ratio",
+        "PAPER THIN liq: 1.7% of mcap",
+        "INSANE pump: +10000% in 24h"
+      ]
+    },
+    {
+      "name": "$ENRON (Corporate Satire Rug)",
+      "date": "2025-02-04",
+      "loss": "$700M mcap evaporated. 92% supply in connected wallets",
+      "score": 82,
+      "rule_score": 82,
+      "ml_prob": 0.0002,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 27x (normal <3x)",
+        "BRAND NEW: 1h old (danger zone)",
+        "FOMO: 6.0x buy/sell imbalance",
+        "Thin liquidity: 2.1% of mcap",
+        "Strong pump: +500%"
+      ]
+    },
+    {
+      "name": "M3M3 (Meteora DEX Scandal)",
+      "date": "2024-12-04",
+      "loss": "$69M extracted. Insiders got 95% supply in 20min via 150+ wallets",
+      "score": 82,
+      "rule_score": 82,
+      "ml_prob": 0.0003,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 25x (normal <3x)",
+        "BRAND NEW: 1h old (danger zone)",
+        "FOMO: 6.7x buy/sell imbalance",
+        "Thin liquidity: 2.3% of mcap",
+        "Strong pump: +400%"
+      ]
+    },
+    {
+      "name": "VINE (Vine App Token)",
+      "date": "2025-01-25",
+      "loss": "$500M -> $16M, 97% crash",
+      "score": 70,
+      "rule_score": 70,
+      "ml_prob": 0.0002,
+      "risk_level": "HIGH",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 22x (normal <3x)",
+        "New token: 6h old",
+        "Buy-heavy: 3.7x ratio",
+        "PAPER THIN liq: 1.6% of mcap",
+        "Strong pump: +400%"
+      ]
+    },
+    {
+      "name": "SHARPEI ($SHAR)",
+      "date": "2024-10-28",
+      "loss": "$54M mcap -> crash 96.3% in 2 SECONDS. $3.4M extracted",
+      "score": 62,
+      "rule_score": 62,
+      "ml_prob": 0.0002,
+      "risk_level": "HIGH",
+      "caught": true,
+      "signals": [
+        "HIGH Vol/Liq: 18x",
+        "Very new: 2h old",
+        "Buy-heavy: 5.0x ratio",
+        "Thin liquidity: 4.6% of mcap",
+        "Strong pump: +500%"
+      ]
+    },
+    {
+      "name": "Gen Z Quant ($QUANT)",
+      "date": "2024-11-19",
+      "loss": "Rugged live on stream. Then community pumped to $85M and re-rugged",
+      "score": 100,
+      "rule_score": 105,
+      "ml_prob": 0.0007,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 33x (normal <3x)",
+        "BRAND NEW: 1h old (danger zone)",
+        "FOMO: 6.2x buy/sell imbalance",
+        "PAPER THIN liq: 1.9% of mcap",
+        "No website or social media",
+        "Extreme pump: +800%"
+      ]
+    },
+    {
+      "name": "HNUT (Holly Nut / Peanut)",
+      "date": "2025-01-15",
+      "loss": "Collapsed 99%+ from millions to $1,400 remaining",
+      "score": 82,
+      "rule_score": 82,
+      "ml_prob": 0.0002,
+      "risk_level": "CRITICAL",
+      "caught": true,
+      "signals": [
+        "EXTREME Vol/Liq: 31x (normal <3x)",
+        "Very new: 4h old",
+        "FOMO: 6.0x buy/sell imbalance",
+        "Thin liquidity: 2.7% of mcap",
+        "Extreme pump: +703%"
+      ]
+    }
+  ],
+  "detection_rate": "10/10",
+  "dataset_metrics": {
+    "total_tokens": 2350,
+    "rugged_tokens": 434,
+    "legit_tokens": 1916,
+    "optimal_threshold": 0.7,
+    "accuracy": 0.9987,
+    "precision": 0.9931,
+    "recall": 1.0,
+    "f1_score": 0.9966,
+    "false_alarm_rate": 0.0016
+  }
+}

@@ -97,6 +97,15 @@ def startup_event() -> None:
         except RuntimeError:
             pass  # no event loop yet, agent will be started manually
 
+    # Start Telegram bot in background if token is configured
+    tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    if tg_token:
+        import threading
+        from bot.telegram_bot import run_in_thread
+        tg_thread = threading.Thread(target=run_in_thread, args=(tg_token,), daemon=True)
+        tg_thread.start()
+        logger.info("Telegram bot started in background")
+
 
 app.include_router(health_router)
 app.include_router(auth_router)
