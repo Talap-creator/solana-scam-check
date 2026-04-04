@@ -21,3 +21,20 @@ frontend/out/
 
 backend/.venv/
 
+# Claude Code
+.claude/
+
+# ML artifacts (keep only .onnx + feature_cols.json)
+backend/models/*.pkl
+backend/models/*.joblib
+backend/models/*.json.bak
+backend/models/rugsignal_model.json
+backend/models/rugsignal_report.png
+
+# Data backups
+backend/data/*.bak
+
+# Internal docs (not for public)
+RUNNING_SERVERS.md
+TECH_SPEC.md
+
