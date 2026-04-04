@@ -197,6 +197,8 @@ rugsignal/
 |   |-- data/
 |   |   |-- dexscreener_2k.csv             # 1916 legit tokens (45 features)
 |   |   |-- rugged_tokens.csv              # 434 confirmed rugs (47 features)
+|   |-- bot/
+|   |   |-- telegram_bot.py                # Telegram bot (@solanatrust_bot)
 |   |-- tools/
 |   |   |-- backtest.py                    # Backtest vs top 10 rug pulls
 |   |   |-- parse_dexscreener.py           # Token parser (DexScreener + RPC)
@@ -298,6 +300,7 @@ ORACLE_PUBLISHER_KEYPAIR=[1,2,3...]
 ORACLE_PROGRAM_ID=HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS
 ORACLE_RPC_URL=https://api.devnet.solana.com
 HELIUS_API_KEY=...
+TELEGRAM_BOT_TOKEN=your-bot-token-from-botfather
 ```
 
 **Frontend:**
@@ -401,10 +404,35 @@ RugSignal: AI score lives in Solana PDA -> GuardedVault reads it -> **physically
 
 ---
 
+## Telegram Bot
+
+[@solanatrust_bot](https://t.me/solanatrust_bot) — instant token risk scoring in Telegram.
+
+Send any Solana token address and get:
+- ML model rug probability
+- AI-generated risk analysis (GPT-4o-mini)
+- Combined score (0-100) with risk level
+- DexScreener link
+
+```
+You:  7BgBvyjrZX1YKz4oh9mjb8ZScatkkwb8DzFx7LoiVkM3
+Bot:  ⛔ Score: 85/100 (CRITICAL)
+      ML Model: 87.3% rug probability
+      Analysis: Token shows concentrated holder distribution...
+```
+
+Run locally:
+```bash
+TELEGRAM_BOT_TOKEN=your-token BACKEND_URL=http://localhost:8000 python backend/bot/telegram_bot.py
+```
+
+---
+
 ## Live
 
 - **Website:** https://solanatrust.tech
 - **Oracle:** https://solanatrust.tech/oracle
+- **Telegram Bot:** https://t.me/solanatrust_bot
 - **Program:** [Explorer](https://explorer.solana.com/address/HXrM4MfnenFcSWiakw4A6mQAstwhpKQECGBPa7Sn4MuS?cluster=devnet)
 
 ## Team

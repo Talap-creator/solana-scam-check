@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { OracleScore } from "@/lib/api";
+import { removeOracleMonitor } from "@/lib/api";
 
 const riskColors: Record<string, string> = {
   low: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -24,6 +27,20 @@ function timeAgo(iso: string): string {
 }
 
 export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
+  const router = useRouter();
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  const handleRemove = async (address: string) => {
+    setRemoving(address);
+    try {
+      await removeOracleMonitor(address);
+      router.refresh();
+    } catch {
+      // ignore
+    } finally {
+      setRemoving(null);
+    }
+  };
   if (scores.length === 0) {
     return (
       <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 text-center text-sm text-slate-400 sm:p-8">
@@ -43,6 +60,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
             <th className="px-3 py-3 sm:px-6 sm:py-4">Confidence</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">Last Published</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">TX</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4"></th>
           </tr>
         </thead>
         <tbody>
@@ -107,6 +125,16 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
                 ) : (
                   <span className="text-slate-500">--</span>
                 )}
+              </td>
+              <td className="px-3 py-3 sm:px-6 sm:py-4">
+                <button
+                  className="rounded-lg border border-red-500/20 bg-red-500/6 px-2.5 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/15 disabled:opacity-40"
+                  disabled={removing === s.token_address}
+                  onClick={() => void handleRemove(s.token_address)}
+                  type="button"
+                >
+                  {removing === s.token_address ? "..." : "Remove"}
+                </button>
               </td>
             </tr>
           ))}

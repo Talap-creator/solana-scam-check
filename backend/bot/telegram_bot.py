@@ -324,9 +324,9 @@ def score_token(token_address: str) -> dict:
     # 5. Rule-based scoring
     rules, signals = rule_score(features)
 
-    # 6. Combine: rules + ML
+    # 6. Combine: 60% rules + 40% ML (same as main pipeline)
     if ml_prob >= 0:
-        combined = min(100, rules + int(ml_prob * 100))
+        combined = min(100, int(0.6 * rules + 0.4 * (ml_prob * 100)))
     else:
         combined = rules
 
