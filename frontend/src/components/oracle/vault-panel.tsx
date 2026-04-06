@@ -104,7 +104,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
     setLoading(label);
     setMsg("");
     try {
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
+      const { blockhash } = await connection.getLatestBlockhash("confirmed");
       const tx = new Transaction();
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
@@ -217,7 +217,7 @@ export function VaultPanel({ scores }: { scores: OracleScore[] }) {
 
   const [swapResult, setSwapResult] = useState<{ token: string; blocked: boolean; sig?: string; error?: string } | null>(null);
 
-  const guardedSwap = useCallback(async (tokenMint: string, tokenScore: number | null) => {
+  const guardedSwap = useCallback(async (tokenMint: string, _tokenScore: number | null) => {
     if (!publicKey || !vaultPda || !vaultSolPda) return;
     const mintPk = new PublicKey(tokenMint);
     const scorePda = findPDA([Buffer.from("score"), mintPk.toBuffer()]);

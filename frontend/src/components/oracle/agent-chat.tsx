@@ -37,7 +37,7 @@ function scoreColor(score: number) {
 
 function formatAnalysis(text: string) {
   // Remove trailing JSON block
-  let clean = text.replace(/\{[^{}]*"score"[^{}]*\}\s*$/, "").trim();
+  const clean = text.replace(/\{[^{}]*"score"[^{}]*\}\s*$/, "").trim();
   // Split into lines and format
   return clean.split("\n").map((line, i) => {
     const trimmed = line.trim();
@@ -67,7 +67,7 @@ export function AgentChat() {
   const [verdict, setVerdict] = useState<VerdictMessage | null>(null);
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
-  const [done, setDone] = useState(false);
+  const [, setDone] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
