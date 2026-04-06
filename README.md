@@ -12,6 +12,10 @@
 
 > Decentrathon 5.0 — National Solana Hackathon 2026 | Colosseum Frontier
 
+<p align="center">
+  <img src="docs/screenshots/landing.png" width="700" alt="RugSignal Landing Page"/>
+</p>
+
 ---
 
 ## Problem
@@ -63,6 +67,10 @@ if token_risk_score.score > vault.risk_threshold {
 | 5 | Create GuardedVault, set risk threshold |
 | 6 | Deposit devnet SOL |
 | 7 | **Simulate Swap** → contract checks score → BLOCKED or ALLOWED |
+
+<p align="center">
+  <img src="docs/screenshots/oracle.png" width="700" alt="AI Risk Oracle — on-chain scores, GuardedVault, monitoring"/>
+</p>
 
 **Live links:**
 
