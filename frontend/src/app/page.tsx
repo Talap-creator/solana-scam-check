@@ -142,11 +142,11 @@ export default async function Home() {
     status: item.status,
   }));
   const landingNav = [
+    { href: "#oracle", label: "Oracle" },
     { href: "#engine", label: "Intelligence" },
     { href: "/coins", label: "Live Feed", external: false },
-    { href: "#oracle", label: "Oracle" },
-    { href: "/developers", label: "Developers", external: false },
     { href: "#team", label: "Team" },
+    { href: "/developers", label: "Developers", external: false },
     { href: "#pricing", label: "Pricing" },
   ] as const;
 
@@ -220,13 +220,13 @@ export default async function Home() {
                 <div className="flex flex-col gap-8">
                   <div className="space-y-4">
                     <span className="inline-flex items-center rounded-full bg-[#3b82f6]/10 px-3 py-1 text-xs font-medium text-[#3b82f6] ring-1 ring-inset ring-[#3b82f6]/20">
-                      Institutional Grade Analytics
+                      AI Oracle + On-Chain Enforcement
                     </span>
                     <h1 className="text-4xl font-black leading-tight tracking-tighter text-slate-100 sm:text-5xl lg:text-7xl">
-                      Solana Onchain <span className="text-[#3b82f6]">Risk Intelligence</span>
+                      AI Oracle that <span className="text-[#3b82f6]">Blocks Rug Pulls</span>
                     </h1>
                     <p className="max-w-xl text-base text-slate-400 sm:text-lg">
-                      Real-time security analytics and risk scoring for the Solana ecosystem. Identify rugs, honey pots, and malicious contracts before they strike.
+                      3-layer AI scores tokens, publishes to Solana PDA, and GuardedVault smart contract physically blocks risky swaps. Not a warning — an enforcer.
                     </p>
                   </div>
                   <div className="relative max-w-xl">
@@ -269,7 +269,78 @@ export default async function Home() {
             </div>
           </section>
 
-          <section className="bg-[#3b82f6]/5 py-20" id="engine">
+          <section className="bg-[#3b82f6]/5 py-20" id="oracle">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="mb-14 text-center">
+                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
+                  On-Chain Oracle
+                </span>
+                <h2 className="mt-4 mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">AI Risk Oracle</h2>
+                <p className="mx-auto max-w-2xl text-slate-400">
+                  Autonomous AI agent publishes risk scores on-chain. Smart contracts read them to protect your funds in real time.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="radar" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">AI Scores Tokens</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    3-layer pipeline: Rule Engine (56 features) + XGBoost ML (ONNX) + GPT-4o-mini reasoning. Scores every monitored token 0-100.
+                  </p>
+                </article>
+
+                <article className="rounded-2xl border border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.15),rgba(15,23,42,0.98))] p-5 shadow-[0_24px_70px_rgba(59,130,246,0.1)] sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="shield" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">Published On-Chain</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    Scores are written to Solana PDAs via the RugSignal Anchor program. Fully verifiable on Explorer, immutable, and composable.
+                  </p>
+                </article>
+
+                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
+                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="wallet" />
+                  </div>
+                  <h3 className="mb-3 text-xl font-bold">GuardedVault Enforcement</h3>
+                  <p className="text-sm leading-relaxed text-slate-400">
+                    Smart contract reads oracle score and physically blocks risky swaps. Not a warning — your funds can&apos;t leave the vault if the token is dangerous.
+                  </p>
+                </article>
+              </div>
+
+              <div className="mt-10 flex flex-col items-center gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
+                  <div className="flex gap-1">
+                    <div className="h-2 w-8 rounded-full bg-emerald-500/60" />
+                    <div className="h-2 w-6 rounded-full bg-yellow-500/60" />
+                    <div className="h-2 w-4 rounded-full bg-red-500/60" />
+                  </div>
+                  <span className="text-xs text-slate-300 sm:text-sm">AI Score</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-xs text-slate-300 sm:text-sm">Solana PDA</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-xs text-slate-300 sm:text-sm">GuardedSwap</span>
+                  <span className="text-slate-500">&rarr;</span>
+                  <span className="text-xs font-bold text-emerald-400 sm:text-sm">Protected</span>
+                </div>
+                <Link
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition hover:brightness-110"
+                  href="/oracle"
+                >
+                  <AppIcon className="h-4 w-4" name="shield" />
+                  Open Oracle Dashboard
+                </Link>
+                <p className="text-xs text-slate-500">Free users get 5 oracle operations per day</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="py-20" id="engine">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="mb-16 text-center">
                 <h2 className="mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">Risk Intelligence Engine</h2>
@@ -415,77 +486,6 @@ export default async function Home() {
                     </div>
                   </article>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="py-20" id="oracle">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="mb-14 text-center">
-                <span className="inline-flex items-center rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#93c5fd]">
-                  On-Chain Oracle
-                </span>
-                <h2 className="mt-4 mb-4 text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">AI Risk Oracle</h2>
-                <p className="mx-auto max-w-2xl text-slate-400">
-                  Autonomous AI agent publishes risk scores on-chain. Smart contracts read them to protect your funds in real time.
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
-                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
-                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="radar" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-bold">AI Scores Tokens</h3>
-                  <p className="text-sm leading-relaxed text-slate-400">
-                    The RugSignal ML pipeline analyzes 50+ on-chain features and assigns a risk score from 0 to 100 for each monitored token.
-                  </p>
-                </article>
-
-                <article className="rounded-2xl border border-[#3b82f6]/40 bg-[linear-gradient(180deg,rgba(30,64,175,0.15),rgba(15,23,42,0.98))] p-5 shadow-[0_24px_70px_rgba(59,130,246,0.1)] sm:p-8">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
-                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="shield" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-bold">Published On-Chain</h3>
-                  <p className="text-sm leading-relaxed text-slate-400">
-                    Scores are written to Solana PDAs via the RugSignal Oracle program. Fully verifiable, transparent, and immutable.
-                  </p>
-                </article>
-
-                <article className="rounded-2xl border border-[#3b82f6]/10 bg-[#020617] p-5 sm:p-8">
-                  <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#3b82f6]/10 sm:mb-6 sm:size-14">
-                    <AppIcon className="h-6 w-6 text-[#3b82f6] sm:h-7 sm:w-7" name="wallet" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-bold">Guarded Vaults</h3>
-                  <p className="text-sm leading-relaxed text-slate-400">
-                    Smart contracts read oracle scores to automatically block risky swaps. If a token goes critical, emergency exit withdraws your funds.
-                  </p>
-                </article>
-              </div>
-
-              <div className="mt-10 flex flex-col items-center gap-4">
-                <div className="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
-                  <div className="flex gap-1">
-                    <div className="h-2 w-8 rounded-full bg-emerald-500/60" />
-                    <div className="h-2 w-6 rounded-full bg-yellow-500/60" />
-                    <div className="h-2 w-4 rounded-full bg-red-500/60" />
-                  </div>
-                  <span className="text-xs text-slate-300 sm:text-sm">AI Score</span>
-                  <span className="text-slate-500">&rarr;</span>
-                  <span className="text-xs text-slate-300 sm:text-sm">Solana PDA</span>
-                  <span className="text-slate-500">&rarr;</span>
-                  <span className="text-xs text-slate-300 sm:text-sm">GuardedSwap</span>
-                  <span className="text-slate-500">&rarr;</span>
-                  <span className="text-xs font-bold text-emerald-400 sm:text-sm">Protected</span>
-                </div>
-                <Link
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(37,99,235,0.25)] transition hover:brightness-110"
-                  href="/oracle"
-                >
-                  <AppIcon className="h-4 w-4" name="shield" />
-                  Open Oracle Dashboard
-                </Link>
-                <p className="text-xs text-slate-500">Free users get 5 oracle operations per day</p>
               </div>
             </div>
           </section>
