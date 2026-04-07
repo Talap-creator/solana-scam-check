@@ -6,14 +6,14 @@
   <img src="https://img.shields.io/badge/Colosseum-Frontier-purple" alt="Colosseum Frontier"/>
 </p>
 
-# RugSignal — AI Oracle with On-Chain Enforcement for Solana
+# Solana Trust — AI Oracle with On-Chain Enforcement for Solana
 
 **AI agent that scores Solana tokens for rug pull risk and physically blocks risky swaps via smart contract. Not just a warning — an autonomous on-chain enforcer.**
 
 > Decentrathon 5.0 — National Solana Hackathon 2026 | Colosseum Frontier
 
 <p align="center">
-  <img src="docs/screenshots/landing.png" width="700" alt="RugSignal Landing Page"/>
+  <img src="docs/screenshots/landing.png" width="700" alt="Solana Trust Landing Page"/>
 </p>
 
 ---
@@ -26,7 +26,7 @@ Every existing tool does the same thing: **warn**. User ignores warning, buys an
 
 ## Solution
 
-RugSignal is the first system that moves from **off-chain advisory** to **on-chain enforcement**:
+Solana Trust is the first system that moves from **off-chain advisory** to **on-chain enforcement**:
 
 ```
 Token Added → AI Scores → Score Published to Solana PDA → Swap Attempt → Smart Contract Reads Score → BLOCK or ALLOW
