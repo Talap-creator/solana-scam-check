@@ -192,7 +192,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
       </div>
 
       {profiles.length ? (
-        <div className="mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))]">
+        <div className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))]">
           <div className="border-b border-white/10 px-5 py-5">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_380px]">
               <div>
