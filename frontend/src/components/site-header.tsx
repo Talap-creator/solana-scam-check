@@ -33,20 +33,21 @@ export function SiteHeader() {
 
   return (
     <header className="mb-7 flex flex-col gap-4 rounded-[24px] border border-[color:var(--border)] bg-[rgba(2,6,23,0.72)] px-5 py-4 shadow-[0_20px_60px_rgba(2,6,23,0.34)] backdrop-blur md:flex-row md:items-center md:justify-between">
-      <a className="flex items-center gap-3 text-[var(--accent)]" href="#top">
-        <span className="grid h-10 w-10 place-items-center rounded-xl border border-[rgba(59,130,246,0.24)] bg-[rgba(59,130,246,0.12)] font-[family:var(--font-display)] text-lg font-bold text-[var(--accent)]">
-          R
+      <Link className="flex items-center gap-3 text-[var(--accent)]" href="/">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.14)]">
+          <svg aria-hidden="true" className="h-5 w-4 text-[#3b82f6]" viewBox="0 0 16 20" fill="none">
+            <path d="M8 1.25 13.5 3v5.04c0 4.09-2.63 7.7-6.5 8.96C3.13 15.74.5 12.13.5 8.04V3L8 1.25Z" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M8 5.1 10.8 6v2.44c0 2-1.2 3.78-2.8 4.33-1.6-.55-2.8-2.33-2.8-4.33V6L8 5.1Z" fill="currentColor" opacity="0.35" />
+          </svg>
         </span>
-        <span className="flex flex-col">
-          <strong className="text-base font-bold tracking-tight text-slate-100">RugSignal</strong>
-          <span className="text-xs text-slate-400">Solana risk intelligence</span>
-        </span>
-      </a>
+        <span className="text-xl font-bold tracking-[-0.04em] text-slate-100">SolanaTrust</span>
+      </Link>
 
       <nav className="flex flex-wrap gap-2 text-sm text-slate-400 md:justify-center">
         {[
           ["#scan", "Intelligence"],
           ["/coins", "Live Feed"],
+          ["/oracle", "Oracle"],
           ["#pricing", "Pricing"],
           ["#roadmap", "Roadmap"],
         ].map(([href, label]) => (
