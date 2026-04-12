@@ -348,7 +348,47 @@ async def agent_analyze(req: AgentAnalyzeRequest):
         except Exception as exc:
             logger.debug("Deployer DNA lookup failed: %s", exc)
 
-        # Phase 3: ML model scoring via DexScreener
+        # Phase 3: Holder Intelligence
+        try:
+            from ...services.holder_intelligence import get_holder_intelligence
+            settings_hi = get_settings()
+            rpc_hi = SolanaRpcClient(settings_hi.solana_rpc_urls)
+            hi = await asyncio.get_event_loop().run_in_executor(
+                None, get_holder_intelligence, req.token_address, rpc_hi, 20
+            )
+            if hi.total_holders_checked > 0:
+                holder_data = {
+                    "total_holders_checked": hi.total_holders_checked,
+                    "fresh_wallet_count": hi.fresh_wallet_count,
+                    "fresh_wallet_pct": hi.fresh_wallet_pct,
+                    "smart_money_pct": hi.smart_money_pct,
+                    "whale_count": hi.whale_count,
+                    "top5_concentration_pct": hi.top5_concentration_pct,
+                    "holder_risk_score": hi.holder_risk_score,
+                    "risk_label": hi.risk_label,
+                    "top_holders": [
+                        {
+                            "owner_wallet": e.owner_wallet,
+                            "supply_pct": e.supply_pct,
+                            "tx_count": e.tx_count,
+                            "classification": e.classification,
+                            "is_suspicious": e.is_suspicious,
+                        }
+                        for e in hi.top_holders[:10]
+                    ],
+                }
+                hi_step = (
+                    f"Holders: {hi.fresh_wallet_count}/{hi.total_holders_checked} fresh wallets "
+                    f"({int(hi.fresh_wallet_pct*100)}%), top-5 hold {hi.top5_concentration_pct:.0f}% — "
+                    f"{hi.risk_label.upper()}"
+                )
+                yield f'data: {json.dumps({"type": "step", "text": hi_step})}\n\n'
+                yield f'data: {json.dumps({"type": "holders", **holder_data})}\n\n'
+                await asyncio.sleep(0.3)
+        except Exception as exc:
+            logger.debug("Holder intelligence failed: %s", exc)
+
+        # Phase 4: ML model scoring via DexScreener
         features: dict = {}
         ml_score_data: dict | None = None
         try:
@@ -377,7 +417,7 @@ async def agent_analyze(req: AgentAnalyzeRequest):
         except Exception:
             pass
 
-        # Phase 3: Stream AI analysis
+        # Phase 5: Stream AI analysis
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             score = ml_score_data["score"] if ml_score_data else 50

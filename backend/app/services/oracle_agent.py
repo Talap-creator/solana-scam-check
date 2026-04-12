@@ -18,6 +18,7 @@ from ..scoring.ml.inference import MLInferenceEngine
 from .solana_publisher import SolanaPublisher
 from .ai_scorer import ai_score_token
 from .dexscreener import DexScreenerClient, pick_most_liquid_pair
+from .oracle_ws import OracleWebSocketListener
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +52,13 @@ class OracleAgent:
         self._get_pipeline = get_pipeline
         self._running = False
         self._task: asyncio.Task | None = None
+        self._ws_task: asyncio.Task | None = None
         self._last_run: datetime | None = None
         self._total_published: int = 0
         self._errors: int = 0
         self._ml_engine = MLInferenceEngine()
         self._dex_client = DexScreenerClient()
+        self._ws_listener = OracleWebSocketListener(on_trigger=self._ws_trigger)
 
     @property
     def is_running(self) -> bool:
@@ -71,21 +74,63 @@ class OracleAgent:
         }
 
     def start(self, interval_seconds: int = 60):
-        """Start the autonomous scoring loop."""
+        """Start the autonomous scoring loop + WebSocket listener."""
         if self._running:
             logger.warning("Oracle agent is already running")
             return
         self._running = True
         self._task = asyncio.create_task(self._loop(interval_seconds))
-        logger.info("Oracle agent started (interval=%ds)", interval_seconds)
+        self._ws_task = asyncio.create_task(self._start_ws())
+        logger.info("Oracle agent started (interval=%ds + WebSocket)", interval_seconds)
 
     def stop(self):
-        """Stop the scoring loop."""
+        """Stop the scoring loop and WebSocket listener."""
         self._running = False
+        self._ws_listener.stop()
         if self._task:
             self._task.cancel()
             self._task = None
+        if self._ws_task:
+            self._ws_task.cancel()
+            self._ws_task = None
         logger.info("Oracle agent stopped")
+
+    async def _start_ws(self) -> None:
+        """Start WebSocket listener with current monitored tokens."""
+        await asyncio.sleep(5)  # Let the first polling cycle run first
+        while self._running:
+            try:
+                db = next(self._get_db())
+                try:
+                    mints = [
+                        t.token_address
+                        for t in db.query(OracleMonitoredToken)
+                        .filter(OracleMonitoredToken.is_active.is_(True))
+                        .all()
+                    ]
+                finally:
+                    db.close()
+                if mints:
+                    await self._ws_listener.run(mints)
+                else:
+                    await asyncio.sleep(30)
+            except Exception as exc:
+                logger.debug("WS listener error: %s", exc)
+                await asyncio.sleep(15)
+
+    async def _ws_trigger(self, mint: str) -> None:
+        """Called by WebSocket listener when a monitored token changes."""
+        db = next(self._get_db())
+        try:
+            token = db.query(OracleMonitoredToken).filter_by(token_address=mint).first()
+            if token and token.is_active:
+                logger.info("WS real-time trigger: scoring %s", mint[:12])
+                await self._score_and_publish(db, token)
+                db.commit()
+        except Exception as exc:
+            logger.warning("WS trigger score failed for %s: %s", mint[:12], exc)
+        finally:
+            db.close()
 
     async def _loop(self, interval: int):
         """Main autonomous loop."""

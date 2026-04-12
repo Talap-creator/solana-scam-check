@@ -31,7 +31,26 @@ type DeployerMessage = {
   recent_tokens: DeployerTokenEntry[];
   from_db: boolean;
 };
-type SSEMessage = StepMessage | AnalysisChunk | VerdictMessage | ErrorMessage | DeployerMessage;
+type HolderEntry = {
+  owner_wallet: string | null;
+  supply_pct: number;
+  tx_count: number;
+  classification: string;
+  is_suspicious: boolean;
+};
+type HoldersMessage = {
+  type: "holders";
+  total_holders_checked: number;
+  fresh_wallet_count: number;
+  fresh_wallet_pct: number;
+  smart_money_pct: number;
+  whale_count: number;
+  top5_concentration_pct: number;
+  holder_risk_score: number;
+  risk_label: string;
+  top_holders: HolderEntry[];
+};
+type SSEMessage = StepMessage | AnalysisChunk | VerdictMessage | ErrorMessage | DeployerMessage | HoldersMessage;
 
 function riskColor(level: string) {
   switch (level) {
@@ -104,6 +123,7 @@ export function AgentChat() {
   const [analysisText, setAnalysisText] = useState("");
   const [verdict, setVerdict] = useState<VerdictMessage | null>(null);
   const [deployer, setDeployer] = useState<DeployerMessage | null>(null);
+  const [holders, setHolders] = useState<HoldersMessage | null>(null);
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
   const [, setDone] = useState(false);
@@ -124,6 +144,7 @@ export function AgentChat() {
     setAnalysisText("");
     setVerdict(null);
     setDeployer(null);
+    setHolders(null);
     setError("");
     setDone(false);
     setRunning(true);
@@ -180,6 +201,9 @@ export function AgentChat() {
               case "deployer":
                 setDeployer(msg);
                 break;
+              case "holders":
+                setHolders(msg);
+                break;
               case "error":
                 setError(msg.text);
                 break;
@@ -210,7 +234,7 @@ export function AgentChat() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const hasContent = steps.length > 0 || analysisText || verdict || deployer || error;
+  const hasContent = steps.length > 0 || analysisText || verdict || deployer || holders || error;
   const mascotState = running ? "scanning" : verdict ? (verdict.score >= 75 ? "alert" : "idle") : "idle";
 
   return (
@@ -396,6 +420,83 @@ export function AgentChat() {
                       </div>
                     ) : (
                       <p className="text-xs text-slate-500">First time seen — no prior launch history in database.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Holder Intelligence card */}
+                {holders && (
+                  <div className="mt-3 rounded-xl border border-slate-700/40 bg-[rgba(15,23,42,0.7)] p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                        Holder Intelligence
+                      </span>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                        holders.risk_label === "critical" ? "border-rose-400/30 bg-rose-400/10 text-rose-400"
+                        : holders.risk_label === "high" ? "border-orange-400/30 bg-orange-400/10 text-orange-400"
+                        : holders.risk_label === "medium" ? "border-amber-400/30 bg-amber-400/10 text-amber-400"
+                        : "border-emerald-400/30 bg-emerald-400/10 text-emerald-400"
+                      }`}>
+                        {holders.risk_label}
+                      </span>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="mb-3 grid grid-cols-4 gap-2 text-center text-xs">
+                      <div>
+                        <div className={`font-bold ${holders.fresh_wallet_pct >= 0.5 ? "text-rose-400" : holders.fresh_wallet_pct >= 0.3 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {Math.round(holders.fresh_wallet_pct * 100)}%
+                        </div>
+                        <div className="text-slate-500">fresh wallets</div>
+                      </div>
+                      <div>
+                        <div className={`font-bold ${holders.top5_concentration_pct >= 60 ? "text-rose-400" : holders.top5_concentration_pct >= 40 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {holders.top5_concentration_pct.toFixed(0)}%
+                        </div>
+                        <div className="text-slate-500">top-5 hold</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-200">{holders.whale_count}</div>
+                        <div className="text-slate-500">whales</div>
+                      </div>
+                      <div>
+                        <div className={`font-bold ${holders.holder_risk_score >= 70 ? "text-rose-400" : holders.holder_risk_score >= 45 ? "text-amber-400" : "text-emerald-400"}`}>
+                          {holders.holder_risk_score}
+                        </div>
+                        <div className="text-slate-500">risk score</div>
+                      </div>
+                    </div>
+
+                    {/* Top holders mini-list */}
+                    {holders.top_holders.length > 0 && (
+                      <div className="space-y-1">
+                        {holders.top_holders.slice(0, 5).map((h, i) => (
+                          <div key={i} className="flex items-center justify-between text-[11px]">
+                            <div className="flex items-center gap-2">
+                              <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                                h.is_suspicious ? "bg-rose-400" : h.classification === "whale" ? "bg-amber-400" : "bg-emerald-400/60"
+                              }`} />
+                              <span className="font-mono text-slate-500">
+                                {h.owner_wallet ? `${h.owner_wallet.slice(0, 4)}...${h.owner_wallet.slice(-4)}` : "unknown"}
+                              </span>
+                              <span className={`rounded px-1 py-0.5 text-[9px] font-medium ${
+                                h.classification === "fresh_wallet" ? "bg-rose-400/10 text-rose-400"
+                                : h.classification === "whale" ? "bg-amber-400/10 text-amber-400"
+                                : "bg-slate-700/60 text-slate-400"
+                              }`}>
+                                {h.classification.replace("_", " ")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-500">
+                              <span>{h.supply_pct.toFixed(1)}%</span>
+                              <span className="text-slate-600">{h.tx_count} txs</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}

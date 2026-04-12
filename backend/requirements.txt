@@ -10,3 +10,4 @@ solders==0.27.1
 openai==1.82.0
 onnxruntime==1.24.4
 python-telegram-bot==22.7
+websockets==13.1
