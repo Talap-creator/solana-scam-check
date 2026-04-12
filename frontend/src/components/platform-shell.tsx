@@ -92,7 +92,7 @@ export function PlatformShell({
 
       <div className="relative">
         <header className="sticky top-0 z-40 border-b border-[rgba(59,130,246,0.16)] bg-[rgba(2,6,23,0.8)] backdrop-blur-md">
-          <div className="mx-auto flex w-full max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0 lg:px-10">
+          <div className="mx-auto flex w-full max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 md:h-16 md:flex-nowrap md:py-0 lg:px-10">
             <div className="flex items-center gap-8">
               <Link className="flex items-center gap-3 text-[#3b82f6]" href="/">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.14)]">
@@ -168,7 +168,7 @@ export function PlatformShell({
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1440px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
           <section className="rounded-[20px] border border-[rgba(59,130,246,0.16)] bg-[linear-gradient(180deg,rgba(15,23,42,0.82),rgba(15,23,42,0.68))] p-4 shadow-[0_24px_80px_rgba(2,6,23,0.28)] sm:rounded-[28px] sm:p-6">
             <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-[#60a5fa]">{eyebrow}</p>
             <h1 className="mt-3 max-w-4xl font-[family:var(--font-display)] text-2xl font-black tracking-[-0.06em] text-slate-100 sm:text-3xl md:text-6xl">

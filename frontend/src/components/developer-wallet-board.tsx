@@ -168,31 +168,8 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Resolved wallets</p>
-          <p className="mt-3 text-3xl font-black text-white">{walletCount}</p>
-          <p className="mt-2 text-sm text-slate-400">Launch wallets resolved from shared funding routes.</p>
-        </article>
-        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Hidden clusters</p>
-          <p className="mt-3 text-3xl font-black text-white">{clusterCount}</p>
-          <p className="mt-2 text-sm text-slate-400">Operators still hidden behind the funding graph.</p>
-        </article>
-        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Repeat operators</p>
-          <p className="mt-3 text-3xl font-black text-white">{repeatOperators}</p>
-          <p className="mt-2 text-sm text-slate-400">Wallets or clusters tied to more than one tracked launch.</p>
-        </article>
-        <article className="rounded-[24px] border border-white/10 bg-[#020617] px-5 py-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Average operator score</p>
-          <p className="mt-3 text-3xl font-black text-white">{avgOperatorScore}</p>
-          <p className="mt-2 text-sm text-slate-400">Weighted from rug risk, caution, and linked-wallet evidence.</p>
-        </article>
-      </div>
-
       {profiles.length ? (
-        <div className="mt-6 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))]">
+        <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,19,35,0.96),rgba(8,14,26,0.98))]">
           <div className="border-b border-white/10 px-5 py-5">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_380px]">
               <div>
@@ -318,7 +295,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                   return (
                     <tr key={profile.id} className="transition hover:bg-white/[0.03]">
                       <td className="px-5 py-4 align-top">
-                        <div className="min-w-[280px]">
+                        <div className="min-w-[180px]">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-[#3b82f6]/20 bg-[#3b82f6]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#93c5fd]">
                               {walletKindLabel(profile)}
@@ -350,7 +327,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                         </div>
                       </td>
                       <td className="px-5 py-4 align-top">
-                        <div className="min-w-[180px]">
+                        <div className="min-w-[140px]">
                           <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${operatorClasses(profile.operatorScore)}`}>
                             Score {profile.operatorScore}
                           </span>
@@ -364,14 +341,14 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                         </div>
                       </td>
                       <td className="px-5 py-4 align-top">
-                        <div className="min-w-[160px]">
+                        <div className="min-w-[120px]">
                           <p className="text-lg font-bold text-white">{profile.launches}</p>
                           <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">{profile.confidence}</p>
                           <p className="mt-1 text-xs text-slate-400">{profile.coverage}</p>
                         </div>
                       </td>
                       <td className="px-5 py-4 align-top">
-                        <div className="min-w-[220px] space-y-2">
+                        <div className="min-w-[180px] space-y-2">
                           <div>
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Funding source</p>
                             <p className="mt-1 text-sm font-semibold text-white">{profile.fundingSource ?? "Hidden / unresolved"}</p>
@@ -386,7 +363,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                       </td>
                       <td className="px-5 py-4 align-top">
                         {latest ? (
-                          <div className="min-w-[220px]">
+                          <div className="min-w-[180px]">
                             <p className="text-sm font-semibold text-white">{latest.name} | {latest.symbol}</p>
                             <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
                               {modeLabel(latest.pageMode)} | {latest.launchPattern ?? "No pattern"}
