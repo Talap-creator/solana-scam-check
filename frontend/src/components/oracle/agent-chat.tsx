@@ -13,7 +13,25 @@ type VerdictMessage = {
   reasoning: string;
 };
 type ErrorMessage = { type: "error"; text: string };
-type SSEMessage = StepMessage | AnalysisChunk | VerdictMessage | ErrorMessage;
+type DeployerTokenEntry = {
+  mint: string;
+  name: string;
+  symbol: string;
+  rug_probability: number;
+  risk_level: string;
+};
+type DeployerMessage = {
+  type: "deployer";
+  deployer_wallet: string;
+  total_launches: number;
+  rug_count: number;
+  rug_ratio: number;
+  avg_rug_probability: number;
+  risk_label: string;
+  recent_tokens: DeployerTokenEntry[];
+  from_db: boolean;
+};
+type SSEMessage = StepMessage | AnalysisChunk | VerdictMessage | ErrorMessage | DeployerMessage;
 
 function riskColor(level: string) {
   switch (level) {
@@ -85,6 +103,7 @@ export function AgentChat() {
   const [steps, setSteps] = useState<string[]>([]);
   const [analysisText, setAnalysisText] = useState("");
   const [verdict, setVerdict] = useState<VerdictMessage | null>(null);
+  const [deployer, setDeployer] = useState<DeployerMessage | null>(null);
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
   const [, setDone] = useState(false);
@@ -104,6 +123,7 @@ export function AgentChat() {
     setSteps([]);
     setAnalysisText("");
     setVerdict(null);
+    setDeployer(null);
     setError("");
     setDone(false);
     setRunning(true);
@@ -157,6 +177,9 @@ export function AgentChat() {
               case "verdict":
                 setVerdict(msg);
                 break;
+              case "deployer":
+                setDeployer(msg);
+                break;
               case "error":
                 setError(msg.text);
                 break;
@@ -187,7 +210,7 @@ export function AgentChat() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const hasContent = steps.length > 0 || analysisText || verdict || error;
+  const hasContent = steps.length > 0 || analysisText || verdict || deployer || error;
   const mascotState = running ? "scanning" : verdict ? (verdict.score >= 75 ? "alert" : "idle") : "idle";
 
   return (
@@ -310,6 +333,72 @@ export function AgentChat() {
                 {error}
               </div>
             )}
+
+                {/* Deployer DNA card */}
+                {deployer && (
+                  <div className="mt-3 rounded-xl border border-slate-700/40 bg-[rgba(15,23,42,0.7)] p-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                        </svg>
+                        Deployer DNA
+                      </span>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                        deployer.risk_label === "serial_rugger"
+                          ? "border-rose-400/30 bg-rose-400/10 text-rose-400"
+                          : deployer.risk_label === "suspicious"
+                          ? "border-amber-400/30 bg-amber-400/10 text-amber-400"
+                          : deployer.risk_label === "clean"
+                          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-400"
+                          : "border-slate-600/30 bg-slate-600/10 text-slate-400"
+                      }`}>
+                        {deployer.risk_label.replace("_", " ")}
+                      </span>
+                    </div>
+                    <div className="mb-2 font-mono text-[11px] text-slate-500">
+                      {deployer.deployer_wallet.slice(0, 6)}...{deployer.deployer_wallet.slice(-4)}
+                    </div>
+                    {deployer.from_db && deployer.total_launches > 0 ? (
+                      <div className="flex flex-wrap items-center gap-4 text-xs">
+                        <div className="text-center">
+                          <div className="font-bold text-slate-200">{deployer.total_launches}</div>
+                          <div className="text-slate-500">launches</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`font-bold ${deployer.rug_count > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                            {deployer.rug_count}
+                          </div>
+                          <div className="text-slate-500">rugs</div>
+                        </div>
+                        <div className="text-center">
+                          <div className={`font-bold ${deployer.rug_ratio >= 0.5 ? "text-rose-400" : deployer.rug_ratio >= 0.2 ? "text-amber-400" : "text-emerald-400"}`}>
+                            {Math.round(deployer.rug_ratio * 100)}%
+                          </div>
+                          <div className="text-slate-500">rug rate</div>
+                        </div>
+                        {deployer.recent_tokens.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {deployer.recent_tokens.slice(0, 3).map((t) => (
+                              <span
+                                key={t.mint}
+                                className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                                  t.rug_probability >= 0.65
+                                    ? "bg-rose-400/10 text-rose-400"
+                                    : "bg-slate-700/60 text-slate-400"
+                                }`}
+                              >
+                                ${t.symbol}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500">First time seen — no prior launch history in database.</p>
+                    )}
+                  </div>
+                )}
 
             {/* Verdict card */}
             {verdict && (

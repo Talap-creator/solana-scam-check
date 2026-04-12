@@ -12,9 +12,12 @@ from openai import OpenAI
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from ...config import get_settings
 from ...db import get_db
 from ...models import OracleMonitoredToken, OraclePublishEvent
+from ...services.deployer_dna import get_deployer_dna
 from ...services.oracle_agent import get_oracle_agent
+from ...services.solana_rpc import SolanaRpcClient
 
 router = APIRouter(prefix="/api/v1/oracle", tags=["oracle"])
 
@@ -68,6 +71,25 @@ class PublishEventResponse(BaseModel):
     status: str
     error_message: str | None
     published_at: str
+
+
+class DeployerTokenEntryResponse(BaseModel):
+    mint: str
+    name: str
+    symbol: str
+    rug_probability: float
+    risk_level: str
+
+
+class DeployerDNAResponse(BaseModel):
+    deployer_wallet: str | None
+    total_launches: int
+    rug_count: int
+    rug_ratio: float
+    avg_rug_probability: float
+    risk_label: str
+    recent_tokens: list[DeployerTokenEntryResponse]
+    from_db: bool
 
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
@@ -214,6 +236,33 @@ def list_publish_history(
     ]
 
 
+@router.get("/deployer/{token_address}", response_model=DeployerDNAResponse)
+def deployer_dna(token_address: str, db: Session = Depends(get_db)):
+    """Return Deployer DNA for a token: who deployed it and their rug history."""
+    settings = get_settings()
+    rpc = SolanaRpcClient(settings.solana_rpc_urls)
+    result = get_deployer_dna(token_address, db, rpc)
+    return DeployerDNAResponse(
+        deployer_wallet=result.deployer_wallet,
+        total_launches=result.total_launches,
+        rug_count=result.rug_count,
+        rug_ratio=result.rug_ratio,
+        avg_rug_probability=result.avg_rug_probability,
+        risk_label=result.risk_label,
+        recent_tokens=[
+            DeployerTokenEntryResponse(
+                mint=t.mint,
+                name=t.name,
+                symbol=t.symbol,
+                rug_probability=t.rug_probability,
+                risk_level=t.risk_level,
+            )
+            for t in result.recent_tokens
+        ],
+        from_db=result.from_db,
+    )
+
+
 @router.post("/agent/start")
 async def start_agent():
     agent = get_oracle_agent()
@@ -250,7 +299,56 @@ async def agent_analyze(req: AgentAnalyzeRequest):
             yield f"data: {json.dumps(step)}\n\n"
             await asyncio.sleep(0.6)
 
-        # Phase 2: ML model scoring via DexScreener
+        # Phase 2: Deployer DNA lookup
+        deployer_data: dict | None = None
+        try:
+            settings = get_settings()
+            rpc = SolanaRpcClient(settings.solana_rpc_urls)
+            from sqlalchemy.orm import Session as _Session
+            db_gen = get_db()
+            db_session: _Session = next(db_gen)
+            try:
+                dna = get_deployer_dna(req.token_address, db_session, rpc)
+            finally:
+                try:
+                    next(db_gen)
+                except StopIteration:
+                    pass
+
+            if dna.deployer_wallet:
+                deployer_data = {
+                    "deployer_wallet": dna.deployer_wallet,
+                    "total_launches": dna.total_launches,
+                    "rug_count": dna.rug_count,
+                    "rug_ratio": dna.rug_ratio,
+                    "avg_rug_probability": dna.avg_rug_probability,
+                    "risk_label": dna.risk_label,
+                    "recent_tokens": [
+                        {
+                            "mint": t.mint,
+                            "name": t.name,
+                            "symbol": t.symbol,
+                            "rug_probability": t.rug_probability,
+                            "risk_level": t.risk_level,
+                        }
+                        for t in dna.recent_tokens
+                    ],
+                    "from_db": dna.from_db,
+                }
+                label = dna.risk_label
+                step_text = (
+                    f"Deployer {dna.deployer_wallet[:6]}...{dna.deployer_wallet[-4:]}: "
+                    f"{dna.total_launches} launches, {int(dna.rug_ratio * 100)}% rug rate — {label.replace('_', ' ').upper()}"
+                    if dna.from_db and dna.total_launches > 0
+                    else f"Deployer {dna.deployer_wallet[:6]}...{dna.deployer_wallet[-4:]}: first seen, no prior history"
+                )
+                yield f'data: {json.dumps({"type": "step", "text": step_text})}\n\n'
+                yield f'data: {json.dumps({"type": "deployer", **deployer_data})}\n\n'
+                await asyncio.sleep(0.3)
+        except Exception as exc:
+            logger.debug("Deployer DNA lookup failed: %s", exc)
+
+        # Phase 3: ML model scoring via DexScreener
         features: dict = {}
         ml_score_data: dict | None = None
         try:
