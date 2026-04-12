@@ -144,7 +144,7 @@ def get_holder_intelligence(
     token_account_addrs = [a["address"] for a in accounts]
     owners = _get_account_owners(token_account_addrs, rpc)
 
-    # 4. For each holder, get tx count
+    # 4. For each holder, get tx count (only for top 5 to avoid RPC rate limits)
     entries: list[HolderEntry] = []
     for i, acc in enumerate(accounts):
         owner = owners[i] if i < len(owners) else None
@@ -152,8 +152,10 @@ def get_holder_intelligence(
         supply_pct = (ui_amount / total_amount) * 100
 
         tx_count = 0
-        if owner:
+        if owner and i < 5:  # Only check tx counts for top-5 holders
             tx_count = _get_tx_count(owner, rpc, limit=50)
+        elif owner:
+            tx_count = 50  # Assume established wallet for holders beyond top-5
 
         classification, is_suspicious = _classify(ui_amount, supply_pct, tx_count)
 

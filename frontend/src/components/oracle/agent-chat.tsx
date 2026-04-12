@@ -381,9 +381,13 @@ export function AgentChat() {
                       </span>
                     </div>
                     <div className="mb-2 font-mono text-[11px] text-slate-500">
-                      {deployer.deployer_wallet.slice(0, 6)}...{deployer.deployer_wallet.slice(-4)}
+                      {deployer.deployer_wallet === "renounced"
+                        ? <span className="text-emerald-400 font-semibold not-italic">✓ Mint authority renounced</span>
+                        : `${deployer.deployer_wallet.slice(0, 6)}...${deployer.deployer_wallet.slice(-4)}`}
                     </div>
-                    {deployer.from_db && deployer.total_launches > 0 ? (
+                    {deployer.risk_label === "renounced" ? (
+                      <p className="text-xs text-emerald-400/80">No one can mint new tokens — this is a positive safety signal.</p>
+                    ) : deployer.from_db && deployer.total_launches > 0 ? (
                       <div className="flex flex-wrap items-center gap-4 text-xs">
                         <div className="text-center">
                           <div className="font-bold text-slate-200">{deployer.total_launches}</div>

@@ -315,36 +315,40 @@ async def agent_analyze(req: AgentAnalyzeRequest):
                 except StopIteration:
                     pass
 
-            if dna.deployer_wallet:
-                deployer_data = {
-                    "deployer_wallet": dna.deployer_wallet,
-                    "total_launches": dna.total_launches,
-                    "rug_count": dna.rug_count,
-                    "rug_ratio": dna.rug_ratio,
-                    "avg_rug_probability": dna.avg_rug_probability,
-                    "risk_label": dna.risk_label,
-                    "recent_tokens": [
-                        {
-                            "mint": t.mint,
-                            "name": t.name,
-                            "symbol": t.symbol,
-                            "rug_probability": t.rug_probability,
-                            "risk_level": t.risk_level,
-                        }
-                        for t in dna.recent_tokens
-                    ],
-                    "from_db": dna.from_db,
-                }
+            # Always emit deployer card — even if mint authority is renounced
+            wallet_display = dna.deployer_wallet or "renounced"
+            deployer_data = {
+                "deployer_wallet": wallet_display,
+                "total_launches": dna.total_launches,
+                "rug_count": dna.rug_count,
+                "rug_ratio": dna.rug_ratio,
+                "avg_rug_probability": dna.avg_rug_probability,
+                "risk_label": dna.risk_label if dna.deployer_wallet else "renounced",
+                "recent_tokens": [
+                    {
+                        "mint": t.mint,
+                        "name": t.name,
+                        "symbol": t.symbol,
+                        "rug_probability": t.rug_probability,
+                        "risk_level": t.risk_level,
+                    }
+                    for t in dna.recent_tokens
+                ],
+                "from_db": dna.from_db,
+            }
+            if not dna.deployer_wallet:
+                step_text = "Mint authority: renounced ✓ — no one can mint new tokens"
+            elif dna.from_db and dna.total_launches > 0:
                 label = dna.risk_label
                 step_text = (
                     f"Deployer {dna.deployer_wallet[:6]}...{dna.deployer_wallet[-4:]}: "
                     f"{dna.total_launches} launches, {int(dna.rug_ratio * 100)}% rug rate — {label.replace('_', ' ').upper()}"
-                    if dna.from_db and dna.total_launches > 0
-                    else f"Deployer {dna.deployer_wallet[:6]}...{dna.deployer_wallet[-4:]}: first seen, no prior history"
                 )
-                yield f'data: {json.dumps({"type": "step", "text": step_text})}\n\n'
-                yield f'data: {json.dumps({"type": "deployer", **deployer_data})}\n\n'
-                await asyncio.sleep(0.3)
+            else:
+                step_text = f"Deployer {dna.deployer_wallet[:6]}...{dna.deployer_wallet[-4:]}: first seen, no prior history"
+            yield f'data: {json.dumps({"type": "step", "text": step_text})}\n\n'
+            yield f'data: {json.dumps({"type": "deployer", **deployer_data})}\n\n'
+            await asyncio.sleep(0.3)
         except Exception as exc:
             logger.debug("Deployer DNA lookup failed: %s", exc)
 
