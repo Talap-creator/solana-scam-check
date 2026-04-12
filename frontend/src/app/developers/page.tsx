@@ -17,7 +17,7 @@ export default async function DevelopersPage() {
 
   return (
     <main className="min-h-screen bg-[#020617] text-slate-100 antialiased">
-      <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+      <div className="relative flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 w-full border-b border-[rgba(59,130,246,0.1)] bg-[rgba(2,6,23,0.82)] backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex min-h-16 flex-wrap items-center justify-between gap-3 py-3 md:h-16 md:flex-nowrap md:py-0">
