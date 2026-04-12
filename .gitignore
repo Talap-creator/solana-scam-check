@@ -38,3 +38,4 @@ backend/data/*.bak
 RUNNING_SERVERS.md
 TECH_SPEC.md
 
+.gstack/
