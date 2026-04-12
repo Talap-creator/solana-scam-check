@@ -12,7 +12,7 @@ export default async function OraclePage() {
   const [status, scores, history] = await Promise.all([
     getOracleStatus(),
     getOracleScores(),
-    getOracleHistory(20),
+    getOracleHistory(500),
   ]);
 
   return (
@@ -78,7 +78,7 @@ export default async function OraclePage() {
                 {scores.length} token{scores.length !== 1 ? "s" : ""} monitored
               </span>
             </div>
-            <OracleScoresTable scores={scores} />
+            <OracleScoresTable scores={scores} history={history} />
           </section>
 
           {/* Guarded Vault */}

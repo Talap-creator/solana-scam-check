@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { OracleScore } from "@/lib/api";
+import type { OracleScore, OraclePublishEvent } from "@/lib/api";
 import { removeOracleMonitor } from "@/lib/api";
+import { ScoreSparkline } from "./score-sparkline";
 
 const riskColors: Record<string, string> = {
   low: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
@@ -26,9 +27,31 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
+export function OracleScoresTable({
+  scores,
+  history = [],
+}: {
+  scores: OracleScore[];
+  history?: OraclePublishEvent[];
+}) {
   const router = useRouter();
   const [removing, setRemoving] = useState<string | null>(null);
+
+  // Group history by token_address, sorted oldest→newest
+  const historyByToken: Record<string, { score: number; published_at: string }[]> = {};
+  for (const ev of history) {
+    if (!historyByToken[ev.token_address]) historyByToken[ev.token_address] = [];
+    historyByToken[ev.token_address].push({
+      score: ev.score,
+      published_at: ev.published_at,
+    });
+  }
+  // Sort each token's history oldest first
+  for (const addr of Object.keys(historyByToken)) {
+    historyByToken[addr].sort(
+      (a, b) => new Date(a.published_at).getTime() - new Date(b.published_at).getTime(),
+    );
+  }
 
   const handleRemove = async (address: string) => {
     setRemoving(address);
@@ -41,6 +64,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
       setRemoving(null);
     }
   };
+
   if (scores.length === 0) {
     return (
       <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 text-center text-sm text-slate-400 sm:p-8">
@@ -56,6 +80,7 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
           <tr className="border-b border-[rgba(59,130,246,0.12)] text-left text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
             <th className="px-3 py-3 sm:px-6 sm:py-4">Token</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">Score</th>
+            <th className="px-3 py-3 sm:px-6 sm:py-4">Trend</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">Risk</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">Confidence</th>
             <th className="px-3 py-3 sm:px-6 sm:py-4">Last Published</th>
@@ -64,80 +89,123 @@ export function OracleScoresTable({ scores }: { scores: OracleScore[] }) {
           </tr>
         </thead>
         <tbody>
-          {scores.map((s) => (
-            <tr
-              key={s.token_address}
-              className="border-b border-[rgba(59,130,246,0.06)] transition-colors hover:bg-[rgba(59,130,246,0.04)]"
-            >
-              <td className="px-3 py-3 sm:px-6 sm:py-4">
-                <div>
-                  <span className="font-mono text-slate-200">
-                    {shortenAddress(s.token_address)}
-                  </span>
-                  {s.display_name && (
-                    <span className="ml-2 text-xs text-slate-400">{s.display_name}</span>
-                  )}
-                </div>
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4">
-                <div>
-                  {s.score !== null ? (
-                    <span className="font-[family:var(--font-display)] text-xl font-black">
-                      {s.score}
+          {scores.map((s) => {
+            const tokenHistory = historyByToken[s.token_address] ?? [];
+            // Include current score as final point if not already in history
+            const sparkPoints =
+              tokenHistory.length > 0
+                ? tokenHistory
+                : s.score !== null && s.last_published_at
+                ? [{ score: s.score, published_at: s.last_published_at }]
+                : [];
+
+            // Score delta: compare latest vs earliest in history
+            const delta =
+              sparkPoints.length >= 2
+                ? sparkPoints[sparkPoints.length - 1].score - sparkPoints[0].score
+                : null;
+
+            return (
+              <tr
+                key={s.token_address}
+                className="border-b border-[rgba(59,130,246,0.06)] transition-colors hover:bg-[rgba(59,130,246,0.04)]"
+              >
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  <div>
+                    <span className="font-mono text-slate-200">
+                      {shortenAddress(s.token_address)}
+                    </span>
+                    {s.display_name && (
+                      <span className="ml-2 text-xs text-slate-400">{s.display_name}</span>
+                    )}
+                  </div>
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  <div>
+                    {s.score !== null ? (
+                      <span className="font-[family:var(--font-display)] text-xl font-black">
+                        {s.score}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">--</span>
+                    )}
+                    {s.reasoning && (
+                      <p className="mt-1 max-w-[260px] text-xs italic leading-snug text-slate-400/70">
+                        {s.reasoning}
+                      </p>
+                    )}
+                  </div>
+                </td>
+
+                {/* Sparkline + delta */}
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  <div className="flex items-center gap-2">
+                    <ScoreSparkline points={sparkPoints} width={80} height={28} />
+                    {delta !== null && (
+                      <span
+                        className={`text-[10px] font-bold ${
+                          delta > 0
+                            ? "text-rose-400"
+                            : delta < 0
+                            ? "text-emerald-400"
+                            : "text-slate-500"
+                        }`}
+                      >
+                        {delta > 0 ? `+${delta}` : delta}
+                      </span>
+                    )}
+                  </div>
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  {s.risk_level ? (
+                    <span
+                      className={`inline-block rounded-full border px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${riskColors[s.risk_level] ?? "text-slate-400"}`}
+                    >
+                      {s.risk_level}
                     </span>
                   ) : (
                     <span className="text-slate-500">--</span>
                   )}
-                  {s.reasoning && (
-                    <p className="mt-1 text-xs italic text-slate-400/70 leading-snug max-w-[260px]">
-                      {s.reasoning}
-                    </p>
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-300">
+                  {s.confidence !== null ? `${Math.round(s.confidence * 100)}%` : "--"}
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-400">
+                  {s.last_published_at ? timeAgo(s.last_published_at) : "never"}
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  {s.tx_signature ? (
+                    <a
+                      href={`https://explorer.solana.com/tx/${s.tx_signature}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono text-xs text-[#60a5fa] hover:underline"
+                    >
+                      {s.tx_signature.slice(0, 12)}...
+                    </a>
+                  ) : (
+                    <span className="text-slate-500">--</span>
                   )}
-                </div>
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4">
-                {s.risk_level ? (
-                  <span
-                    className={`inline-block rounded-full border px-3 py-1 text-xs font-extrabold uppercase tracking-[0.14em] ${riskColors[s.risk_level] ?? "text-slate-400"}`}
+                </td>
+
+                <td className="px-3 py-3 sm:px-6 sm:py-4">
+                  <button
+                    className="rounded-lg border border-red-500/20 bg-red-500/6 px-2.5 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/15 disabled:opacity-40"
+                    disabled={removing === s.token_address}
+                    onClick={() => void handleRemove(s.token_address)}
+                    type="button"
                   >
-                    {s.risk_level}
-                  </span>
-                ) : (
-                  <span className="text-slate-500">--</span>
-                )}
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-300">
-                {s.confidence !== null ? `${Math.round(s.confidence * 100)}%` : "--"}
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4 text-slate-400">
-                {s.last_published_at ? timeAgo(s.last_published_at) : "never"}
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4">
-                {s.tx_signature ? (
-                  <a
-                    href={`https://explorer.solana.com/tx/${s.tx_signature}?cluster=devnet`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono text-xs text-[#60a5fa] hover:underline"
-                  >
-                    {s.tx_signature.slice(0, 12)}...
-                  </a>
-                ) : (
-                  <span className="text-slate-500">--</span>
-                )}
-              </td>
-              <td className="px-3 py-3 sm:px-6 sm:py-4">
-                <button
-                  className="rounded-lg border border-red-500/20 bg-red-500/6 px-2.5 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/15 disabled:opacity-40"
-                  disabled={removing === s.token_address}
-                  onClick={() => void handleRemove(s.token_address)}
-                  type="button"
-                >
-                  {removing === s.token_address ? "..." : "Remove"}
-                </button>
-              </td>
-            </tr>
-          ))}
+                    {removing === s.token_address ? "..." : "Remove"}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
