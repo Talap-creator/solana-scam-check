@@ -35,6 +35,12 @@ logging.basicConfig(
 )
 log = logging.getLogger("rugsignal-bot")
 
+# Silence noisy polling logs from telegram lib and httpx
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("telegram.ext.Updater").setLevel(logging.WARNING)
+logging.getLogger("telegram.ext.ExtBot").setLevel(logging.WARNING)
+
 BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # ── Backend API client ───────────────────────────────────────────────────────
@@ -259,7 +265,12 @@ def run_in_thread(token: str):
         log.info("Telegram bot starting (background thread)...")
         log.info("Scoring via backend API: %s", BACKEND_URL)
         async with tg_app:
-            await tg_app.updater.start_polling(drop_pending_updates=True)
+            await tg_app.updater.start_polling(
+                drop_pending_updates=True,
+                poll_interval=2.0,
+                read_timeout=30,
+                connect_timeout=15,
+            )
             await tg_app.start()
             stop_event = asyncio.Event()
             await stop_event.wait()
@@ -279,7 +290,12 @@ def main():
 
     app = _build_app(token)
     log.info("Bot is running. Press Ctrl+C to stop.")
-    app.run_polling(drop_pending_updates=True)
+    app.run_polling(
+        drop_pending_updates=True,
+        poll_interval=2.0,
+        read_timeout=30,
+        connect_timeout=15,
+    )
 
 
 if __name__ == "__main__":
