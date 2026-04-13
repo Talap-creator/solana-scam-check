@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppIcon } from "@/components/app-icon";
 import { PremiumCheckoutButton } from "@/components/premium-checkout-button";
+import { getUsage } from "@/lib/api";
 import type { DeveloperLeadProfile } from "@/lib/developer-leads";
 
 type DeveloperWalletBoardProps = {
@@ -124,6 +125,13 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<BoardTab>("all");
   const [sort, setSort] = useState<BoardSort>("operator");
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    getUsage()
+      .then((usage) => setIsPremium(usage.plan === "pro" || usage.plan === "enterprise"))
+      .catch(() => setIsPremium(false));
+  }, []);
 
   const filteredProfiles = useMemo(() => {
     let items = profiles.filter((profile) => profileMatchesQuery(profile, query));
@@ -507,32 +515,34 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
               </div>
             </div>
 
-            <div className="mt-6 rounded-[26px] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-sm leading-7 text-slate-300">{selected.premiumPrompt}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {selected.flags.slice(0, 4).map((flag) => (
-                  <span
-                    key={flag}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300"
+            {!isPremium ? (
+              <div className="mt-6 rounded-[26px] border border-white/10 bg-white/[0.03] p-5">
+                <p className="text-sm leading-7 text-slate-300">{selected.premiumPrompt}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {selected.flags.slice(0, 4).map((flag) => (
+                    <span
+                      key={flag}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300"
+                    >
+                      {flag}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <PremiumCheckoutButton
+                    className="rounded-xl bg-[#3b82f6] px-5 py-3 text-center text-sm font-bold text-white"
+                    label="Unlock with Premium"
+                  />
+                  <button
+                    className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-slate-100"
+                    onClick={() => setSelectedId(null)}
+                    type="button"
                   >
-                    {flag}
-                  </span>
-                ))}
+                    Maybe later
+                  </button>
+                </div>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <PremiumCheckoutButton
-                  className="rounded-xl bg-[#3b82f6] px-5 py-3 text-center text-sm font-bold text-white"
-                  label="Unlock with Premium"
-                />
-                <button
-                  className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-slate-100"
-                  onClick={() => setSelectedId(null)}
-                  type="button"
-                >
-                  Maybe later
-                </button>
-              </div>
-            </div>
+            ) : null}
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {selected.topMetrics.map((metric) => (
@@ -544,7 +554,7 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
             </div>
 
             <div className="mt-6 overflow-hidden rounded-[26px] border border-white/10">
-              <div className="pointer-events-none select-none blur-[10px] opacity-40">
+              <div className={isPremium ? "" : "pointer-events-none select-none blur-[10px] opacity-40"}>
                 <div className="grid gap-4 p-5 lg:grid-cols-2">
                   <div className="space-y-3">
                     {selected.profileSignals.map((signal) => (
@@ -568,9 +578,11 @@ export function DeveloperWalletBoard({ profiles }: DeveloperWalletBoardProps) {
                   </div>
                 </div>
               </div>
-              <div className="border-t border-white/10 px-5 py-4 text-center text-xs font-bold uppercase tracking-[0.22em] text-[#93c5fd]">
-                Premium unlocks full wallet history, linked addresses, launch archive, and cluster evidence
-              </div>
+              {!isPremium ? (
+                <div className="border-t border-white/10 px-5 py-4 text-center text-xs font-bold uppercase tracking-[0.22em] text-[#93c5fd]">
+                  Premium unlocks full wallet history, linked addresses, launch archive, and cluster evidence
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
