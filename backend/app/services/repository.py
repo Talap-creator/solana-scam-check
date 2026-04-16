@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from datetime import datetime, timezone
 import hashlib
 import json
+import logging
 import sys
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -27,7 +29,12 @@ from .dexscreener import DexScreenerClient, extract_token_profile, pick_most_liq
 from .analyzer import generate_report, normalize_entity_id, relative_time, risk_status, utc_now
 from .solana_rpc import SolanaRpcClient
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# Max reports kept in memory before evicting oldest.
+# Reports are persisted to DB, so eviction only drops the in-memory cache.
+_MAX_CACHED_REPORTS = 200
 
 
 class ReportRepository:
@@ -37,7 +44,7 @@ class ReportRepository:
         token_holders_max_pages: int = 25,
         dexscreener_client: DexScreenerClient | None = None,
     ) -> None:
-        self.reports: dict[str, CheckOverview] = {}
+        self.reports: OrderedDict[str, CheckOverview] = OrderedDict()
         self.entity_index: dict[tuple[EntityType, str], list[str]] = {}
         self.rpc_client = rpc_client
         self.token_holders_max_pages = token_holders_max_pages
@@ -47,6 +54,11 @@ class ReportRepository:
 
     def register_report(self, report: CheckOverview, *, persist: bool = True) -> CheckOverview:
         self.reports[report.id] = report
+        # Evict oldest cached reports to prevent unbounded memory growth.
+        # Persisted reports can still be loaded on demand from the DB.
+        while len(self.reports) > _MAX_CACHED_REPORTS:
+            evicted_id, _ = self.reports.popitem(last=False)
+            logger.debug("Evicted report %s from in-memory cache", evicted_id)
         index_key = (report.entity_type, report.entity_id)
         self.entity_index.setdefault(index_key, []).append(report.id)
         if persist:

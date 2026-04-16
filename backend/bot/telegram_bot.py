@@ -249,7 +249,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def _build_app(token: str):
     """Build telegram Application with handlers."""
-    tg_app = ApplicationBuilder().token(token).build()
+    tg_app = (
+        ApplicationBuilder()
+        .token(token)
+        .read_timeout(30)
+        .connect_timeout(15)
+        .build()
+    )
     tg_app.add_handler(CommandHandler("start", cmd_start))
     tg_app.add_handler(CommandHandler("help", cmd_help))
     tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
@@ -268,8 +274,6 @@ def run_in_thread(token: str):
             await tg_app.updater.start_polling(
                 drop_pending_updates=True,
                 poll_interval=2.0,
-                read_timeout=30,
-                connect_timeout=15,
             )
             await tg_app.start()
             stop_event = asyncio.Event()
@@ -293,8 +297,6 @@ def main():
     app.run_polling(
         drop_pending_updates=True,
         poll_interval=2.0,
-        read_timeout=30,
-        connect_timeout=15,
     )
 
 

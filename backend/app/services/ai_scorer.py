@@ -69,6 +69,17 @@ def _build_analysis_prompt(token_address: str, features: dict) -> str:
     return "\n".join(lines)
 
 
+_openai_client: OpenAI | None = None
+
+
+def _get_openai_client(api_key: str) -> OpenAI:
+    """Reuse a single OpenAI client to avoid per-call allocation overhead."""
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = OpenAI(api_key=api_key)
+    return _openai_client
+
+
 async def ai_score_token(token_address: str, features: dict | None = None) -> dict:
     """Score a token using GPT.
 
@@ -86,7 +97,7 @@ async def ai_score_token(token_address: str, features: dict | None = None) -> di
     prompt = _build_analysis_prompt(token_address, features)
 
     try:
-        client = OpenAI(api_key=api_key)
+        client = _get_openai_client(api_key)
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             max_tokens=300,

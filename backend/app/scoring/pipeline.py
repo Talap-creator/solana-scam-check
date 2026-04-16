@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from ..schemas import CheckOverview
 from .explainability import ExplanationEngine
 from .feature_extractor import TokenFeatureExtractor
-from .ml.inference import MLInferenceEngine
+from .ml.inference import MLInferenceEngine, get_ml_engine
 from .schemas import (
     BehaviourAnalysisResult,
     ModelVersionInfo,
@@ -95,7 +95,7 @@ class TokenScoringPipeline:
     def __init__(self) -> None:
         self.extractor = TokenFeatureExtractor()
         self.explanation = ExplanationEngine()
-        self.ml_engine = MLInferenceEngine()
+        self.ml_engine = get_ml_engine()
         self.version = "live_report_adapter_v21"
 
     def run(self, *, report: CheckOverview) -> PipelineResult:

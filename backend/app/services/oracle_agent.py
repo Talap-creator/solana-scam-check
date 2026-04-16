@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 
 from ..config import Settings
 from ..models import OracleMonitoredToken, OraclePublishEvent
-from ..scoring.ml.inference import MLInferenceEngine
 from .solana_publisher import SolanaPublisher
 from .ai_scorer import ai_score_token
 from .dexscreener import DexScreenerClient, pick_most_liquid_pair
@@ -56,7 +55,7 @@ class OracleAgent:
         self._last_run: datetime | None = None
         self._total_published: int = 0
         self._errors: int = 0
-        self._ml_engine = MLInferenceEngine()
+        self._ml_engine: object | None = None  # set lazily to share singleton
         self._dex_client = DexScreenerClient()
         self._ws_listener = OracleWebSocketListener(on_trigger=self._ws_trigger)
 
@@ -283,6 +282,10 @@ class OracleAgent:
 
         # Step 2: ML model scoring via DexScreener features
         ml_probability = -1.0
+        # Lazily get the shared ML engine singleton to avoid duplicate ONNX sessions.
+        if self._ml_engine is None:
+            from ..scoring.ml.inference import get_ml_engine
+            self._ml_engine = get_ml_engine()
         if self._ml_engine.has_model:
             try:
                 pairs = self._dex_client.get_token_pairs("solana", token_address)

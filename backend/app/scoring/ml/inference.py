@@ -288,3 +288,16 @@ class MLInferenceEngine:
     @property
     def has_model(self) -> bool:
         return self._onnx_session is not None or self._model is not None
+
+
+# ─── Singleton ──────────────────────────────────────────────────────────────
+
+_ml_engine_instance: MLInferenceEngine | None = None
+
+
+def get_ml_engine() -> MLInferenceEngine:
+    """Return a shared MLInferenceEngine singleton to avoid duplicate ONNX sessions."""
+    global _ml_engine_instance
+    if _ml_engine_instance is None:
+        _ml_engine_instance = MLInferenceEngine()
+    return _ml_engine_instance
