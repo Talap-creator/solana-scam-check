@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AgentMascot } from "./agent-mascot";
 import { ScoreGauge } from "./score-gauge";
+import { addOracleMonitor } from "@/lib/api";
 
 type StepMessage = { type: "step"; text: string };
 type AnalysisChunk = { type: "analysis"; text: string };
@@ -127,6 +128,8 @@ export function AgentChat() {
   const [error, setError] = useState("");
   const [running, setRunning] = useState(false);
   const [, setDone] = useState(false);
+  const [addState, setAddState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [addMessage, setAddMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -148,6 +151,8 @@ export function AgentChat() {
     setError("");
     setDone(false);
     setRunning(true);
+    setAddState("idle");
+    setAddMessage("");
 
     abortRef.current = new AbortController();
 
@@ -233,6 +238,21 @@ export function AgentChat() {
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleAddToMonitor = useCallback(async () => {
+    const target = address.trim();
+    if (!target || addState === "loading") return;
+    setAddState("loading");
+    setAddMessage("");
+    try {
+      await addOracleMonitor(target);
+      setAddState("success");
+      setAddMessage(`Added ${target.slice(0, 8)}... to monitoring`);
+    } catch (err) {
+      setAddState("error");
+      setAddMessage(err instanceof Error ? err.message : "Failed to add token");
+    }
+  }, [address, addState]);
 
   const hasContent = steps.length > 0 || analysisText || verdict || deployer || holders || error;
   const mascotState = running ? "scanning" : verdict ? (verdict.score >= 75 ? "alert" : "idle") : "idle";
@@ -532,12 +552,24 @@ export function AgentChat() {
 
                 {/* Action buttons */}
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    onClick={() => scrollToSection("oracle-add-token")}
-                    className="flex-1 rounded-xl border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-4 py-2.5 text-xs font-semibold text-[#60a5fa] transition-all hover:bg-[rgba(59,130,246,0.15)] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]"
-                  >
-                    Add to Monitor
-                  </button>
+                  <div className="flex flex-1 flex-col gap-1">
+                    <button
+                      onClick={handleAddToMonitor}
+                      disabled={addState === "loading" || addState === "success" || !address.trim()}
+                      className="w-full rounded-xl border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-4 py-2.5 text-xs font-semibold text-[#60a5fa] transition-all hover:bg-[rgba(59,130,246,0.15)] hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {addState === "loading"
+                        ? "Adding..."
+                        : addState === "success"
+                          ? "Added ✓"
+                          : "Add to Monitor"}
+                    </button>
+                    {addMessage && (
+                      <p className={`text-[10px] ${addState === "error" ? "text-rose-400" : "text-emerald-400"}`}>
+                        {addMessage}
+                      </p>
+                    )}
+                  </div>
                   <button
                     onClick={() => scrollToSection("guarded-vault")}
                     className="flex-1 rounded-xl bg-[linear-gradient(135deg,#2563eb,#06b6d4)] px-4 py-2.5 text-xs font-bold text-white shadow-[0_8px_16px_rgba(37,99,235,0.2)] transition-all hover:shadow-[0_12px_24px_rgba(37,99,235,0.3)] hover:brightness-110"
