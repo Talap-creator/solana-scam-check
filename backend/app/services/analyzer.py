@@ -1406,7 +1406,7 @@ def extract_inbound_funding_sources(
         except SolanaRpcError:
             continue
 
-        instructions = (((transaction.get("transaction") or {}).get("message")) or {}).get("instructions") or []
+        instructions = ((((transaction or {}).get("transaction") or {}).get("message")) or {}).get("instructions") or []
         for instruction in instructions:
             if instruction.get("program") != "system":
                 continue
@@ -1523,7 +1523,7 @@ def extract_recent_wallet_transfer_partners(
         except SolanaRpcError:
             continue
 
-        instructions = (((transaction.get("transaction") or {}).get("message")) or {}).get("instructions") or []
+        instructions = ((((transaction or {}).get("transaction") or {}).get("message")) or {}).get("instructions") or []
         for instruction in instructions:
             parsed = instruction.get("parsed") or {}
             info = parsed.get("info") or {}
@@ -1878,7 +1878,7 @@ def detect_insider_selling_pattern(
             except SolanaRpcError:
                 continue
 
-            instructions = (((transaction.get("transaction") or {}).get("message")) or {}).get("instructions") or []
+            instructions = ((((transaction or {}).get("transaction") or {}).get("message")) or {}).get("instructions") or []
             for instruction in instructions:
                 program = instruction.get("program")
                 if program not in {"spl-token", "spl-token-2022"}:
@@ -2314,8 +2314,11 @@ def build_live_token_report(
     if not account_value:
         raise SolanaRpcError("Mint account not found")
 
-    parsed = account_value.get("data", {}).get("parsed", {})
-    if parsed.get("type") != "mint":
+    data_field = account_value.get("data", {})
+    if not isinstance(data_field, dict):
+        raise SolanaRpcError("Address is not an SPL token mint")
+    parsed = data_field.get("parsed", {})
+    if not isinstance(parsed, dict) or parsed.get("type") != "mint":
         raise SolanaRpcError("Address is not an SPL token mint")
 
     mint_info = parsed.get("info", {})
