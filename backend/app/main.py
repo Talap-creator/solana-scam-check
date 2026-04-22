@@ -97,14 +97,20 @@ def startup_event() -> None:
         except RuntimeError:
             pass  # no event loop yet, agent will be started manually
 
-    # Start Telegram bot in background if token is configured
+    # Start Telegram bot in background ONLY if explicitly enabled.
+    # Set ENABLE_TELEGRAM_BOT=1 on exactly one service (backend OR the
+    # dedicated bot worker, never both) — otherwise the two pollers fight
+    # over getUpdates and spam telegram.error.Conflict.
     tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-    if tg_token:
+    tg_enabled = os.getenv("ENABLE_TELEGRAM_BOT", "").strip().lower() in ("1", "true", "yes")
+    if tg_token and tg_enabled:
         import threading
         from bot.telegram_bot import run_in_thread
         tg_thread = threading.Thread(target=run_in_thread, args=(tg_token,), daemon=True)
         tg_thread.start()
-        logger.info("Telegram bot started in background")
+        logger.info("Telegram bot started in background (ENABLE_TELEGRAM_BOT=1)")
+    elif tg_token:
+        logger.info("Telegram bot NOT started in backend (ENABLE_TELEGRAM_BOT is not set)")
 
 
 app.include_router(health_router)
