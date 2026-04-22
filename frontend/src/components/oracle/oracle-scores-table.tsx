@@ -50,12 +50,17 @@ export function OracleScoresTable({
   }, []);
 
   useEffect(() => {
-    const known = new Set(scores.map((s) => s.token_address));
-    setPendingAdds((prev) => prev.filter((addr) => !known.has(addr)));
+    const scored = new Set(
+      scores.filter((s) => s.score !== null).map((s) => s.token_address),
+    );
+    setPendingAdds((prev) => prev.filter((addr) => !scored.has(addr)));
   }, [scores]);
 
+  const unscoredRows = scores.filter((s) => s.score === null && s.last_published_at === null);
+  const hasPending = pendingAdds.length > 0 || unscoredRows.length > 0;
+
   useEffect(() => {
-    if (pendingAdds.length === 0) {
+    if (!hasPending) {
       if (pollRef.current) {
         clearInterval(pollRef.current);
         pollRef.current = null;
@@ -80,7 +85,7 @@ export function OracleScoresTable({
         pollRef.current = null;
       }
     };
-  }, [pendingAdds, router]);
+  }, [hasPending, router]);
 
   // Group history by token_address, sorted oldest→newest
   const historyByToken: Record<string, { score: number; published_at: string }[]> = {};
@@ -110,12 +115,12 @@ export function OracleScoresTable({
     }
   };
 
-  const pendingBanner = pendingAdds.length > 0 && (
+  const pendingCount = Math.max(pendingAdds.length, unscoredRows.length);
+  const pendingBanner = pendingCount > 0 && (
     <div className="mb-3 flex items-center gap-3 rounded-xl border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-4 py-3 text-xs text-[#60a5fa]">
       <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#60a5fa] border-t-transparent" />
       <span>
-        Analyzing {pendingAdds.length === 1 ? shortenAddress(pendingAdds[0]) : `${pendingAdds.length} tokens`}
-        ... AI agent is scoring on-chain data.
+        AI agent is scoring {pendingCount === 1 ? "1 token" : `${pendingCount} tokens`} on-chain. This can take up to a minute.
       </span>
     </div>
   );
@@ -150,6 +155,42 @@ export function OracleScoresTable({
         </thead>
         <tbody>
           {scores.map((s) => {
+            const isPending = s.score === null && s.last_published_at === null;
+            if (isPending) {
+              return (
+                <tr
+                  key={s.token_address}
+                  className="border-b border-[rgba(59,130,246,0.06)] bg-[rgba(59,130,246,0.03)]"
+                >
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
+                    <div>
+                      <span className="font-mono text-slate-200">
+                        {shortenAddress(s.token_address)}
+                      </span>
+                      {s.display_name && (
+                        <span className="ml-2 text-xs text-slate-400">{s.display_name}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-6 sm:py-4">
+                    <div className="flex items-center gap-2 text-xs text-[#60a5fa]">
+                      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#60a5fa] border-t-transparent" />
+                      <span>Analyzing on-chain data... AI agent will publish a score shortly.</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 sm:px-6 sm:py-4">
+                    <button
+                      className="rounded-lg border border-red-500/20 bg-red-500/6 px-2.5 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/15 disabled:opacity-40"
+                      disabled={removing === s.token_address}
+                      onClick={() => void handleRemove(s.token_address)}
+                      type="button"
+                    >
+                      {removing === s.token_address ? "..." : "Remove"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            }
             const tokenHistory = historyByToken[s.token_address] ?? [];
             // Include current score as final point if not already in history
             const sparkPoints =
