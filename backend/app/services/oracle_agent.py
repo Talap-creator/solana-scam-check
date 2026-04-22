@@ -300,7 +300,14 @@ class OracleAgent:
                 logger.warning("ML scoring failed for %s: %s", token_address[:12], exc)
 
         # Step 3: AI scoring via Claude
-        features_dict = features if isinstance(features, dict) else {}
+        if isinstance(features, dict):
+            features_dict = dict(features)
+        elif hasattr(features, "model_dump"):
+            features_dict = features.model_dump(exclude_none=False)
+        elif hasattr(features, "dict"):
+            features_dict = features.dict()
+        else:
+            features_dict = {}
         if ml_probability >= 0:
             features_dict["ml_rug_probability"] = round(ml_probability * 100, 1)
         ai_result = await ai_score_token(token_address, features_dict)
