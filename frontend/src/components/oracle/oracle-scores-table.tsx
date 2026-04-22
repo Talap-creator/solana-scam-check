@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OracleScore, OraclePublishEvent } from "@/lib/api";
 import { removeOracleMonitor } from "@/lib/api";
 import { ScoreSparkline } from "./score-sparkline";
@@ -36,6 +36,51 @@ export function OracleScoresTable({
 }) {
   const router = useRouter();
   const [removing, setRemoving] = useState<string | null>(null);
+  const [pendingAdds, setPendingAdds] = useState<string[]>([]);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const onPending = (e: Event) => {
+      const detail = (e as CustomEvent<{ address: string }>).detail;
+      if (!detail?.address) return;
+      setPendingAdds((prev) => (prev.includes(detail.address) ? prev : [...prev, detail.address]));
+    };
+    window.addEventListener("oracle:pending-add", onPending);
+    return () => window.removeEventListener("oracle:pending-add", onPending);
+  }, []);
+
+  useEffect(() => {
+    const known = new Set(scores.map((s) => s.token_address));
+    setPendingAdds((prev) => prev.filter((addr) => !known.has(addr)));
+  }, [scores]);
+
+  useEffect(() => {
+    if (pendingAdds.length === 0) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      return;
+    }
+    if (pollRef.current) return;
+    pollRef.current = setInterval(() => {
+      router.refresh();
+    }, 4000);
+    const stop = setTimeout(() => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      setPendingAdds([]);
+    }, 120_000);
+    return () => {
+      clearTimeout(stop);
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [pendingAdds, router]);
 
   // Group history by token_address, sorted oldest→newest
   const historyByToken: Record<string, { score: number; published_at: string }[]> = {};
@@ -65,15 +110,30 @@ export function OracleScoresTable({
     }
   };
 
+  const pendingBanner = pendingAdds.length > 0 && (
+    <div className="mb-3 flex items-center gap-3 rounded-xl border border-[rgba(59,130,246,0.3)] bg-[rgba(59,130,246,0.08)] px-4 py-3 text-xs text-[#60a5fa]">
+      <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#60a5fa] border-t-transparent" />
+      <span>
+        Analyzing {pendingAdds.length === 1 ? shortenAddress(pendingAdds[0]) : `${pendingAdds.length} tokens`}
+        ... AI agent is scoring on-chain data.
+      </span>
+    </div>
+  );
+
   if (scores.length === 0) {
     return (
-      <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 text-center text-sm text-slate-400 sm:p-8">
-        No tokens monitored yet. Add a token address above to start.
+      <div>
+        {pendingBanner}
+        <div className="rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)] p-4 text-center text-sm text-slate-400 sm:p-8">
+          No tokens monitored yet. Add a token address above to start.
+        </div>
       </div>
     );
   }
 
   return (
+    <div>
+      {pendingBanner}
     <div className="overflow-x-auto rounded-[24px] border border-[rgba(59,130,246,0.16)] bg-[rgba(15,23,42,0.82)]">
       <table className="w-full text-sm">
         <thead>
@@ -208,6 +268,7 @@ export function OracleScoresTable({
           })}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

@@ -69,7 +69,7 @@ export default async function OraclePage() {
           </section>
 
           {/* On-chain scores */}
-          <section>
+          <section id="oracle-scores-section">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[#60a5fa]">
                 On-Chain Scores

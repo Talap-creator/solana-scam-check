@@ -248,6 +248,8 @@ export function AgentChat() {
       await addOracleMonitor(target);
       setAddState("success");
       setAddMessage(`Added ${target.slice(0, 8)}... to monitoring`);
+      window.dispatchEvent(new CustomEvent("oracle:pending-add", { detail: { address: target } }));
+      document.getElementById("oracle-scores-section")?.scrollIntoView({ behavior: "smooth" });
     } catch (err) {
       setAddState("error");
       setAddMessage(err instanceof Error ? err.message : "Failed to add token");

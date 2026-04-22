@@ -46,8 +46,11 @@ export function OracleAddToken() {
       setSuccess("");
 
       try {
-        await addOracleMonitor(address.trim(), name.trim() || undefined);
-        setSuccess(`Added ${address.slice(0, 8)}... to monitoring`);
+        const target = address.trim();
+        await addOracleMonitor(target, name.trim() || undefined);
+        setSuccess(`Added ${target.slice(0, 8)}... to monitoring`);
+        window.dispatchEvent(new CustomEvent("oracle:pending-add", { detail: { address: target } }));
+        document.getElementById("oracle-scores-section")?.scrollIntoView({ behavior: "smooth" });
         setAddress("");
         setName("");
         // Refresh usage after operation
