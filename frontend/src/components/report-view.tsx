@@ -280,6 +280,7 @@ export function ReportView({ report }: ReportViewProps) {
     { href: `/report/${report.entityType}/${report.id}`, label: reportAnalyzerLabel },
     { href: "/coins", label: "Launch Feed" },
     { href: "/developers", label: "Developers" },
+    { href: "/oracle", label: "Oracle" },
   ] as const;
 
   return (

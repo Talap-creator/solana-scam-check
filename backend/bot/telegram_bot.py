@@ -21,6 +21,7 @@ import time
 
 import httpx
 from telegram import Update
+from telegram.error import Conflict, NetworkError
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -259,6 +260,22 @@ def _build_app(token: str):
     tg_app.add_handler(CommandHandler("start", cmd_start))
     tg_app.add_handler(CommandHandler("help", cmd_help))
     tg_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    async def _on_error(update, context):
+        err = context.error
+        if isinstance(err, Conflict):
+            log.warning(
+                "Telegram Conflict: another getUpdates poller is active for this bot "
+                "token. Ensure only one bot instance runs (check Render scale, "
+                "local dev, and overlapping deploys)."
+            )
+            return
+        if isinstance(err, NetworkError):
+            log.warning("Telegram network error: %s", err)
+            return
+        log.exception("Unhandled telegram error", exc_info=err)
+
+    tg_app.add_error_handler(_on_error)
     return tg_app
 
 
@@ -271,9 +288,14 @@ def run_in_thread(token: str):
         log.info("Telegram bot starting (background thread)...")
         log.info("Scoring via backend API: %s", BACKEND_URL)
         async with tg_app:
+            try:
+                await tg_app.bot.delete_webhook(drop_pending_updates=True)
+            except Exception as exc:
+                log.warning("delete_webhook failed (continuing): %s", exc)
             await tg_app.updater.start_polling(
                 drop_pending_updates=True,
                 poll_interval=2.0,
+                error_callback=lambda exc: log.warning("polling error: %s", exc),
             )
             await tg_app.start()
             stop_event = asyncio.Event()
