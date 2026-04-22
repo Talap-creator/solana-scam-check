@@ -48,25 +48,32 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 
 async def score_via_backend(token_address: str) -> dict:
-    """Call backend v2 scan endpoint — same pipeline as the website."""
+    """Submit token to backend and fetch the full report (same pipeline as the website)."""
     t0 = time.time()
-    url = f"{BACKEND_URL}/api/v1/v2/scan/token"
+    submit_url = f"{BACKEND_URL}/api/v1/check/token"
 
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(url, json={
-                "token_address": token_address,
-                "chain": "solana",
-            })
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(submit_url, json={"address": token_address})
 
             if resp.status_code == 400:
-                return {"error": "Invalid token address or not found on Solana."}
+                return {"error": "Invalid token address or not an SPL mint."}
+            if resp.status_code == 429:
+                return {"error": "Rate limit reached. Try again later."}
             if resp.status_code == 502:
-                return {"error": "Token not found. Check the address."}
+                return {"error": "Token not found on Solana. Check the address."}
             if resp.status_code != 200:
                 return {"error": f"Backend error ({resp.status_code}). Try again later."}
 
-            data = resp.json()
+            check_id = resp.json().get("check_id")
+            if not check_id:
+                return {"error": "Backend returned no check_id."}
+
+            report_resp = await client.get(f"{BACKEND_URL}/api/v1/checks/{check_id}")
+            if report_resp.status_code != 200:
+                return {"error": f"Report fetch failed ({report_resp.status_code})."}
+
+            data = report_resp.json()
 
     except httpx.TimeoutException:
         return {"error": "Scoring timed out. Try again later."}
@@ -77,26 +84,22 @@ async def score_via_backend(token_address: str) -> dict:
 
     elapsed = time.time() - t0
 
-    # Extract top findings as signals
     signals = []
-    for finding in data.get("top_findings", []):
-        title = finding.get("title", "")
-        desc = finding.get("description", "")
-        severity = finding.get("severity", "").upper()
+    for factor in (data.get("risk_increasers") or data.get("factors") or [])[:6]:
+        title = factor.get("title") or factor.get("label") or ""
+        desc = factor.get("description") or factor.get("summary") or ""
+        severity = str(factor.get("severity") or factor.get("level") or "").upper()
         if title:
             signals.append(f"[{severity}] {title}: {desc}" if desc else f"[{severity}] {title}")
 
     return {
         "address": token_address,
         "score": data.get("score", 0),
-        "risk_level": data.get("risk_level", "unknown").upper(),
-        "ml_probability": round(data.get("ml_probability", 0) * 100, 1),
-        "rule_score": round(data.get("rule_score", 0), 1),
-        "rug_probability": round(data.get("rug_probability", 0) * 100, 1),
-        "confidence": round(data.get("confidence", 0) * 100),
+        "risk_level": str(data.get("status", "unknown")).upper(),
+        "rug_probability": data.get("rug_probability", 0),
+        "confidence": round(float(data.get("confidence", 0)) * 100),
         "signals": signals,
-        "explanation": data.get("explanation", {}),
-        "category_scores": data.get("category_scores", {}),
+        "summary": data.get("summary", ""),
         "elapsed": round(elapsed, 1),
     }
 
@@ -127,39 +130,17 @@ def format_result(r: dict) -> str:
         "",
     ]
 
-    # Category scores
-    cats = r.get("category_scores", {})
-    if cats:
-        lines.append("<b>Risk Breakdown:</b>")
-        cat_labels = {
-            "technical_risk": "Technical",
-            "distribution_risk": "Distribution",
-            "market_execution_risk": "Market",
-            "market_maturity": "Maturity",
-            "behaviour_risk": "Behaviour",
-        }
-        for key, label in cat_labels.items():
-            val = cats.get(key)
-            if val is not None:
-                bar = "\u2588" * (val // 10) + "\u2591" * (10 - val // 10)
-                lines.append(f"  {label}: {bar} {val}/100")
-        lines.append("")
-
     # Top findings
     if r["signals"]:
         lines.append(f"<b>Top Findings ({len(r['signals'])}):</b>")
         for sig in r["signals"][:6]:
-            lines.append(f"  \u2022 {sig}")
+            lines.append(f"  • {sig}")
         lines.append("")
 
-    # Scores
-    lines.append(f"<b>ML Model:</b> {r['ml_probability']:.1f}% rug probability")
-    lines.append(f"<b>Rule Engine:</b> {r['rule_score']:.0f}/100")
+    lines.append(f"<b>Rug Probability:</b> {r['rug_probability']}%")
     lines.append(f"<b>Confidence:</b> {r['confidence']}%")
 
-    # Explanation
-    explanation = r.get("explanation", {})
-    summary = explanation.get("summary", "")
+    summary = r.get("summary", "")
     if summary:
         if len(summary) > 400:
             summary = summary[:400] + "..."
