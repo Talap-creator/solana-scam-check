@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}>
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
